@@ -531,7 +531,7 @@ class Model
         //$qb = $em->createQueryBuilder();
         $discount = ($project->getMcd());
 
-        $query = $em->createQuery('SELECT p.productId, p.model, p.description, p.eca, pt.service, pt.name AS productType, pt.typeId, pt.service, s.ppu, s.attributes, s.label, '
+        $query = $em->createQuery('SELECT p.mcd, p.productId, p.model, p.description, p.eca, pt.service, pt.name AS productType, pt.typeId, pt.service, s.ppu, s.attributes, s.label, '
             . 'SUM(s.quantity * sp.quantity) AS quantity, '
             . 'SUM(s.ppu * s.quantity * sp.quantity) AS price, '
             . 'SUM(ROUND((s.ppu * (1 - ('.$discount.' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
