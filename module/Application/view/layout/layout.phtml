@@ -1,0 +1,322 @@
+<?php echo $this->doctype(); ?>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+    <meta charset="utf-8" />
+    <?php 
+    echo $this->headTitle();
+            
+    $this->headLink()
+        ->prependStylesheet('/css/style-default.css', 'screen', false, array('id'=>'style_color'))
+        ->prependStylesheet('/css/style-responsive.css')
+        ->prependStylesheet('/css/style.css')
+        ->prependStylesheet('/assets/jquery-ui/jquery-ui-1.10.1.custom.min.css')
+        ->prependStylesheet('/assets/font-awesome/css/font-awesome.css')
+        ->prependStylesheet('/assets/bootstrap/css/bootstrap-fileupload.css')
+        ->prependStylesheet('/assets/bootstrap/css/bootstrap-responsive.min.css')
+        ->prependStylesheet('/assets/bootstrap/css/bootstrap.min.css')
+        ->appendStylesheet('/assets/gritter/css/jquery.gritter.css')
+        ;
+
+    $this->headMeta()->appendName('description', '8point3 CRM');
+    $this->headMeta()->appendName('author', '8point3 Limited');
+    $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1.0');
+    
+    echo $this->headLink(), chr(13).chr(10);
+    echo $this->headScript(), chr(13).chr(10);
+    echo $this->headMeta(), chr(13).chr(10);
+    echo $this->headStyle(), chr(13).chr(10);
+    ?>
+</head>
+<!-- END HEAD -->
+<!-- BEGIN BODY -->
+<body class="fixed-top">
+   <!-- BEGIN HEADER -->
+   <div id="header" class="navbar navbar-inverse navbar-fixed-top">
+       <!-- BEGIN TOP NAVIGATION BAR -->
+       <div class="navbar-inner">
+           <div class="container-fluid">
+               <!--BEGIN SIDEBAR TOGGLE-->
+               <div class="sidebar-toggle-box hidden-phone">
+                   <div class="icon-reorder"></div>
+               </div>
+               <!--END SIDEBAR TOGGLE-->
+               <!-- BEGIN LOGO -->
+               <h3 style="float: left">PROJIS <sub><?php echo $this->identity()->getCompany()->getDisplayName(); ?></sub></h3>
+               <!-- END LOGO -->
+               <!-- BEGIN RESPONSIVE MENU TOGGLER -->
+               <a class="btn btn-navbar collapsed" id="main_menu_trigger" data-toggle="collapse" data-target=".nav-collapse">
+                   <span class="icon-bar"></span>
+                   <span class="icon-bar"></span>
+                   <span class="icon-bar"></span>
+                   <span class="arrow"></span>
+               </a>
+               <!-- END RESPONSIVE MENU TOGGLER -->
+               <div id="top_menu" class="nav notify-row">
+                   <!-- BEGIN NOTIFICATION -->
+                   <ul class="nav top-menu">
+                       <!-- BEGIN SETTINGS -->
+                       <li class="dropdown">
+                           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                               <i class="icon-tasks"></i><?php
+                                $config = $this->identity()->getConfig();
+                                $taskHtml = '<span class="badge badge-important task-count" style="display: none">0</span>';
+                                if (!empty($config)) {
+                                    $config = json_decode($config);
+                                    if (isset($config->taskCount)) {
+                                        $taskHtml = '<span class="badge badge-important task-count" >'.$config->taskCount.'</span>';
+                                    }
+                                }
+                                echo $taskHtml;
+                               ?>
+                               
+                           </a>
+                           <ul class="dropdown-menu extended tasks-bar" id="task-items">
+                               <li>
+                                   <p>Please wait whilst tasks load ...</p>
+                               </li>
+                               <li class="external">
+                                   <a href="/project/index/">See All Active Projects</a>
+                               </li>
+                           </ul>
+                       </li>
+                       <!-- END SETTINGS -->
+                       <!-- BEGIN INBOX DROPDOWN -->
+                       <li class="dropdown" id="header_inbox_bar">
+                           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                               <i class="icon-envelope-alt"></i><?php
+                                $config = $this->identity()->getConfig();
+                                $mailHtml = '<span class="badge badge-important mail-count" style="display: none"></span>';
+                                if (!empty($config)) {
+                                    $config = json_decode($config);
+                                    if (isset($config->gmailCount) && isset($config->gmailExpire)) {
+                                        if (time() < $config->gmailExpire) {
+                                            $mailHtml = '<span class="badge badge-important mail-count" >'.$config->gmailCount.'</span>';
+                                        }
+                                    }
+                                }
+                                echo $mailHtml;
+                               ?>
+                           </a>
+                           <ul class="dropdown-menu extended inbox" id="mail-items">
+                               <li >
+                                   <p>Please wait messages are loading ...</p>
+                               </li>
+                           </ul>
+                       </li>
+                       <!-- END INBOX DROPDOWN -->
+                       <!-- BEGIN NOTIFICATION DROPDOWN -->
+                       <li class="dropdown" id="header_notification_bar">
+                           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+
+                               <i class="icon-bell-alt"></i>
+                               <span class="badge badge-warning">0</span>
+                           </a>
+                           <ul class="dropdown-menu extended notification">
+                               <li>
+                                   <p>You have 0 new notifications</p>
+                               </li>
+                               <!--<li>
+                                   <p>You have 3 new notifications</p>
+                               </li>
+                               <li>
+                                   <a href="/client-615/project-471/">
+                                       <span class="label label-default"><i class="icon-phone"></i></span>
+                                       Call 00615-00471
+                                       <span class="small italic">today</span>
+                                   </a>
+                               </li>
+                               <li>
+                                   <a href="/client-615/project-1035/">
+                                       <span class="label label-warning"><i class="icon-bell"></i></span>
+                                       Review project status.
+                                       <span class="small italic">1 Day</span>
+                                   </a>
+                               </li>
+                               <li>
+                                   <a href="/client-615/project-1036/">
+                                       <span class="label label-important"><i class="icon-bolt"></i></span>
+                                       Create follow-up Proposal.
+                                       <span class="small italic">3 Days</span>
+                                   </a>
+                               </li>
+                               <li>
+                                   <a href="#">See all notifications</a>
+                               </li><!-- -->
+                           </ul>
+                       </li>
+                       <!-- END NOTIFICATION DROPDOWN -->
+
+                   </ul>
+               </div>
+               <!-- END  NOTIFICATION -->
+               <div class="top-nav ">
+                   <ul class="nav pull-right top-menu" >
+                       <!-- BEGIN SUPPORT -->
+                       <li class="dropdown mtop5">
+
+                           <a class="dropdown-toggle element" data-placement="bottom" data-toggle="tooltip" href="#" data-original-title="Chat">
+                               <i class="icon-comments-alt"></i>
+                           </a>
+                       </li>
+                       <li class="dropdown mtop5">
+                           <a class="dropdown-toggle element" data-placement="bottom" data-toggle="tooltip" href="#" data-original-title="Help">
+                               <i class="icon-headphones"></i>
+                           </a>
+                       </li>
+                       <!-- END SUPPORT -->
+                       <!-- BEGIN USER LOGIN DROPDOWN -->
+                       <li class="dropdown">
+                           <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="margin-top: 3px;">
+                               <!--<img src="/img/avatar_small.jpg" alt=""><!-- -->
+                               <i class="icon-user"></i>
+                               <span class="username"><?php echo $this->identity()->getHandle(); ?></span>
+                               <b class="caret"></b>
+                           </a>
+                           <ul class="dropdown-menu extended logout">
+                               <li><a href="/user/profile/"><i class="icon-user"></i> My Profile</a></li>
+                               <li><a href="/user/password/"><i class="icon-cog"></i> Change Password</a></li>
+                               <li><a href="<?php echo $this->url('logout'); ?>"><i class="icon-key"></i> Log Out</a></li>
+                           </ul>
+                       </li>
+                       <!-- END USER LOGIN DROPDOWN -->
+                   </ul>
+                   <!-- END TOP NAVIGATION MENU -->
+               </div>
+           </div>
+       </div>
+       <!-- END TOP NAVIGATION BAR -->
+   </div>
+   <!-- END HEADER -->
+   <!-- BEGIN CONTAINER -->
+   <div id="container" class="row-fluid">
+      <!-- BEGIN SIDEBAR -->
+      <div class="sidebar-scroll">
+        <div id="sidebar" class="nav-collapse collapse">
+
+         <!-- BEGIN RESPONSIVE QUICK SEARCH FORM -->
+         <div class="navbar-inverse">
+            <form class="navbar-search visible-phone">
+                <input type="text" class="search-query" placeholder="Search"  />
+            </form>
+         </div>
+         
+         <!-- END RESPONSIVE QUICK SEARCH FORM -->
+         <!-- BEGIN SIDEBAR MENU -->
+        <?php // <-- Update this !!
+        echo $this->navigation('navigation')
+                  ->menu()
+                  ->setMinDepth(0)
+                   ->setPartial(array('partial/sidemenu.phtml', 'Application'));
+        ?>                    
+
+         <!-- END SIDEBAR MENU -->
+      </div>
+      </div>
+      <!-- END SIDEBAR -->
+      <!-- BEGIN PAGE -->  
+      <div id="main-content">
+         <!-- BEGIN PAGE CONTAINER-->
+         <div class="container-fluid">
+            <!-- BEGIN PAGE HEADER-->   
+            <div class="row-fluid">
+               <div class="span12">
+                   <!-- BEGIN THEME CUSTOMIZER-->
+                   <div id="theme-change" class="hidden-phone">
+                       <i class="icon-cogs"></i>
+                        <span class="settings">
+                            <span class="text">Theme Color:</span>
+                            <span class="colors">
+                                <span class="color-default" data-style="default"></span>
+                                <span class="color-green" data-style="green"></span>
+                                <span class="color-gray" data-style="gray"></span>
+                                <span class="color-purple" data-style="purple"></span>
+                                <span class="color-red" data-style="red"></span>
+                            </span>
+                        </span>
+                   </div>
+                   <!-- END THEME CUSTOMIZER-->
+                  <!-- BEGIN PAGE TITLE & BREADCRUMB-->
+                   <h3 class="page-title">
+                     <?php echo empty($this->caption)?'Dashboard':$this->caption; ?>
+                   </h3>
+                    <?php // <-- Update this !!
+                    echo $this->navigation('navigation')
+                              ->breadcrumbs()
+                              ->setMinDepth(0)
+                              ->setPartial(array('partial/breadcrumb.phtml', 'Application'));
+                    ?>                    
+                   <!-- END PAGE TITLE & BREADCRUMB-->
+               </div>
+            </div>
+            <!-- END PAGE HEADER-->
+            <!-- BEGIN PAGE CONTENT-->
+            <?php echo $this->content; ?>
+            <!-- END PAGE CONTENT-->         
+         </div>
+         <!-- END PAGE CONTAINER-->
+      </div>
+      <!-- END PAGE -->  
+   </div>
+   <!-- END CONTAINER -->
+
+   <!-- BEGIN FOOTER -->
+   <div id="footer">
+       <?php echo date('Y'); ?> &copy; 8point3 Limited
+   </div>
+   <!-- END FOOTER -->
+
+   <!-- BEGIN JAVASCRIPTS -->
+   <!-- Load javascripts at bottom, this will reduce page load time -->
+<?php
+    $this->inlineScript()
+    // common script for all pages            
+    ->prependFile('/js/forms/mail/dashboard.js')
+    ->prependFile('/js/forms/task/dashboard.js')
+    ->prependFile('/js/common-scripts.js?20150319')
+
+    ->prependFile(
+        '/js/respond.js',
+        'text/javascript',
+        array('conditional' => 'lt IE 9')
+    )            
+            
+    // conditional #1 should go here            
+    ->prependFile(
+        '/js/excanvas.js',
+        'text/javascript',
+        array('conditional' => 'lt IE 9')
+    )            
+    ->prependFile('/assets/bootstrap/js/bootstrap.min.js')
+    ->prependFile('/assets/jquery-slimscroll/jquery-ui-1.9.2.custom.min.js')
+    ->prependFile('/assets/jquery-slimscroll/jquery.slimscroll.min.js')
+    ->prependFile('/js/jquery.nicescroll.js')
+    ->prependFile('/assets/gritter/js/jquery.gritter.js')
+            
+    ->prependFile('/js/jquery-1.8.3.min.js')
+?>
+
+<?php echo $this->inlineScript(); ?>
+<?php
+    if (!empty($this->flashMessages)){
+        ?><script>
+            $(function(){<?php        
+        foreach ($this->flashMessages as $msg) {
+            $msg = (array)$msg;
+            if (empty($msg[1])) {
+                $msg[1] = 'System Message';
+            }
+            echo 'growl("'.$msg[1].'","'.$msg[0].'", {}); ';
+        }
+        ?>
+            });</script>
+<?php
+    }
+?>
+
+   <!-- END JAVASCRIPTS -->   
+</body>
+<!-- END BODY -->
+</html>

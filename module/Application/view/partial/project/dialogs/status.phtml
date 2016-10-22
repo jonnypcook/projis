@@ -1,0 +1,58 @@
+<div id="modalProjectStatus" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Project Status Information&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="msgs4"></div>
+        <div id="projectStatusLoader" class="loader"></div>
+        <table class="table table-advance table-bordered">
+            <thead>
+            <tr>
+                <th colspan="2" id="contact-name"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td id="contact-company">
+                    <label>Select the rating that best fits the project according to the viability, value and position of the opportunity.</label>
+
+                    <div class="space15"></div>
+                    <div class="control-group">
+                        <form id="ProjectStatusForm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project<?php echo $route . '-' . $project->getProjectId(); ?>/updateStatus/" class="form-horizontal form-nomargin">
+                            <label class="control-label">Rating</label>
+                            <div class="controls">
+                                <select name="sltProjectStatus" id="sltProjectStatus">
+                                    <option <?php echo $project->getRating() == 0 ? 'selected="selected"' : ''; ?> value="0">Un-Rated</option>
+                                    <option <?php echo $project->getRating() == 1 ? 'selected="selected"' : ''; ?> value="1">Red Rated (30%)</option>
+                                    <option <?php echo $project->getRating() == 2 ? 'selected="selected"' : ''; ?> value="2">Amber Rated (60%)</option>
+                                    <option <?php echo $project->getRating() == 3 ? 'selected="selected"' : ''; ?> value="3">Green Rated (90%)</option>
+                                </select>
+                            </div>
+                            <br/>
+                            <label class="control-label">Expected Date</label>
+                            <div class="controls">
+                                <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                                    <input type="text" name="expected_date" id="expected_date" data-date-format="dd/mm/yyyy" value="<?php echo !empty($project->getExpectedDate()) ? $project->getExpectedDate()->format('d/m/Y') : ''; ?>" />
+                                    <span class="add-on" id="expectedDateIcon" style="cursor:pointer;" title="Reset date"><i class="icon-calendar"></i></span>
+                                </div>
+                            </div>
+                            <br/>
+                            <label class="control-label">Exclude from Reporting</label>
+                            <div class="controls">
+                                <input type="checkbox" name="exclude_from_reporting" id="exclude_from_reporting" <?php echo $project->getExcludeReporting() ?  'checked="checked"' :''; ?> value="1" />
+                            </div>
+                        </form>
+                    </div>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+        <button class="btn btn-success" id="btn-edit-status" aria-hidden="true"><i class="icon-save"></i> Save</button>
+    </div>
+</div>

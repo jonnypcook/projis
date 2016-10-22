@@ -1,0 +1,379 @@
+<?php
+$this->headLink()
+    ->appendStylesheet( '/assets/chosen-bootstrap/chosen/chosen.css' )
+    ->appendStylesheet( '/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css' )
+    ->appendStylesheet( '/assets/bootstrap-datepicker/css/datepicker.css' );
+
+$this->inlineScript()
+    ->appendFile( '/assets/bootstrap-datepicker/js/bootstrap-datepicker.js' )
+    ->appendFile( '/assets/chosen-bootstrap/chosen/chosen.jquery.min.js' )
+    ->appendFile( '/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js' )
+    ->appendFile( '/js/jquery.validate.min.js' );
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $('#btn-edit-resource').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $('#resourceEditForm').submit();
+            return false;
+        });
+
+        $("#resourceEditForm").validate({
+                rules: {
+                    edit_expected_date: "required",
+                    edit_resource: "required",
+                    edit_costCode: "required",
+                    edit_project: "required",
+                    edit_project: "required",
+                    edit_quantity: "required",
+                    edit_rate: "required"
+                },
+                messages: {
+                    edit_expected_date: "Plaease enter date",
+                    edit_resource: "Please select resource",
+                    edit_costCode: "Please select cost code",
+                    edit_project: "Please enter valid project id",
+                    edit_quantity: "Please enter quantity",
+                    edit_rate: "Please enter rate"
+                },
+                submitHandler: function(form){
+                    var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#resourceEditForm').serialize();
+                    var rid = $('#resource_id').val();
+                    $('#resourceEditLoader').fadeIn(function(){
+                        $.ajax({
+                            type: 'POST',
+                            url: '/resource-activity/resource-' + rid + '/edit',
+                            data: params, // Just send the Base64 content in POST body
+                            processData: true, // No need to process
+                            timeout: 60000, // 1 min timeout
+                            dataType: 'text', // Pure Base64 char data
+                            beforeSend: function onBeforeSend(xhr, settings) {},
+                            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                            success: function onUploadComplete(response) {
+                                try{
+                                    var obj=jQuery.parseJSON(response);
+                                    var k = 0;
+                                    // an error has been detected
+                                    if (obj.err == true) {
+
+                                    } else{ // no errors
+                                        window.location.reload();
+                                    }
+                                }
+                                catch(error){
+                                }
+                            },
+                            complete: function(jqXHR, textStatus){
+                                $('#resouceEditLoader').fadeOut(function(){});
+                            }
+
+                        });
+                    });
+                }
+            });
+
+        $('#edit_expected_date, #resourceEditForm #start_date, #resourceEditForm  #end_date').on('blur', function(){
+        var d = $(this).val();
+        var currDate = new Date();
+        var new_date = '';
+        if ( d.length >= 8 )
+        {
+            //$(this).select();
+            return false;
+        }
+        else if ( d.length == 2 && !isNaN(d)  )
+        {
+            currMonth = (currDate.getMonth() + 1 );
+            if ( currMonth < 10 )
+            {
+                currMonth = '0'  + currMonth;
+            }
+
+            new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 4 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 6 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+            $(this).val(new_date);
+        }
+        else if( d.length == 8 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+            $(this).val(new_date);
+        }
+        else {
+        }
+    });
+
+        $('#edit_quantity, #edit_rate').on('keyup change', function(){
+            var quantity = $('#edit_quantity').val();
+            var rate = $('#edit_rate').val();
+            var total = 0;
+            if ( quantity != '' && rate != '' )
+            {
+                total  = parseFloat(quantity * rate);
+            }
+
+            $('#edit_total_cost').html(total);
+        });
+
+        $('#edit_project').on('blur change', function(){
+            var project_id = $(this).val();
+            $.ajax({
+                type : 'POST',
+                url : '/resource-activities/getclientid',
+                data: {'project_id' : project_id},
+                beforeSend: function(){
+                    $('#edit_project_ref').css('color', '#000');
+                    $('#edit_project_ref').html('Loading...');
+                },
+                success: function(res){
+                    $('#edit_project_ref').html('');
+                    if ( res.error )
+                    {
+                        $('#edit_project_ref').html('Invalid Project');
+                        $('#edit_project_ref').css('color', 'red');
+                    }
+                    else
+                    {
+                       $('#edit_project_ref').html(res.project_ref);
+                    }
+                }
+            });
+        });
+
+        $('#edit_resource').on('change', function(){
+            var id = $(this).val();
+            url = '/resource-item/resource-' + id + '/fetchresource';
+            $.ajax({
+                type : 'POST',
+                url : url,
+                data: {'resource_id' : id},
+                beforeSend: function(){
+                    $('#edit_resource_ref').css('color', '#000');
+                    $('#edit_resource_ref').html('Processing...');
+                },
+                success: function(res){
+                    $('#edit_resource_ref').html('');
+                    if ( res.error > 0 )
+                    {
+                        $('#edit_resource_ref').css('color', '#000');
+                        $('#edit_resource_ref').html('Invalid Resource');
+                       return false;
+                    }
+                    else
+                    {
+                        $('#edit_costCode').val(res.costCode);
+                        $('#edit_rate').val(res.rate);
+                    }
+                }
+            });
+        });
+
+        // Setting focus on date
+        $('#modalResourceEdit').on('show', function(){
+
+        });
+
+        $('.btn-edit-activity').live('click', function(){
+            var rid = $(this).attr('data-value');
+            $('#resource_id').val(rid);
+            $('#modalResourceEdit').modal();
+            var params = 'ts='+Math.round(new Date().getTime()/1000);
+            $('#resourceEditLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activity/resource-' + rid,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            console.log(obj);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                var rs = obj.resource;
+                                console.log(rs);
+                                $('#edit_expected_date').val(rs.date);
+                                $('#edit_resource').val(rs.resource);
+                                $('#edit_costCode').val(rs.costCode);
+                                $('#edit_project').val(rs.project);
+                                $('#edit_reference').val(rs.reference);
+                                $('#edit_details').val(rs.details);
+                                $('#edit_quantity').val(rs.quantity);
+                                $('#edit_rate').val(rs.rate);
+                                $('#resourceEditForm #start_date').val(rs.start_date);
+                                $('#resourceEditForm #end_date').val(rs.end_date);
+                                if ( rs.status > 0 )
+                                {
+                                    $('#resourceEditForm input[name="status"][value="'+ rs.status + '"]').attr('checked', 'checked');
+                                }
+
+                                $('#edit_project').trigger('blur');
+                                $('#edit_quantity, #edit_rate').trigger('keyup');
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#resourceEditLoader').fadeOut(function(){});
+                    }
+                });
+            });
+        });
+
+        $('#modalResourceEdit').on('shown.bs.modal', function(){
+            if ( $(this).attr('data-modal-shown' ) == 'yes' )
+            {
+               return false
+            }
+            $('#edit_expected_date').focus();
+            $(this).attr('data-modal-shown', 'yes');
+        });
+
+        $("#modalResourceEdit").on("hidden", function () {
+            $(this).removeAttrs('data-modal-shown');
+        });
+    });
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalResourceEdit" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="width:80%;left:10%;margin-left:0px;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Resource Activity - Edit</h3>
+    </div>
+    <div class="modal-body">
+        <div id="resourceEditLoader" class="loader"></div>
+        <form id="resourceEditForm" action="" class="form-horizontal form-nomargin">
+            <input type="hidden" value="" id="resource_id"/>
+            <table class="table noborder">
+                <tr>
+                    <td nowrap="nowrap"><strong>Date:</strong></td>
+                    <td nowrap="nowrap">
+                        <input type="text" onfocus="this.select()" name="edit_expected_date" id="edit_expected_date" data-date-format="dd/mm/yyyy" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                    </td>
+                    <td nowrap="nowrap"><strong>Resource:</strong></td>
+                    <td nowrap="nowrap">
+                        <select name="edit_resource" id="edit_resource" tabindex="2">
+                            <option value="">Please Select</option>
+                            <?php if ( !empty($data['resources']) ): ?>
+                                <?php foreach ( $data['resources'] as $key => $value ): ?>
+                                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+
+                        <div id="edit_resource_ref"></div>
+                    </td>
+                    <td nowrap="nowrap"><strong>Cost Code:</strong></td>
+                    <td nowrap="nowrap">
+                        <select name="edit_costCode" id="edit_costCode" tabindex="3">
+                            <option value="">Please Select</option>
+                            <?php if ( !empty($data['costcodes']) ): ?>
+                                <?php foreach ( $data['costcodes'] as $key => $value ): ?>
+                                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                        <?php /*
+                        <?php echo $this->formElement( $resource_form->get( 'costCode' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'costCode' ), array( 'class' => 'error-msg' ) ); ?>
+                        *
+                        *
+                        */ ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Project:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="edit_project" id="edit_project" value="" tabindex="4"/>
+
+                        <div id="edit_project_ref"></div>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Reference:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="edit_reference" id="edit_reference" value="" tabindex="5"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Details:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="edit_details" id="edit_details" value="" tabindex="6"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Quantity:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="edit_quantity" id="edit_quantity" value="" tabindex="7"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Rate:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="edit_rate" id="edit_rate" value="" tabindex="8"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Total Cost:</strong>
+                    </td>
+                    <td>
+                        &#163; <span id="edit_total_cost"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Start Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="start_date" id="start_date" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="9"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>End Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="end_date" id="end_date" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="10"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Status:</strong>
+                    </td>
+                    <td>
+                        <?php if ( !empty($status) ): ?>
+                            <?php foreach ( $status as $item ): ?>
+                                <label class="radio" style="margin-left:25px;">
+                                    <input type="radio" name="status" value="<?php echo $item->getResourceStatusId(); ?>" tabindex="11"/> <?php echo $item->getName(); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-edit-resource" aria-hidden="true" tabindex="12"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true" tabindex="13"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

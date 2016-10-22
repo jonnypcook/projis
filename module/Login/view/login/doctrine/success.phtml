@@ -1,0 +1,14 @@
+You have been successfully logged on.<br />
+Click on the button below if you are not redirected automatically.
+<br /><br />
+<a herf="#" class="btn btn-success" id="btn-refresh-parent">Refresh page</a>
+<script>
+$(function() {
+    $('#btn-refresh-parent').on('click', function(e) {
+        parent.location.reload();
+    });
+    
+    parent.location.reload();
+    
+});
+</script>

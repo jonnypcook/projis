@@ -1,0 +1,340 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $('#btn-edit-product').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $('#productEditForm').submit();
+            return false;
+        });
+
+        $("#productEditForm").validate({
+                rules: {
+                    productEditDate: "required",
+                    productEditresource: "required",
+                    productEditCostCode: "required",
+                    productEditProject: "required",
+                    productEditQuantity: "required",
+                    productEditRate: "required"
+                },
+                messages: {
+                    productEditDate: "Plaease enter date",
+                    productEditResource: "Please select resource",
+                    productEditCostCode: "Please select cost code",
+                    prodcutEditProject: "Please enter valid project id",
+                    productEditQuantity: "Please enter quantity",
+                    productEditRate: "Please enter rate"
+                },
+                submitHandler: function(form){
+                    var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#productEditForm').serialize();
+                    var rid = $('#productEditResourceId').val();
+                    $('#productEditLoader').fadeIn(function(){
+                        $.ajax({
+                            type: 'POST',
+                            url: '/resource-activity/resource-' + rid + '/editproduct',
+                            data: params, // Just send the Base64 content in POST body
+                            processData: true, // No need to process
+                            timeout: 60000, // 1 min timeout
+                            dataType: 'text', // Pure Base64 char data
+                            beforeSend: function onBeforeSend(xhr, settings) {},
+                            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                            success: function onUploadComplete(response) {
+                                try{
+                                    var obj=jQuery.parseJSON(response);
+                                    var k = 0;
+                                    // an error has been detected
+                                    if (obj.err == true) {
+
+                                    } else{ // no errors
+                                        window.location.reload();
+                                    }
+                                }
+                                catch(error){
+                                }
+                            },
+                            complete: function(jqXHR, textStatus){
+                                $('#productEditLoader').fadeOut(function(){});
+                            }
+
+                        });
+                    });
+                }
+            });
+
+
+        $('#productEditQuantity, #productEditRate').on('keyup change', function(){
+            var quantity = $('#productEditQuantity').val();
+            var rate = $('#productEditRate').val();
+            var total = 0;
+            if ( quantity != '' && rate != '' )
+            {
+                total  = parseFloat(quantity * rate);
+            }
+            $('#productEditTotalCost').html(total);
+        });
+
+        $('#productEditProject').on('blur change', function(){
+            var project_id = $(this).val();
+            $.ajax({
+                type : 'POST',
+                url : '/resource-activities/getclientid',
+                data: {'project_id' : project_id},
+                beforeSend: function(){
+                    $('#productEditProjectRef').css('color', '#000');
+                    $('#productEditProjectRef').html('Loading...');
+                },
+                success: function(res){
+                    $('#productEditProjectRef').html('');
+                    if ( res.error )
+                    {
+                        $('#productEditProjectRef').html('Invalid Project');
+                        $('#productEditProjectRef').css('color', 'red');
+                    }
+                    else
+                    {
+                       $('#productEditProjectRef').html(res.project_ref);
+                    }
+                }
+            });
+        });
+
+        $('#productEditDate, #productEditStartDate, #productEditEndDate').on('blur', function(){
+            var d = $(this).val();
+            var currDate = new Date();
+            var new_date = '';
+            if ( d.length >= 8 )
+            {
+                return false;
+            }
+            else if ( d.length == 2 && !isNaN(d)  )
+            {
+                currMonth = (currDate.getMonth() + 1 );
+                if ( currMonth < 10 )
+                {
+                    currMonth = '0'  + currMonth;
+                }
+
+                new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+                $(this).val(new_date);
+            }
+            else if( d.length == 4 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+                $(this).val(new_date);
+            }
+            else if( d.length == 6 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+                $(this).val(new_date);
+            }
+            else if( d.length == 8 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+                $(this).val(new_date);
+            }
+            else {
+            }
+        });
+
+        $('#productEditResource').on('change', function(){
+            var id = $(this).val();
+            url = '/resource-item/resource-' + id + '/fetchresource';
+            $.ajax({
+                type : 'POST',
+                url : url,
+                data: {'resource_id' : id},
+                beforeSend: function(){
+                    $('#productEditResourceRef').css('color', '#000');
+                    $('#productEditResourceRef').html('Processing...');
+                },
+                success: function(res){
+                    $('#productEditResourceRef').html('');
+                    if ( res.error > 0 )
+                    {
+                        $('#productEditResourceRef').css('color', '#000');
+                        $('#productEditResourceRef').html('Invalid Resource');
+                       return false;
+                    }
+                    else
+                    {
+                        $('#productEditCostCode').val(res.costCode);
+                        $('#productEditRate').val(res.rate);
+                    }
+                }
+            });
+        });
+
+        $('.btn-edit-product').live('click', function(){
+            var rid = $(this).attr('data-value');
+            $('#productEditResourceId').val(rid);
+            $('#modalProductEdit').modal();
+            var params = 'ts='+Math.round(new Date().getTime()/1000);
+            $('#productEditLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activity/resource-' + rid,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            console.log(obj);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                var rs = obj.resource;
+                                console.log(rs);
+                                $('#productEditDate').val(rs.date);
+                                $('#productEditResource').val(rs.resource);
+                                $('#productEditCostCode').val(rs.costCode);
+                                $('#productEditProject').val(rs.project);
+                                $('#productEditReference').val(rs.reference);
+                                $('#productEditDetails').val(rs.details);
+                                $('#productEditQuantity').val(rs.quantity);
+                                $('#productEditRate').val(rs.rate);
+                                $('#productEditForm #productEditStartDate').val(rs.start_date);
+                                $('#productEditForm #productEditEndDate').val(rs.end_date);
+                                if ( rs.status > 0 )
+                                {
+                                    $('#productEditForm input[name="productEditStatus"][value="'+ rs.status + '"]').attr('checked', 'checked');
+                                }
+
+                                $('#productEditProject').trigger('blur');
+                                $('#productEditQuantity, #edit_rate').trigger('keyup');
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#productEditLoader').fadeOut(function(){});
+                    }
+                });
+            });
+        });
+
+        $('#modalProductEdit').on('shown.bs.modal', function(){
+            if ( $(this).attr('data-modal-shown' ) == 'yes' )
+            {
+               return false
+            }
+            $('#productEditDate').focus();
+            $(this).attr('data-modal-shown', 'yes');
+        });
+
+        $('#modalProductEdit').on('shown.bs.modal', function(){
+            if ( $(this).attr('data-modal-shown' ) == 'yes' )
+            {
+               return false
+            }
+            $('#productEditDate').focus();
+            $(this).attr('data-modal-shown', 'yes');
+        });
+
+        $("#modalProductEdit").on("hidden", function () {
+            $(this).removeAttrs('data-modal-shown');
+        });
+    });
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalProductEdit" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="width:80%;left:10%;margin-left:0px;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Product - Edit</h3>
+    </div>
+    <div class="modal-body">
+        <div id="productEditLoader" class="loader"></div>
+        <form id="productEditForm" action="" class="form-horizontal form-nomargin">
+            <input type="hidden" value="" id="productEditResourceId"/>
+            <table class="table noborder">
+                <tr>
+                    <td nowrap="nowrap"><strong>Date:</strong></td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="productEditDate" id="productEditDate" data-date-format="dd/mm/yyyy" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                    </td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap"></td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Project:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="productEditProject" id="productEditProject" value="" readonly="readonly"/>
+
+                        <div id="edit_project_ref"></div>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Reference:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="productEditReference" id="productEditReference" value=""/>
+                    </td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap"></td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Quantity:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="productEditQuantity" id="productEditQuantity" value=""/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Rate:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="number" name="productEditRate" id="productEditRate" value=""/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Total Cost:</strong>
+                    </td>
+                    <td>
+                        &#163; <span id="productEditTotalCost"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Start Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="productEditStartDate" id="productEditStartDate" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>End Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="productEditEndDate" id="productEditEndDate" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Status:</strong>
+                    </td>
+                    <td>
+                        <?php if ( !empty($status) ): ?>
+                            <?php foreach ( $status as $item ): ?>
+                                <label class="radio" style="margin-left:25px;">
+                                    <input type="radio" name="productEditStatus" value="<?php echo $item->getResourceStatusId(); ?>"/> <?php echo $item->getName(); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-edit-product" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

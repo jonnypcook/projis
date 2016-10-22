@@ -1,0 +1,171 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/assets/jquery-rest-gh-pages/dist/1/jquery.rest.js');
+
+echo $this->partial('partial/system/modelnav.phtml', array('navRoute'=>'model', 'project'=>$project));
+
+
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-bar-chart"></i> System Costings Model</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <div class="row-fluid">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th class="hidden-480">Description</th>
+                            <th class="row-right">Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+<?php
+    $modelPeriod = count($forecast);
+?>
+                        <tr>
+                            <td>Total Value Of ECA Eligible LEDs</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['eca_eligible'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Total Value of ECA Ineligible LEDs</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['eca_ineligible'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Projected ECA Eligibility</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['eca'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>Total <?php echo $modelPeriod; ?> Year Carbon Saving (tonnes)</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['carbon'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Total <?php echo $modelPeriod; ?> Year Carbon Allowance</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['carbonallowance'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Total <?php echo $modelPeriod; ?> Year Saving</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['saving'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>LED Cost</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_led'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Installation Cost</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_install'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Delivery Cost</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_delivery'],2); ?></td>
+                        </tr>
+<?php if ($figures['cost_ibp'] > 0) { ?>                        
+                        <tr>
+                            <td>Insurance Backed Premium Cost</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_ibp'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+<?php if ($figures['cost_access'] > 0) { ?>                        
+                        <tr>
+                            <td>Access Cost</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_access'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+<?php if ($figures['cost_prelim'] > 0) { ?>                        
+                        <tr>
+                            <td>Prelim Fee</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_prelim'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+<?php if ($figures['cost_overheads'] > 0) { ?>                        
+                        <tr>
+                            <td>Overheads Fee</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_overheads'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+<?php if ($figures['cost_overheads'] > 0) { ?>                        
+                        <tr>
+                            <td>Management Fee</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['cost_overheads'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+<?php if ($figures['finance_amount'] > 0) { ?>                        
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>Total Cost With Financing</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['finance_amount'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Financing Period</td>
+                            <td class="row-right"><?php echo number_format($figures['finance_years'],2); ?> Years</td>
+                        </tr>
+                        <tr>
+                            <td>Interest Rate (Annual Flat Rate)</td>
+                            <td class="row-right"><?php echo number_format($figures['finance_annual_rate'],2); ?>%</td>
+                        </tr>
+                        <tr>
+                            <td>Average Cash Benefit Over Funding Period</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['finance_avg_benefit'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Average Repayments Over Funding Period</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['finance_avg_repay'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Average Net Annual Benefit Over Funding Period</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['finance_avg_netbenefit'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Net Cash Benefit Over Funding Period</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['finance_netbenefit'],2); ?></td>
+                        </tr>
+<?php } ?>                        
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>Total <?php echo $modelPeriod; ?> Year Profit</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['profit'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Total <?php echo $modelPeriod; ?> Year Profit with ECA and Carbon Allowance</td>
+                            <td class="row-right">&#163;<?php echo number_format($figures['profiteca'],2); ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="space20"></div>
+                <div class="row-fluid">
+                    <div class="span4 invoice-block pull-right">
+                        <ul class="unstyled amounts">
+                            <li><strong>Total Cost :</strong> &#163;<?php echo number_format($figures['cost'],2); ?></li>
+                            <li><strong>Total Cost (less ECA):</strong> &#163;<?php echo number_format($figures['costeca'],2); ?></li>
+                            <li><strong>Discount :</strong> <?php echo round($project->getMCD()*100, 2); ?>%</li>
+                            <li><strong>VAT :</strong> &#163;<?php echo round($figures['vat'], 2); ?></li>
+                            <li><strong>Grand Total :</strong> &#163;<?php echo number_format($figures['costvat'],2); ?></li>
+                            <li><strong>Grand Total (Less ECA) :</strong> &#163;<?php echo number_format($figures['costvateca'],2); ?></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END BLANK PAGE PORTLET-->
+    </div>
+</div>

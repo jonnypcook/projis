@@ -1,0 +1,157 @@
+<style>
+    #surveyhead_logo {
+        width: 240px;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    
+    table.surveyhead_clientdetails {
+        border-spacing: 0px;
+        border-collapse: separate;
+        border-bottom: 1px #ccc solid;
+    }
+    
+    table.surveyhead_clientdetails td {
+        margin: 0;
+        padding: 4px 0 0 6px;
+        border-top: 1px #ccc solid;
+        vertical-align: text-top;
+    }
+    
+    table.surveyhead_clientdetails th {
+        margin: 0;
+        padding: 4px 6px 0 0;
+        text-align: left;
+        width: 110px;
+        border-right: 1px #ccc solid;
+        border-top: 1px #ccc solid;
+        font-weight: normal;
+        vertical-align: text-top;
+    }
+    
+</style>
+<div style="position: relative; font-size: 0.9em!important;">
+    <img id="surveyhead_logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-1.png" />
+    <div style="position: absolute; right: 0; top: 90px; text-align: right">
+        <?php echo date('jS F Y'); ?>
+    </div>
+    <h1>Survey Request Form</h1>
+    <table class="surveyhead_clientdetails" >
+        <tbody>
+            <tr>
+                <th>Project</th>
+                <td><?php echo $project->getName(); ?></td>
+            </tr>
+            <tr>
+                <th>Reference</th>
+                <td><?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT);
+                    if (isset ($invoiceNo)) {
+                        echo ' / '.$invoiceNo;
+                    }
+                ?></td>
+            </tr>
+            <tr>
+                <th>Company</th>
+                <td><?php echo $project->getClient()->getName(); ?></td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    
+    <p>
+        Customer Information currently on record at 8point3 Ltd:
+    </p>
+
+    <table class="surveyhead_clientdetails" style="width: 100%">
+        <tbody>
+            <tr>
+                <th>Company Name </th>
+                <td><?php echo $project->getClient()->getName(); ?></td>
+            </tr>
+            <tr>
+                <th>Address</th>
+                <td><?php
+                    if (!empty($contact->getAddress())) {
+                        echo $contact->getAddress()->assemble(', ');
+                    }
+                ?></td>
+            </tr>
+            <tr>
+                <th>Contact</th>
+                <td><?php echo $contact->getName(); ?></td>
+            </tr>
+            <tr>
+                <th>Telephone No. </th>
+                <td><?php echo $contact->getTelephone1(); ?></td>
+            </tr>
+            <tr>
+                <th>E-mail </th>
+                <td><?php echo $contact->getEmail(); ?></td>
+            </tr>
+            <tr>
+                <th>Project Manager</th>
+                <td><?php echo $project->getClient()->getUser()->getName(); ?></td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    <p>
+        Please complete survey address and contact details if different from above:
+    </p>
+    <table class="surveyhead_clientdetails" style="width: 100%">
+        <tbody>
+            <tr>
+                <th>Company Name </th>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>Address</th>
+                <td>&nbsp;<br />&nbsp;<br />&nbsp;<br /></td>
+            </tr>
+            <tr>
+                <th>Contact</th>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>Telephone No. </th>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>E-mail </th>
+                <td>&nbsp;</td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    <p>
+        Please proceed with a full technical survey of our premises at a cost of &#163;750.00 per day plus VAT. Survey is
+        estimated to take <span style="display: inline-block; width: 100px; border-bottom: 1px #ccc solid;">&nbsp;</span> days. I understand that this fee will be reimbursed should we proceed to order.
+    </p>
+    <table class="surveyhead_clientdetails" style="width: 100%">
+        <tbody>
+            <tr>
+                <th>Signed</th>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>Print Name</th>
+                <td>&nbsp;<br />&nbsp;<br />&nbsp;<br /></td>
+            </tr>
+            <tr>
+                <th>On Behalf Of</th>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>&nbsp;</td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    <p>
+        Please return this form to: <br />
+        Survey Department, 8point3 Ltd, SusCon, Brunel Way, Dartford, Kent, DA1 5AJ<br />
+        T: 01322 270 400 | F: 0844 9934561 | E: info@8point3led.co.uk
+    </p>
+</div>

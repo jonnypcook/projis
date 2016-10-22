@@ -1,0 +1,60 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $(document).on('click', '.contact-info', function(e) {
+            e.preventDefault(); 
+            $('#contact-tel1').html($(this).attr('data-tel1')?'<a href="tel:'+$(this).attr('data-tel1')+'">'+$(this).attr('data-tel1')+' <i class="icon-phone"></i></a>':'');
+            $('#contact-tel2').html($(this).attr('data-tel2')?'<a href="tel:'+$(this).attr('data-tel2')+'">'+$(this).attr('data-tel2')+' <i class="icon-phone"></i></a>':'');
+            $('#contact-email').html($(this).attr('data-email')?'<a href="mailto:'+$(this).attr('data-email')+'">'+$(this).attr('data-email')+' <i class="icon-envelope"></i></a>':'');
+            $('#contact-addr').text($(this).attr('data-addr'));
+            $('#contact-name').text($(this).attr('data-name'));
+            $('#contact-company').text($(this).attr('data-company'));
+
+            $('#modalContacts').modal('show');
+    //        console.log(tel1);
+            return false;
+        });
+    });
+JS;
+$this->inlineScript()->captureEnd();
+?><div id="modalContacts" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Contact Information&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <table class="table table-advance table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" id="contact-name"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Company:</th>
+                    <td id="contact-company"></td>
+                </tr>
+                <tr>
+                    <th>Telephone 1:</th>
+                    <td id="contact-tel1"></td>
+                </tr>
+                <tr>
+                    <th>Telephone 2:</th>
+                    <td id="contact-tel2"></td>
+                </tr>
+                <tr>
+                    <th>Email:</th>
+                    <td id="contact-email"></td>
+                </tr>
+                <tr>
+                    <th>Address:</th>
+                    <td id="contact-addr"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

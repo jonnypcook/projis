@@ -1,0 +1,173 @@
+<?php
+    $financing = ($figures['finance_amount'] > 0);
+    $client = $project->getClient();
+
+    
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <?php 
+            if (!empty($footer['pages'])) {
+                echo $this->partial('partial/project/docs/pages.phtml'); 
+            }
+            
+        ?>
+        <div>
+            <?php 
+                echo $this->partial('partial/project/docs/headers/letterhead.phtml'); 
+            ?>
+            <p class="strong">
+            <?php
+                if(!empty($financing)) {
+                    echo 'RE: Funded LED Solution<br />';
+                }
+            ?>
+                LED Lighting Savings - Energy, Maintenance &amp; Carbon Reduction Solutions
+            </p>
+
+            <?php if(!empty($financing)) { ?>
+            <p>
+                Following our previous discussions, we are pleased to provide you with an indicative illustration of the financial benefits that 
+                could be afforded to <?php echo $client->getName(); ?> 
+                through the installation of a funded 8point3 LED lighting solution. 
+            </p>
+            <p>
+                The attached business illustration is based on our initial understanding of your current lighting, the hours of operation and the assumptions in the summary below.  
+                This illustration sets out to identify the potential energy savings, maintenance savings and carbon avoidance achievable as well as showing financial benefits
+                to the business. 
+            </p>
+            <?php } else { ?>
+            <p>
+                Following our previous discussions, we are pleased to provide you with an illustration of the financial benefits that could be afforded to <?php echo $client->getName(); ?> 
+                through the installation of 8point3 LED lighting. 
+            </p>
+            <p>
+                The attached business illustration is based on our initial understanding of your current lighting, the hours of operation and the assumptions in the summary below.  
+                This illustration sets out to identify the potential energy savings, maintenance savings and carbon avoidance achievable as well as showing budgetary 
+                projects costs and return on investment. 
+            </p>
+            <?php } ?>
+            <p>
+                Where applicable, we have also shown the benefit available through ECA (Enhanced Capital Allowances for White Light LED) as well as savings achievable through the CRC 
+                Energy Efficiency Scheme.
+            </p>
+            
+            <?php if (!empty($figures['space_count'])) { ?>
+            <p>
+            To provide further clarity on the savings for specific areas within your business, we have segregated the proposed project into 
+            <?php 
+            echo $this->wordify($figures['space_count']); 
+
+            ?> bespoke spaces, each space having a breakdown of the lighting types to be replaced, the 
+            energy savings available, the hours of usage and the cost of the project.
+            </p>
+            <?php } ?>
+
+            <p>
+                <span class="strong">Business Illustration Assumptions</span><br />
+                We have based our calculations for the business illustration upon a number of assumptions as detailed below:
+            </p>
+            <ul>
+                <li>Hours of operation of lighting as shown in business illustration</li>
+                <li>Energy price per kWh of &#163;<?php echo round($project->getfueltariff(), 4); ?></li>
+                <li>Inflation (RPI) predicted at <?php echo ($project->getrpi()*100); ?>% p.a.</li>
+                <li>Energy Price Inflation (EPI) predicted at <?php echo ($project->getepi()*100); ?>% p.a.</li>
+                <li>Average annual maintenance cost of current lighting system of &#163;<?php echo number_format($forecast[1][3],0); ?>.</li>
+                <?php if ($project->geteca()>0) { ?>
+                <li>ECA allowance: <?php echo ($project->geteca()*100).'%'; ?></li>
+                <?php } ?>
+                <?php if ($project->getcarbon()>0) { ?>
+                <li>CRC allowance: <?php echo '&#163;'.$project->getcarbon().' per tonne'; ?></li>
+                <?php } ?>
+            </ul>
+
+            <p>
+                <span class="strong">Summary of Benefits</span>
+            </p>
+            <ul>
+            <?php if(!empty($financing)) { ?>
+                <li class="strong">Funded programme over <?php echo $this->wordify($figures['finance_years']); ?> year<?php echo ($figures['finance_years']==1)?'':'s'; ?></li>
+            <?php } else { 
+                        if (!empty($figures['payback_year'])) { // check that ROI makes business sense
+            ?>
+                <li class="strong">Return on investment (ROI) in year <?php echo $this->wordify($figures['payback_year']); ?></li>
+            <?php 
+                        } 
+                }?>
+                <li>Average per luminaire power consumption reduction of <span class="strong"><?php echo (100-round((($forecast[1][1]/$forecast[1][0])*100),2));  ?>%</span> (<?php echo number_format($figures['kwhYear']);?> kW per year)</li>
+                <li><span class="strong">Zero maintenance costs</span> for the full guarantee period - negates current spend of &#163;<?php echo number_format($forecast[1][3],0); ?> per annum</li>
+                <li>Carbon emissions reduction of <span class="strong"><?php echo number_format($forecast[1][7],2); ?> tonnes</span> per year</li>
+
+            <?php if(!empty($financing)) { ?>
+                <li>Net cash saving in year one from installing 8point3 LED lighting of <span class="strong">&#163;<?php echo number_format($forecast[1][2]+$forecast[1][3]-$forecast[1][11],2); ?></span></li>
+            <?php } else { ?>
+                <li>Net cash saving in year one from installing 8point3 LED lighting of <span class="strong">&#163;<?php echo number_format($forecast[1][4],2); ?></span></li>
+            <?php } ?>
+
+            <?php if(!empty($figures['eca'])) { ?>
+                <li>ECA benefit of <span class="strong">&#163;<?php echo number_format($figures['eca'],2); ?></span></li>
+            <?php } ?>
+            <?php if(!empty($figures['carbonallowance'])) { ?>
+                <li>CRC Energy Efficiency Scheme entitlement of <span class="strong">&#163;<?php echo number_format($figures['carbonallowance'],2); ?></span></li>
+            <?php } ?>
+                <?php 
+                    if (!empty($figures['payback_year'])) {
+                        echo '<li>A total '.$this->wordify($figures['payback_year']).' year profit of <span class="strong">&#163;'.number_format($forecast[$figures['payback_year']][9],2).'</span></li>';
+                    }/**/
+                ?>
+            </ul>
+            
+            <p style="font-weight:bold; font-style: italic; text-transform: uppercase">
+                The cost to your business in <span style="text-decoration: underline">electricity alone</span> by not moving to LED is &#163;<?php echo number_format($forecast[1][2],0); ?> p.a.
+            </p>
+            <p>
+            A full breakdown of the benefits, calculations and projected savings over the next <?php echo $this->wordify(count($forecast)); ?> years is shown in the schedules attached.&nbsp;&nbsp;Please 
+            note that all costs are exclusive of delivery, installation, setup &amp; commissioning of sensor &amp; lighting controls, and VAT unless itemised on the attached Business Illustration.
+            </p>
+
+            <p > 
+                <span style="font-weight:bold; font-size: 1.2em;"><br />Our Guarantee</span><br />
+                Our products come with a five year full product repair or replacement guarantee. If in the rare event one of our lights 
+                fails during this time, we will repair or replace it at our cost. 
+            </p>
+
+
+            <p>
+                <span style="font-weight:bold; font-size: 1.2em;"><br />Next Steps</span><br />
+                Following on from this business illustration, we would be pleased to provide you with a fully costed business 
+                proposal that will provide a definitive business case for <?php echo $client->getName(); ?>.  In order to prepare a 
+                full proposal, it is necessary to undertake a full and detailed survey of your existing lighting 
+                scheme so that we can gain an accurate inventory of your current lighting, the lighting type/s, energy ratings, 
+                fixing methods and accessibility and any associated maintenance costs. 
+                The standard lead time for product delivery is 4-8 weeks from date of order.
+            </p>
+            <p>
+                Should you wish to proceed with a technical survey, please complete the attached Survey Request Form and return 
+                to either myself or our Survey Team.  Please note that the charge for the survey will be reimbursed<span style="display: inline-block; height: 20px; margin-left: 2px"><sup>*</sup></span> when you proceed with a full project. 
+            </p>
+            <p>
+                We look forward to hearing from you with feedback relating to this business illustration but in the meantime, 
+                please feel free to contact us if you have any questions at all.	
+            </p>
+            <?php 
+                echo $this->partial('partial/project/docs/signature.phtml'); 
+            ?>
+        </div>
+        <?php
+            if (!empty($attach)) {
+                foreach ($attach as $name) {
+                    echo '<div style="page-break-before: always"></div>';
+                    echo $this->partial('partial/project/docs/attach/'.$name.'.phtml'); 
+                }
+            }
+        ?>
+    </body>
+</html>

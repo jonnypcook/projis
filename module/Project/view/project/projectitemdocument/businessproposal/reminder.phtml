@@ -1,0 +1,75 @@
+<?php
+    $financing = ($figures['finance_amount'] > 0);
+    $client = $project->getClient();
+
+    
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <?php 
+            if (!empty($footer['pages'])) {
+                echo $this->partial('partial/project/docs/pages.phtml'); 
+            }
+            
+        ?>
+        <div>
+            <?php 
+                echo $this->partial('partial/project/docs/headers/letterhead.phtml'); 
+            ?>
+            <p class="strong">
+            <?php
+                if(!empty($financing)) {
+                    echo 'RE: Funded LED Solution<br />';
+                }
+            ?>
+                LED Lighting Savings - Energy, Maintenance &amp; Carbon Reduction Solutions
+            </p>
+
+            <p>
+                As you may recall we wrote to you recently with an illustration of the potential energy savings you could 
+                achieve by investing in our LED lighting solution.  It has been some time now and we are curious to know if you have 
+                made a decision on this project.
+            </p>
+
+            <?php if ($forecast[1][2]>0) { ?>
+                <h6 style="padding: 0; margin: 0;" class="upper">
+                    In brief we believe the annual cost to your business in <span style="text-decoration: underline">electricity alone</span> by not moving to LED is 
+                	&#163;<?php echo number_format($forecast[1][2],0); 
+                        if (!empty($figures['payback_year'])) { ?>
+                    with a Return on investment (ROI) in year <?php echo $this->wordify($figures['payback_year']); ?>.
+                    <?php  } ?>.
+                </h6>
+            <?php } ?>
+            
+            <p>
+                We appreciate you may be anxious about making such a major investment in what is a relatively new technology.  
+                However, we feel sure that if you were to proceed with a trial, which we would be happy to arrange, then the benefits not only financially 
+                but environmentally and to the well-being of your staff would become self-evident.   
+            </p>
+
+            <p>
+                We would be delighted to discuss this project with you further and hope that you will contact us in the near future to arrange a 
+                mutually convenient appointment.  
+            </p>
+            <?php 
+                echo $this->partial('partial/project/docs/signature.phtml'); 
+            ?>
+        </div>
+        <?php
+            if (!empty($attach)) {
+                foreach ($attach as $name) {
+                    echo '<div style="page-break-before: always"></div>';
+                    echo $this->partial('partial/project/docs/attach/'.$name.'.phtml'); 
+                }
+            }
+        ?>
+    </body>
+</html>

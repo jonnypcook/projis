@@ -1,0 +1,280 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $('#btn-edit-invoice').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $('#invoiceEditForm').submit();
+            return false;
+        });
+
+        $("#invoiceEditForm").validate({
+            rules: {
+                invoiceEditDate: "required",
+                invoiceEditresource: "required",
+                invoiceEditCostCode: "required",
+                invoiceEditProject: "required",
+                invoiceEditQuantity: "required",
+                invoiceEditRate: "required"
+            },
+            messages: {
+                invoiceEditDate: "Plaease enter date",
+                invoiceEditResource: "Please select resource",
+                invoiceEditCostCode: "Please select cost code",
+                invoiceEditProject: "Please enter valid project id",
+                invoiceEditQuantity: "Please enter quantity",
+                invoiceEditRate: "Please enter rate"
+            },
+            submitHandler: function(form){
+                var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#invoiceEditForm').serialize();
+                var rid = $('#invoice_resource_id').val();
+                $('#invoiceEditLoader').fadeIn(function(){
+                    $.ajax({
+                        type: 'POST',
+                        url: '/resource-activity/resource-' + rid + '/editinvoice',
+                        data: params, // Just send the Base64 content in POST body
+                        processData: true, // No need to process
+                        timeout: 60000, // 1 min timeout
+                        dataType: 'text', // Pure Base64 char data
+                        beforeSend: function onBeforeSend(xhr, settings) {},
+                        error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                        success: function onUploadComplete(response) {
+                            try{
+                                var obj=jQuery.parseJSON(response);
+                                var k = 0;
+                                // an error has been detected
+                                if (obj.err == true) {
+
+                                } else{ // no errors
+                                    window.location.reload();
+                                }
+                            }
+                            catch(error){
+                            }
+                        },
+                        complete: function(jqXHR, textStatus){
+                            $('#invoiceEditLoader').fadeOut(function(){});
+                        }
+
+                    });
+                });
+            }
+        });
+
+        $('#invoiceEditDate').on('blur', function(){
+            var d = $(this).val();
+            var currDate = new Date();
+            var new_date = '';
+            if ( d.length >= 8 )
+            {
+                return false;
+            }
+            else if ( d.length == 2 && !isNaN(d)  )
+            {
+                currMonth = (currDate.getMonth() + 1 );
+                if ( currMonth < 10 )
+                {
+                    currMonth = '0'  + currMonth;
+                }
+
+                new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+                $(this).val(new_date);
+            }
+            else if( d.length == 4 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+                $(this).val(new_date);
+            }
+            else if( d.length == 6 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+                $(this).val(new_date);
+            }
+            else if( d.length == 8 && !isNaN(d) )
+            {
+                new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+                $(this).val(new_date);
+            }
+            else {
+            }
+        });
+
+        $('#invoiceEditQuantity, #invoiceEditRate').on('keyup change', function(){
+            var quantity = $('#invoiceEditQuantity').val();
+            var rate = $('#edit_rate').val();
+            var total = 0;
+            if ( quantity != '' && rate != '' )
+            {
+                total  = parseFloat(quantity * rate);
+            }
+
+            $('#invoiceEditTotalCost').html(total);
+        });
+
+        $('#invoiceEditProject').on('blur change', function(){
+            var project_id = $(this).val();
+            $.ajax({
+                type : 'POST',
+                url : '/resource-activities/getclientid',
+                data: {'project_id' : project_id},
+                beforeSend: function(){
+                    $('#invoiceEditProjectRef').css('color', '#000');
+                    $('#invoiceEditProjectRef').html('Loading...');
+                },
+                success: function(res){
+                    $('#invoiceEditProjectRef').html('');
+                    if ( res.error )
+                    {
+                        $('#invoiceEditProjectRef').html('Invalid Project');
+                        $('#invoiceEditProjectRef').css('color', 'red');
+                    }
+                    else
+                    {
+                       $('#invoiceEditProjectRef').html(res.project_ref);
+                    }
+                }
+            });
+        });
+
+        $('#invoiceEditResource').on('change', function(){
+            var id = $(this).val();
+            url = '/resource-item/resource-' + id + '/fetchresource';
+            $.ajax({
+                type : 'POST',
+                url : url,
+                data: {'resource_id' : id},
+                beforeSend: function(){
+                    $('#invoiceEditResourceRef').css('color', '#000');
+                    $('#invoiceEditResourceRef').html('Processing...');
+                },
+                success: function(res){
+                    $('#invoiceEditResourceRef').html('');
+                    if ( res.error > 0 )
+                    {
+                        $('#invoiceEditResourceRef').css('color', '#000');
+                        $('#invoiceEditResourceRef').html('Invalid Resource');
+                       return false;
+                    }
+                    else
+                    {
+                        $('#invoiceEditCostCode').val(res.costCode);
+                        $('#invoiceEditRate').val(res.rate);
+                    }
+                }
+            });
+        });
+
+        $('.btn-edit-invoice').live('click', function(){
+            var rid = $(this).attr('data-value');
+            $('#invoice_resource_id').val(rid);
+            $('#modalInvoiceEdit').modal();
+            var params = 'ts='+Math.round(new Date().getTime()/1000);
+            $('#invoiceEditLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activity/resource-' + rid,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            console.log(obj);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                var rs = obj.resource;
+                                console.log(rs);
+                                $('#invoiceEditDate').val(rs.date);
+                                $('#invoiceEditProject').val(rs.project);
+                                $('#invoiceEditReference').val(rs.reference);
+                                $('#invoiceEditDetails').val(rs.details);
+                                $('#invoiceEditRate').val(rs.rate);
+                                $('#invoiceEditProject').trigger('blur');
+
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#invoiceEditLoader').fadeOut(function(){});
+                    }
+                });
+            });
+        });
+
+        $('#modalInvoiceEdit').on('shown.bs.modal', function(){
+            if ( $(this).attr('data-modal-shown' ) == 'yes' )
+            {
+               return false
+            }
+            $('#invoiceEditDate').focus();
+            $(this).attr('data-modal-shown', 'yes');
+        });
+
+        $("#modalInvoiceEdit").on("hidden", function () {
+            $(this).removeAttrs('data-modal-shown');
+        });
+
+    });
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalInvoiceEdit" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Invoice - Edit</h3>
+    </div>
+    <div class="modal-body">
+        <div id="invoiceEditLoader" class="loader"></div>
+        <form id="invoiceEditForm" action="" class="form-horizontal form-nomargin">
+            <input type="hidden" value="" id="invoice_resource_id"/>
+            <div class="control-group">
+                <label class="control-label" for="invoiceEditDate">Date:</label>
+
+                <div class="controls">
+                    <input class="span12" onfocus="this.select()" type="text" name="invoiceEditDate" id="invoiceEditDate" value="" tabindex="1"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceEditProject">Project:</label>
+                <div class="controls">
+                    <input type="text" name="invoiceEditProject" id="invoiceEditProject" tabindex="2" value="" class="span12"/>
+                    <div id="invoiceEditProjectRef"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceEditReference">Reference:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceEditReference" id="invoiceEditReference" tabindex="3" value="" class="span12"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceEditDetails">Details:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceEditDetails" id="invoiceEditDetails" tabindex="4" value="" class="span12"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceEditRate">Rate:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceEditRate" id="invoiceEditRate" tabindex="5" value="" class="span12"/>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="6" id="btn-edit-invoice" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

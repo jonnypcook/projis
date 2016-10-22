@@ -1,0 +1,71 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/js/jquery.blockui.js')
+    ->appendFile('/assets/uniform/jquery.uniform.min.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/projects.js?201501061641');
+
+$this->headStyle()->captureStart() 
+?>
+    #clients_tbl tbody td:nth-child(6){
+        text-align: center;
+    }
+    
+    #clients_tbl tbody td{
+        vertical-align: middle;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+    <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Active Projects</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <div class="clearfix">
+                        <div class="btn-group pull-right">
+                            <select name="fViewMode" id="fViewMode">
+                                <option value="1">Show Owned &amp; Collaboration Projects</option>
+                                <option value="2">Show Owned Projects Only</option>
+                                <option value="3">Show Company Owned Projects</option>
+<?php if ($this->isGranted('admin.all')) { ?>
+                                <option value="4">Show All Projects</option>
+<?php } ?>
+                            </select>
+                        </div>                    
+                    </div>
+                    <div class="space15"></div>
+                    <table class="table table-striped table-bordered table-hover" id="projects_tbl">
+                        <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Client Name</th>
+                            <th style="width: 180px">Owner</th>
+                            <th style="width: 120px">Created</th>
+                            <th style="width: 50px;">ID</th>
+                            <th style="width: 35px;">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>

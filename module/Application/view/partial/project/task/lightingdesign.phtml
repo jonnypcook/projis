@@ -1,0 +1,59 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/js/forms/task/addld.js')
+;/**/
+?>
+<div id="modalAddTask" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Request Lighting Design&nbsp;</h3>
+    </div>
+    <div class="modal-body relative">
+        <div id="taskAddLoader" class="loader"></div>
+        <div id="taskAddMsgs"></div>
+        <?php echo $this->form()->openTag($formTask); ?>
+        <input type="hidden" name="taskType" value="2" />
+        <input type="hidden" name="projectId" value="<?php echo $project->getProjectId(); ?>" />
+        <input type="hidden" name="sendEmail" value="1" />
+        <?php 
+            foreach ($ldTeam as $user) {
+                echo '<input type="hidden" name="users[]" value="'.$user['userId'].'" />';
+            }
+        ?>
+        
+        <div class="control-group">
+            <label class="control-label">Invited Users</label>
+            <div class="controls">
+                <input type="text" disabled="disabled" value="Lighting Control Team" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Completion Date</label>
+            <div class="controls">
+                <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                    <?php echo $this->formElement($formTask->get('required'));  ?>
+                    <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Additional Information</label>
+            <div class="controls">
+                <?php echo $this->formElement($formTask->get('description'));  ?>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag($formTask); ?>
+        
+    </div>
+    <div class="modal-footer">
+<?php if ($this->isGranted('task.create')) { ?>
+        <button class="btn btn-success" id="btn-create-task"><i class="icon-plus icon-white"></i> Add Task</button>
+<?php } ?>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>

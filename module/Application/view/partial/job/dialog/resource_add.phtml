@@ -1,0 +1,130 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $('#modalResource').on('shown', function () {
+            if ( $(this).attr('data-modal-shown' ) == 'yes' )
+            {
+               return false
+            }
+            $('#expected_date').focus();
+            $(this).attr('data-modal-shown', 'yes');
+        })
+    });
+JS;
+$this->inlineScript()->captureEnd();
+$this->headStyle()->captureStart();
+?>
+.radio_status{
+    float:left;
+}
+<?php $this->headStyle()->captureEnd(); ?>
+<div id="modalResource" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="width:80%;left:10%;margin-left:0px;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Resource Activity - Add</span></h3>
+    </div>
+    <div class="modal-body">
+        <div id="resourceLoader" class="loader"></div>
+        <form id="resourceForm" action="/resource-activites/add" class="form-horizontal form-nomargin">
+            <table class="table noborder">
+                <tr>
+                    <td nowrap="nowrap"><strong>Date:</strong></td>
+                    <td nowrap="nowrap">
+                        <input type="text" onfocus="this.select()" name="expected_date" id="expected_date" data-date-format="dd/mm/yyyy" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                    </td>
+                    <td nowrap="nowrap"><strong>Resource:</strong></td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'resource' ) ); ?>
+                        <div id="resource_ref"></div>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'resource' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap"><strong>Cost Code:</strong></td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'costCode' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'costCode' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Project:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $project->getProjectId() . ' - ' . $project->getName() . ' - ' . $project->getClient()->getName(); ?>
+                        <input type="hidden" name="project" id="project" value="<?php echo $project->getProjectId(); ?>"/>
+                        <?php /*
+                        <?php echo $this->formElement( $resource_form->get( 'project' ) ); ?>
+                        <div id="project_ref"></div>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'project' ), array( 'class' => 'error-msg' ) ); ?>
+                        */ ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Reference:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'reference' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Details:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'details' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'details' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Quantity:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'quantity' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'quantity' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Rate:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'rate' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'rate' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Total Cost:</strong>
+                    </td>
+                    <td>
+                        &#163; <span id="total_cost"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Start Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="start_date" id="start_date" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="9"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>End Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="end_date" id="end_date" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="10"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Status:</strong>
+                    </td>
+                    <td>
+                        <?php if ( !empty($status) ): ?>
+                            <?php foreach ( $status as $item ): ?>
+                                <label class="radio radio_status" style="margin-left:25px;">
+                                    <input type="radio" name="status" tabindex="11" value="<?php echo $item->getResourceStatusId(); ?>"/> <?php echo $item->getName(); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="12" id="btn-save-resource" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" id="btn-close-resource" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

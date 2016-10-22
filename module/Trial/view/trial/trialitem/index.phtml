@@ -1,0 +1,465 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/uniform/jquery.uniform.min.js')
+    ->appendFile('/js/jquery.blockui.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/trial.js');
+
+$closed = $project->getCancelled();
+$job = (($project->getStatus()->getJob()==1) && ($project->getStatus()->getHalt()!=1));
+$completed = (($project->getStatus()->getJob()==1) && ($project->getStatus()->getHalt()>=1));
+$inactive = ($project->getStatus()->getJob()==0);
+
+$mcd = $project->getMCD();
+
+?>
+<?php 
+$notes = $project->getNotes();
+if (!empty($notes)) {
+    $notesArr  = json_decode($notes, true);
+    if (!empty($notesArr)) {
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="alert alert-info relative" id="project-notes">
+            <div id="noteDeleteLoader" class="loader"></div>
+            <button class="close btn-add-note" >+</button>
+<?php
+        $cnt = 0;
+        $scopeNotes = array();
+        foreach ($notesArr as $idx=>$note) {
+            if (is_array($note)) { // this is a scoped note
+                foreach ($note as $didx=>$dnote) {
+                    $cnt++;
+                    $scopeNotes[] = "<strong>".ucwords($idx)." Note:</strong> {$dnote} <a data-scope=\"{$idx}\" data-index=\"{$didx}\" href=\"javascript:\" class=\"delete-note\"><i class=\"icon-remove\"></i></a>";
+                }
+            } else {
+                $cnt++;
+                echo "<div class=\"note\"><strong>Note:</strong> {$note} <a data-index=\"{$idx}\" href=\"javascript:\" class=\"delete-note\"><i class=\"icon-remove\"></i></a></div>";
+            }
+        }
+        if (!empty($scopeNotes)) {
+            echo '<div class="note">'.implode('</div><div class="note">',$scopeNotes).'</div>';
+        }
+?>
+        </div>
+    </div>
+</div>
+<?php
+    }
+}
+?>
+<?php
+if ($project->getTest()) {
+  ?>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="alert alert-error">
+            <strong>Important Notice:</strong> this trial is in test mode and will not show up on reporting. Material generated from this trial should not be presented to the client.
+        </div>
+    </div>
+</div>
+<?php
+}
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="row-fluid">
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/setup/">
+                <i class="icon-gears"></i>
+                <div>Configuration  </div>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/system/">
+                <i class="icon-sitemap"></i>
+                <div>System Overview</div>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/collaborators/">
+                <i class="icon-group"></i>
+                <div>Collaborators  </div>
+                <span class="badge badge-important"><?php echo count($project->getCollaborators()); ?></span>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/telemetry/">
+                <i class="icon-dashboard"></i>
+                <div>Telemetry</div>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/serials/">
+                <i class="icon-barcode"></i>
+                <div>Serials</div>
+                <span class="badge badge-important"><?php echo $serialCount; ?></span>
+            </a>
+            <a class="icon-btn span2 btn-add-note" href="#">
+                <i class="icon-calendar"></i>
+                <div>Notes</div>
+                <span class="badge badge-success">+</span>
+            </a>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="blog span12">
+        <div class="span2 <?php echo $closed?'red':($job?'green':($completed?'green':'orange')); ?>">
+            <a href="javascript:;" class="blog-features date active">
+                <i class=" icon-<?php echo $closed?'ban-circle':($job?'dropbox':($completed?'off':'time')); ?>"></i>
+                <p class="month"><?php echo $closed?'lost':($job?'active':($completed?'completed':'inactive')); ?></p>
+            </a>
+            <a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/system/" class="blog-features comments">
+                <i class=" icon-gear"></i>
+                <p class="info"><?php 
+                    $prjVal = 0;
+                    $prds = 0;
+                    if (!empty($systems)) {
+                        foreach ($systems as $system) {
+                            if (empty($sys['service'])) {
+                                $prds+=$system['quantity'];
+                            }
+                            $prjVal+=round($system['price'] * (1-$mcd), 2);
+                        }
+                    }
+                    echo $prds; 
+                    ?> Products</p>
+            </a>
+            <a href="javascript:;" class="blog-features comments">
+                <i class=" icon-barcode"></i>
+                <p class="info"><?php echo $serialCount; ?> Serials</p>
+            </a>
+            <a href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/deliverynote/" class="blog-features comments">
+                <i class=" icon-truck"></i>
+                <p class="info"><?php echo $dispatchNotes; ?> Delivery Notes +</p>
+            </a>
+        </div>
+        <div class="span10">
+            <h2>
+                <?php echo $project->getName(); ?>
+            </h2>
+            <p>
+                OWNER <a href="javascript:;" class="author"><?php echo strtoupper($project->getClient()->getUser()->getHandle()); ?></a> |  
+                CREATED: <?php echo $project->getcreated()->format('d/m/Y H:i'); ?> | 
+                REFERENCE: <?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT),'-',str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT) ?>
+            </p>
+            <?php
+                if ($closed) {
+                    $stTitle = 'Trial Cancelled!';
+                    $stInfo = 'This trial has been cancelled and is currently inactive.  Cancelled trials can be restarted from the <a href="'
+                            . '/client-'.$project->getClient()->getClientId().'/trial-'.$project->getProjectId().'/setup/">configuration page</a>';
+                    $stCls = 'alert-error';
+                } elseif($job) {
+                    $stTitle = 'Trial Active!';
+                    $stInfo = 'This trial has been active since '.$project->getInstalled()->format('F jS M Y').'.  Active trials can be completed from the <a href="'
+                            . '/client-'.$project->getClient()->getClientId().'/trial-'.$project->getProjectId().'/setup/">configuration page</a>';
+                    $stCls = 'alert-success';
+                } elseif($completed) {
+                    $stTitle = 'Trial Completed!';
+                    $stInfo = 'This trial was run for '.$project->getInstalled()->diff($project->getCompleted())->format('%a days').' days between '.$project->getInstalled()->format('F jS M Y').' and '.$project->getCompleted()->format('F jS M Y').'.';
+                    $stCls = 'alert-info';
+                } else {
+                    $stTitle = 'Trial Inactive!';
+                    $stInfo = 'This trial is currently inactive.  Inactive trials can be restarted from the <a href="'
+                            . '/client-'.$project->getClient()->getClientId().'/trial-'.$project->getProjectId().'/setup/">configuration page</a>';
+                    $stCls = '';
+                }
+
+            ?>
+            <div class="alert <?php echo $stCls; ?>">
+                <strong><?php echo $stTitle; ?></strong> <?php echo $stInfo; ?>
+            </div>
+            <p> Below are displayed the details of the trial including information about the LED 
+                systems that are contracted and a file management section in which trial files can be managed. </p>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            Trial Information
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="width: 120px">
+                            Trial Status
+                        </td>
+                        <td>
+                            <?php 
+                            if ($closed) {
+                                echo '<span class="label label-important label-mini">CANCELLED</span>&nbsp;';
+                            } elseif($job) {
+                                echo '<span class="label label-success label-mini">ACTIVE</span>&nbsp;';
+                            } elseif($completed) {
+                                echo '<span class="label label-info label-mini">COMPLETED</span>&nbsp;';
+                            } else {
+                                echo '<span class="label label-warning label-mini">INACTIVE</span>&nbsp;';
+                            }
+                             ?>
+                            <a href="/client-<?php echo $project->getClient()->getClientId(); ?>/trial-<?php echo $project->getProjectId(); ?>/setup/" class="label label-info" style="float: right"><i class=" icon-cog"></i></a>
+                        </td>
+                    </tr>
+                    <?php
+                        $contactList = array();
+                        if (!count($contacts)) {
+                            $contactList[] = 'No contacts assigned to project';
+                        } else {
+                            foreach ($contacts as $contact) {
+                                $addr = !empty($contact->getAddress())?$contact->getAddress()->assemble():'';
+                                $contactList[] = '<a href="javascript:" class="contact-info" '
+                                        . 'data-tel1="'.$contact->getTelephone1().'" '
+                                        . 'data-tel2="'.$contact->getTelephone2().'" '
+                                        . 'data-email="'.$contact->getEmail().'" '
+                                        . 'data-addr="'.$addr.'" '
+                                        . 'data-name="'.$contact->getName().'" '
+                                        . 'data-company="'.$project->getClient()->getName().'" '
+                                        . '><i class="icon-user"></i> '.$contact->getTitle()->getDisplay().' '.$contact->getForename().' '.$contact->getSurname().'</a>';
+                            }
+                        }
+                    
+                    ?>
+                    <tr>
+                        <td rowspan="<?php echo count($contactList); ?>">
+                            Registered Contact
+                        </td>
+                        <td>
+                            <?php 
+                            echo array_shift($contactList);
+                            ?>&nbsp;
+                        </td>
+                    </tr>
+                    <?php
+                        if (!empty($contactList)) {
+                            echo '<tr><td>'.implode('</td></tr><tr><td>', $contactList).'</td></tr>';
+                        }
+                    ?>
+                    <tr>
+                        <td style="width: 120px">
+                            Monthly Value
+                        </td>
+                        <td>&#163;
+                            <?php 
+                                echo number_format($prjVal, 2);
+                             ?> per month
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 120px">
+                            Start Date
+                        </td>
+                        <td><?php 
+                                if (!empty($project->getInstalled())) {
+                                    echo $project->getInstalled()->format('F jS Y');
+                                } else {
+                                    echo 'No start date configured';
+                                }
+                             ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 120px">
+                            End Date
+                        </td>
+                        <td><?php 
+                                if (!empty($project->getCompleted())) {
+                                    echo $project->getCompleted()->format('F jS Y');
+                                } else {
+                                    echo 'No end date configured';
+                                }
+                             ?>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-cogs"></i> System Overview</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <div class="navbar navbar-static" id="navbar-example">
+                    <div class="navbar-inner">
+                        <div style="width: auto;" class="container">
+                            <a href="#" class="brand">Options</a>
+                            <ul role="navigation" class="nav">
+                                <li class="dropdown">
+                                    <a data-toggle="dropdown" class="dropdown-toggle" role="button" id="drop2" href="#">Downloads <b class="caret"></b></a>
+                                    <ul aria-labelledby="drop2" role="menu" class="dropdown-menu">
+                                        <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportproductlist/" tabindex="-1" role="menuitem">Product List</a></li>
+                                        <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/" class="btn-config-export-csv">System Setup</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered table-advance table-hover" id="products_tbl">
+                    <thead>
+                        <tr>
+                            <th ><i class="icon-cog"></i> Product Name</th>
+                            <th class="hidden-phone"> Product Type</th>
+                            <th class="hidden-phone"> RRP</th>
+                            <th class="hidden-phone "> Monthly PPU</th>
+                            <th style="width: 110px"> Quantity</th>
+                            <th style="width: 140px"> Monthly Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+<?php
+    $totalPriceMCD = 0;
+    $totalQuantity = 0;
+    $totalPriceMonthly = 0;
+    $totalPriceInstallation = 0;
+    if (!empty($systems)) {
+        $mcd = $project->getMCD();
+        foreach ($systems as $system) {
+            $priceMCD = round($system['quantity'] * (round($system['ppu'] * (1- ($mcd * $system['mcd'])), 2)),2);
+            $priceMonthly = round($system['quantity'] * $system['ppuTrial'],2);
+
+            $totalPriceMCD+=$priceMCD;
+            $totalPriceMonthly+=0;
+            if ($system['ppuTrial']>0) {
+                $totalPriceMonthly+=$priceMonthly;
+            }elseif(($system['typeId']==100) || ($system['typeId']==101)) {
+                $totalPriceInstallation+=$priceMCD;
+            }
+            
+            echo '<tr>
+                    <td>'.$system['model'].'</td>
+                    <td>'.$system['productType'].'</td>
+                    <td>'.$system['ppu'].'</td>
+                    <td class="row-right">'.$system['ppuTrial'].'</td>
+                    <td class="row-right">'.$system['quantity'].'</td>
+                    <td class="row-right">'.number_format($priceMonthly,2).'</td>
+                </tr>';
+        }
+    }/**/
+?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="5">Optional Purchase Price</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceMCD,2); ?></th>
+                        </tr>
+                        <tr>
+                            <th colspan="5">System Installation Cost</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceInstallation,2); ?></th>
+                        </tr>
+                        <tr>
+                            <th colspan="5">Monthly Price</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceMonthly,2); ?></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<div class="row-fluid">
+     <div class="span6">
+         <!-- BEGIN NOTIFICATIONS PORTLET-->
+         <div class="widget blue">
+             <div class="widget-title">
+                 <h4><i class="icon-bell"></i> Project Activity </h4>
+               <span class="tools">
+                   <a href="javascript:;" class="icon-chevron-down"></a>
+                   <a href="javascript:;" class="icon-remove"></a>
+               </span>
+             </div>
+             <div class="widget-body">
+                 <ul class="item-list scroller padding"  style="overflow: hidden; width: auto; height: 320px;" data-always-visible="1">
+                     <?php
+                        if (!empty($audit)) {
+                            $i=0;
+                            foreach ($audit as $aItem) {
+                                $tm = (time()-$aItem['created']->getTimestamp());
+                                $days = floor(($tm/(60*60*24)));
+                                $hours = ($tm - ($days*60*60*24))/(60*60);
+                                $when= (($tm/60)<2)
+                                        ?'Just now'
+                                        :(
+                                            (($tm/60)<60)
+                                            ?ceil($tm/60).' mins ago'
+                                            :(
+                                                ($days<1)
+                                                ?floor($hours).' hour'.(($hours>=2)?'s':'').' ago'
+                                                :$days.' day'.(($days>=2)?'s':'').' '.(
+                                                    ($hours>0)
+                                                    ?floor($hours).' hour'.(($hours>=2)?'s':'').' '
+                                                    :''
+                                                ).'ago'    
+                                            )
+                                        );
+                                
+                                $tooltip_data = '';
+                                $tooltip = '';
+                                $url = '';
+                                
+                                $aData = json_decode($aItem['data'], true);
+                                
+                                if (!empty($aItem['dName'])) {
+                                    $tooltip_data.=$aItem['dName'];
+                                    if (!empty($aItem['projectId'])) {
+                                        $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/document/index/';
+                                    }
+                                } elseif (!empty($aItem['model'])) {
+                                    $tooltip_data.=trim($aItem['model']);
+                                    $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/space-'.$aItem['spaceId'].'/';
+                                } elseif (!empty($aItem['sName'])) {
+                                    $tooltip_data.=$aItem['sName'];
+                                    $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/space-'.$aItem['spaceId'].'/';
+                                } 
+                                
+                                if (!empty($tooltip_data)) {
+                                    $tooltip = 'data-trigger="hover" data-placement="right" data-original-title="'.$tooltip_data.'"';
+                                }
+                                
+                                
+                                
+                                //break;
+                                echo '<li>
+                                    <span '.$tooltip.' class="audit '.(empty($tooltip)?'':'tooltips ').'label label-'.(empty($aItem['box'])?'success':$aItem['box']).'" '
+                                        . (!empty($url)?'data-url="'.$url.'" data-link="true"':'')
+                                    . '><i '
+                                        . 'class="icon-'.(empty($aItem['icon'])?'bell':$aItem['icon']).'"></i></span>
+                                    <span class="link">'.
+                                        $aItem['atName'].
+                                    '</span>
+                                    <div class="pull-right">
+                                        <span class="small italic ">'.$when.'</span>
+                                    </div>
+                                </li>';
+                            } 
+                        } else {
+                             echo '<li>
+                                    <span class="label label-default"><i class="icon-bell"></i></span>
+                                    <span class="link">No Activity Information Found</span>
+                                    <div class="pull-right">
+                                        <span class="small italic ">&nbsp;</span>
+                                    </div>
+                                </li>';
+                        }
+                    ?>  
+                 </ul>
+                 <div class="space10"></div>
+                 <a href="#" class="pull-right">View detailed notifications</a>
+                 <div class="clearfix no-top-space no-bottom-space"></div>
+             </div>
+         </div>
+         <!-- END NOTIFICATIONS PORTLET-->
+     </div>
+     <div class="span6">
+         <!-- BEGIN CHAT PORTLET-->
+         <?php echo $this->partial('partial/panels/activity.phtml'); ?>
+         <!-- END CHAT PORTLET-->
+     </div>
+ </div>
+<?php echo $this->partial('partial/project/notes.phtml'); ?>
+<?php echo $this->partial('partial/contact/dialog.phtml'); ?>

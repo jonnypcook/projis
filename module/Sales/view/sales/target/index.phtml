@@ -1,0 +1,243 @@
+<?php
+$this->headLink()
+    ->appendStylesheet( '/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css' )
+    ->appendStylesheet( '/assets/uniform/css/uniform.default.css' )
+    ->appendStylesheet( '/assets/data-tables/DT_bootstrap.css' );
+
+$this->inlineScript()
+    ->appendFile( '/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js' )
+    ->appendFile( '/assets/data-tables/jquery.dataTables.js' )
+    ->appendFile( '/assets/data-tables/DT_bootstrap.js' );
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(document).ready(function(){
+    $('.delete').on('click', function(){
+        if ( confirm('Are you sure to delete this record ?', 'Ok', 'Cancel') )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    });
+
+    $('.show_report').on('click', function(){
+        var id = $(this).attr('data-id');
+
+        $('#sub_report_' + id).slideToggle(function(){
+        var icon_class = $('#icon_' + id).attr('class');
+
+        if ( icon_class == 'icon-plus' )
+        {
+            $('#icon_' + id).removeClass(icon_class);
+            $('#icon_' + id).addClass('icon-minus');
+        }
+        else
+        {
+            $('#icon_' + id).removeClass(icon_class);
+            $('#icon_' + id).addClass('icon-plus');
+        }
+        });
+
+
+    });
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<?php $this->headStyle()->captureStart(); ?>
+i.icon, a.icon{
+color:#fff;
+}
+.show_report{
+cursor:pointer;
+}
+.show_report:hover{
+color:#F80000;
+}
+.sub_report{
+display:none;
+}
+<?php $this->headStyle()->captureEnd(); ?>
+<?php if ( $this->flashMessenger()->render( 'success' ) ): ?>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="alert alert-success">
+                <?php echo $this->flashMessenger()->render( 'success' ); ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+<?php if ( $this->flashMessenger()->render( 'error' ) ): ?>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="alert alert-error">
+                <?php echo $this->flashMessenger()->render( 'error' ); ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+<div class="row-fluid">
+    <div class="span12">
+        <h3>Sales & margin target for user/owner.</h3>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+
+        <a class="btn green" href="<?php echo $this->url( 'targets', array( 'action' => 'add' ) ); ?>">Add Target <i class="icon-plus"></i></a>
+
+    </div>
+</div>
+<br/>
+<div class="row-fluid">
+    <div class="span12">
+        <table class="table table-bordered">
+            <tr>
+                <th width="10"></th>
+                <th>User/Owner</th>
+                <th>Department</th>
+                <th style="text-align:right;">Sales(Value)</th>
+                <th style="text-align:right;">Margin(Value)</th>
+                <th>Margin(%)</th>
+                <th>Year Ending</th>
+                <th width="20%">Action</th>
+            </tr>
+            <?php if ( !empty($targets) ): ?>
+                <?php $grandTotalTarget = 0; ?>
+                <?php $grandTotalMargin = 0; ?>
+
+                <?php foreach ( $targets as $key => $value ): ?>
+                    <?php $subTotalTarget = 0; ?>
+                    <?php $subTotalMargin = 0; ?>
+                    <?php foreach ( $value as $item ): ?>
+                        <tr>
+                            <td rowspan="2">
+                                <?php if ( !empty($item['jobs']) ): ?>
+                                    <span class="show_report" data-id="<?php echo $item['target_id']; ?>"><i id="icon_<?php echo $item['target_id']; ?>" class="icon-plus"></i></span>
+                                <?php endif; ?>
+                            </td>
+                            <td rowspan="2"><?php echo $item['user']; ?></td>
+                            <td rowspan="2"><?php echo $item['department']; ?></td>
+                            <td style="text-align:right;"> Target: &#163; <?php echo number_format( $item['sales'], 2 ); ?> </td>
+                            <td style="text-align:right;"> Target: &#163; <?php echo number_format( $item['margin'], 2 ); ?></td>
+                            <td style="text-align:right;">Target: <?php echo number_format( $item['margin_percentage'], 2 ); ?>%</td>
+                            <td rowspan="2"><?php echo $item['year']; ?></td>
+                            <td rowspan="2"><a href="<?php echo $this->url( 'target', array( 'id' => $item['target_id'] ) ); ?>" title="View #<?php echo str_pad( $item['target_id'], 5, '0', STR_PAD_LEFT ); ?>"><span class="btn
+                        btn-success"><i class="icon icon-eye-open"></i></span></a>
+                                <a class="btn btn-primary" href="<?php echo $this->url( 'target', array( 'action' => 'edit', 'id' => $item['target_id'] ) ); ?>"><i class="icon icon-pencil"></i></a>
+                                <a href="<?php echo $this->url( 'target', array( 'action' => 'copy', 'id' => $item['target_id'] ) ); ?>"><span class="btn btn-inverse"><i class="icon icon-copy"></i></span></a>
+                                <a href="<?php echo $this->url( 'target', array( 'action' => 'delete', 'id' => $item['target_id'] ) ); ?>"> <span class="btn btn-danger delete"><i class="icon icon-remove"></i></span></a>
+                            </td>
+                        </tr>
+                        <?php $actualValue = 0;
+                        $actualMargin      = 0; ?>
+                        <?php if ( !empty($item['jobs']) ): ?>
+                            <?php
+                            foreach ( $item['jobs'] as $j )
+                            {
+                                $actualValue += $j['priceMCD'];
+                                $actualMargin += ($j['priceMCD'] - $j['cost']);
+                            }
+                            ?>
+                        <?php endif; ?>
+                        <tr>
+                            <td style="text-align:right;">Actual: &#163; <?php echo number_format( $actualValue, 2 ); ?></td>
+                            <td style="text-align:right;">Actual: &#163; <?php echo number_format( $actualMargin, 2 ); ?></td>
+                            <td style="text-align:right;">Actual: <?php
+                                if ( $actualValue > 0 )
+                                {
+                                    echo number_format( ($actualMargin / $actualValue) * 100, 2 ) . '%';
+                                }
+                                else
+                                {
+                                    echo '0.00 %';
+                                }
+                                ?></td>
+
+                        </tr>
+                        <?php if ( !empty($item['jobs']) ): ?>
+                            <tr class="sub_report" id="sub_report_<?php echo $item['target_id']; ?>">
+                                <td colspan="8">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Project</th>
+                                            <th>Customer</th>
+                                            <th>Project Value</th>
+                                            <th>Margin(Value)</th>
+                                            <th>Margin(%)</th>
+                                            <th>Started</th>
+                                            <th>Completed</th>
+                                        </tr>
+
+                                        <?php foreach ( $item['jobs'] as $job ): ?>
+                                            <tr>
+                                                <td nowrap="nowrap"><?php echo str_pad( $job['client_id'], 5, "0", STR_PAD_LEFT ) . '-' . str_pad( $job['project_id'], 5, "0", STR_PAD_LEFT ) ?></td>
+                                                <td><a href="<?php echo $this->url( 'project', Array( 'cid' => $job['client_id'], 'pid' => $job['project_id'] ) ); ?>"> <?php echo $job['project_name'] ?></a></td>
+                                                <td><a href="<?php echo $this->url( 'client', Array( 'id' => $job['client_id'] ) ); ?>"><?php echo $job['client_name']; ?></a></td>
+                                                <td style="text-align:right !important;">&#163; <?php echo number_format( $job['priceMCD'], 2 ); ?></td>
+                                                <td style="text-align:right !important;">&#163; <?php echo number_format( $job['priceMCD'] - $job['cost'], 2 ); ?></td>
+                                                <td style="text-align:right !important;">
+                                                    <?php
+                                                    if ( $job['priceMCD'] > 0 )
+                                                    {
+                                                        echo number_format( round( (($job['priceMCD'] - $job['cost']) / $job['priceMCD']) * 100, 2 ), 2, '.', '' ) . ' %';
+                                                    }
+                                                    else
+                                                    {
+                                                        echo '0 %';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td nowrap="nowrap"><?php echo date( 'd M, Y', strtotime( $job['contracted'] ) ); ?></td>
+                                                <td nowrap="nowrap"><?php echo empty($job['completed']) ? 'Date not set' : date( 'd M, Y', strtotime( $job['completed'] ) ); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+
+                                    </table>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php
+
+                        $subTotalTarget += $item['sales'];
+                        $subTotalMargin += $item['margin'];
+                        ?>
+                    <?php endforeach; ?>
+                    <tr style="background-color:#eee;">
+                        <td colspan="3" style="text-align:right;">Sub Total(<?php echo $item['department']; ?>)</td>
+                        <td style="text-align:right;">&#163; <?php echo number_format( $subTotalTarget, 2 ); ?></td>
+                        <td style="text-align:right;">&#163; <?php echo number_format( $subTotalMargin, 2 ); ?></td>
+                        <td style="text-align:right;">
+                            <?php
+                            echo number_format( ($subTotalMargin / $subTotalTarget) * 100, 2 ) . '%';
+                            ?>
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                    <?php
+                    $grandTotalTarget += $subTotalTarget;
+                    $grandTotalMargin += $subTotalMargin;
+                    ?>
+                <?php endforeach; ?>
+                <tr style="background-color:#444;color:#fff;font-weight:bold;">
+                    <td colspan="3" style="text-align:right;">Grand Total</td>
+                    <td style="text-align:right;">&#163; <?php echo number_format( $grandTotalTarget, 2 ); ?></td>
+                    <td style="text-align:right;">&#163; <?php echo number_format( $grandTotalMargin, 2 ); ?></td>
+                    <td style="text-align:right;">
+                        <?php
+                        echo round( ($grandTotalMargin / $grandTotalTarget) * 100, 2 ) . '%';
+                        ?>
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+            <?php else: ?>
+                <tr>
+                    <td class="text-center" colspan="6">No record found</td>
+                </tr>
+            <?php endif; ?>
+        </table>
+    </div>
+</div>

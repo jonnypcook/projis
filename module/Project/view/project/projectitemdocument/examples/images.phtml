@@ -1,0 +1,45 @@
+<?php
+    
+?>
+<html>
+    <head>
+        <style>
+            * {
+                font-family: helvetica;
+            }
+            
+            .flyleaf {
+              page-break-after: always;
+            }
+
+            .header, .footer {
+              position: fixed;
+            }
+
+            .header {
+              top: 0;
+            }
+
+            .footer  {
+              bottom: 0;
+              text-align: center;
+              width: 100%;
+            }
+            
+            .footer .page:after { 
+                content: "-" counter(page) "-"; 
+            }
+            
+            #footer .page:after { 
+                content: "-" counter(page) "-"; 
+            }
+
+            
+        </style>
+    </head>
+    <body>
+        <img id="logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-2.png" />
+        <img id="logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-2.jpg" />
+        <img id="logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-2.gif" />
+    </body>
+</html>

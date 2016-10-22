@@ -1,0 +1,320 @@
+<?php
+    $years = $form['modelyears'];
+    $financing = !empty($figures['finance_amount']);
+    
+    $rowBlank = '<tr><td colspan="2">&nbsp;</td></tr>';
+    $breakdown = isset($form['proposalstyle'])?($form['proposalstyle']!=3):true;
+    
+?><div>
+    <style>
+        table#payback_breakdown {
+            border-spacing: 0px;
+            border-collapse: separate;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        table#payback_breakdown thead th {
+            border-bottom: 1px #ccc solid;
+        }
+        
+        table#payback_breakdown tbody td,
+        table#payback_breakdown tbody th {
+            border-bottom: 1px #ccc solid;
+            font-weight: normal;
+            font-size: 8pt!important;
+        }
+        
+        table#payback_breakdown span {
+            vertical-align: middle;
+        }
+        
+        table#payback_breakdown tbody th {
+            font-weight: normal;
+        }
+        
+        
+        table#payback_summary {
+            border-spacing: 0px;
+            border-collapse: separate;
+            width: 100%;
+        }
+        
+        table#payback_summary tbody td,
+        table#payback_summary tbody th {
+            border-bottom: 1px #ccc solid;
+            font-weight: normal;
+            font-size: 12pt;
+        }
+        
+        table#payback_summary tbody th {
+            font-weight: normal;
+        }
+        
+    </style>
+    <?php
+        $cellsTbl = array();
+        
+        $tableNo = 1;
+        if ($years>6) {
+            $pivot = ceil($years/2);
+        }
+        
+        for ($i=1; $i<=$years; $i++) {
+            $cells[$tableNo][0][] = 'Year '.$i;
+            $cells[$tableNo][1][] = number_format($forecast[$i][5],2);
+            $cells[$tableNo][2][] = number_format($forecast[$i][10],2);
+            $cells[$tableNo][3][] = number_format($forecast[$i][0],2);
+            $cells[$tableNo][4][] = number_format($forecast[$i][1],2);
+            $cells[$tableNo][5][] = number_format($forecast[$i][2],2);
+            $cells[$tableNo][6][] = number_format($forecast[$i][3],2);
+            $cells[$tableNo][7][] = '<span class="red">'.number_format($forecast[$i][6],2).'</span>';
+            $cells[$tableNo][8][] = number_format($forecast[$i][4],2);
+            $cells[$tableNo][9][] = number_format($forecast[$i][5],2);
+            $cells[$tableNo][10][] = '<span class="'.(($forecast[$i][8]>0)?'green':'red').'">'.number_format($forecast[$i][8],2).'</span>';
+            $cells[$tableNo][11][] = '<span class="'.(($forecast[$i][9]>0)?'green':'red').'">'.number_format($forecast[$i][9],2).'</span>';
+            $cells[$tableNo][12][] = number_format($forecast[$i][11],2);
+            $cells[$tableNo][13][] = number_format($forecast[$i][13],2);
+            
+            if ($i==$pivot) {
+                $tableNo++;
+            }
+        }
+        
+        $cellWidth = 90;
+        $endYear = 0;
+        for ($i=1; $i<=$tableNo; $i++) {
+            $startYear = $endYear+1;
+            $endYear = count($cells[$i][0]) + $startYear - 1;
+            $colspan = count($cells[$i][0])+1;
+    ?>
+    <h3>Payback Model Years <?php echo $startYear; ?> - <?php echo $endYear; ?></h3>
+    <table id="payback_breakdown">
+        <thead>
+            <tr>
+                <th>&nbsp;</th>
+                <?php
+                    echo '<th class="right" style="width: '.$cellWidth.'px">'.implode('</th><th class="right" style="width: '.$cellWidth.'px">', $cells[$i][0]).'</th>';
+                ?>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th class="left">Carbon Savings</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][1]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Carbon Allowance</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][2]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Current Spend</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][3]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">LED Spend</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][4]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Electricity Savings</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][5]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Maintenance Savings</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][6]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">LED Maintenance Costs</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][13]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Monthly Cost (No LED)</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][7]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <td colspan="<?php echo $colspan; ?>">&nbsp;</td>
+            </tr>
+            <tr>
+                <th class="left">Net Cash Saving</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][8]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Cumulative Savings</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][9]).'</td>';
+                ?>
+            </tr>
+<?php if ($financing) { ?>            
+            <tr>
+                <td colspan="<?php echo $colspan; ?>">&nbsp;</td>
+            </tr>
+            <tr>
+                <th class="left">Repayments</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][12]).'</td>';
+                ?>
+            </tr>
+<?php } ?>            
+            <tr>
+                <td colspan="<?php echo $colspan; ?>">&nbsp;</td>
+            </tr>
+            <tr>
+                <th class="left">Payback</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][10]).'</td>';
+                ?>
+            </tr>
+            <tr>
+                <th class="left">Payback (ECA + CA)</th>
+                <?php
+                    echo '<td class="right">'.implode('</td><td class="right">', $cells[$i][11]).'</td>';
+                ?>
+            </tr>
+        </tbody>
+    </table>
+    <?php } ?>
+    <h3 class="<?php echo ($tableNo>1)?'break-before':''; ?>"><?php echo $years; ?> Year Payback Summary</h3>
+    <table id="payback_summary">
+        <tbody>
+            <tr>
+                <th class="left">
+                    Projected ECA Eligibility
+                </th>
+                <td class="right">
+                    &#163;<?php echo number_format($figures['eca'],2); ?>
+                </td>
+            </tr>
+            <tr>
+                <th class="left">Total <?php echo $years; ?> Year Carbon Saving (tonnes)</th>
+                <td class="right"><?php echo number_format($figures['carbon'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Total <?php echo $years; ?> Year Carbon Allowance</th>
+                <td class="right"><?php echo number_format($figures['carbonallowance'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Total <?php echo $years; ?> Year Saving</th>
+                <td class="right"><?php echo number_format($figures['saving'],2); ?></td>
+            </tr>
+<?php if ($financing) { ?>            
+            <tr>
+                <th class="left">Average Cash Benefit Over Funding Period</th>
+                <td class="right">&#163;<?php echo number_format($figures['finance_avg_benefit'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Average Repayments Over Funding Period</th>
+                <td class="right">&#163;<?php echo number_format($figures['finance_avg_repay'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Average Net Annual Benefit Over Funding Period</th>
+                <td class="right">&#163;<?php echo number_format($figures['finance_avg_netbenefit'],2); ?></td>
+            </tr>
+            <?php echo $rowBlank; ?>
+            <tr>
+                <th class="left">Net Cash Benefit Over Funding Period</th>
+                <td class="right">&#163;<?php echo number_format($figures['finance_netbenefit'],2); ?></td>
+            </tr>
+            <?php echo $rowBlank; ?>
+<?php } else { 
+        if ($breakdown) { 
+            echo $rowBlank;
+?>
+            <tr>
+                <th class="left">LED Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_led'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Installation Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_install'],2); ?></td>
+            </tr>
+<?php       if ($figures['cost_delivery']>0) { ?>
+            <tr>
+                <th class="left">Delivery Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_delivery'],2); ?></td>
+            </tr>            
+<?php       } ?>
+<?php       if ($figures['cost_ibp']>0) { ?>
+            <tr>
+                <th class="left">Insurance Backed Premium Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_ibp'],2); ?></td>
+            </tr>            
+<?php       } ?>
+<?php       if ($figures['cost_access']>0) { ?>
+            <tr>
+                <th class="left">Access Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_access'],2); ?></td>
+            </tr>            
+<?php       } ?>
+<?php       if ($figures['cost_prelim']>0) { ?>
+            <tr>
+                <th class="left">Prelim Fee</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_prelim'],2); ?></td>
+            </tr>            
+<?php       } ?>
+<?php       if ($figures['cost_overheads']>0) { ?>
+            <tr>
+                <th class="left">Overheads Fee</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_overheads'],2); ?></td>
+            </tr>            
+<?php       } ?>
+<?php       if ($figures['cost_management']>0) { ?>
+            <tr>
+                <th class="left">Management Fee</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost_management'],2); ?></td>
+            </tr>            
+<?php       } 
+        }
+        echo $rowBlank;
+?>            
+            <tr>
+                <th class="left">Total Cost</th>
+                <td class="right">&#163;<?php echo number_format($figures['cost'],2); ?></td>
+            </tr>            
+            <tr>
+                <th class="left">Total Cost Less ECA</th>
+                <td class="right">&#163;<?php echo number_format($figures['costeca'],2); ?></td>
+            </tr>            
+            <?php echo $rowBlank; ?>
+            <tr>
+                <th class="left">VAT at 20%</th>
+                <td class="right">&#163;<?php echo number_format($figures['costvat']-$figures['cost'],2); ?></td>
+            </tr>            
+            <tr>
+                <th class="left">Total Cost (incl VAT)</th>
+                <td class="right">&#163;<?php echo number_format($figures['costvat'],2); ?></td>
+            </tr>            
+            <tr>
+                <th class="left">Total Cost (incl VAT) Less ECA</th>
+                <td class="right">&#163;<?php echo number_format($figures['costvateca'],2); ?></td>
+            </tr>            
+            <?php echo $rowBlank; ?>
+<?php } ?>            
+            <tr>
+                <th class="left">Total <?php echo $years; ?> Year Profit</th>
+                <td class="right">&#163;<?php echo number_format($figures['profit'],2); ?></td>
+            </tr>
+            <tr>
+                <th class="left">Total <?php echo $years; ?> Year Profit with ECA and Carbon Allowance</th>
+                <td class="right">&#163;<?php echo number_format($figures['profiteca'],2); ?></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

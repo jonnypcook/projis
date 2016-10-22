@@ -1,0 +1,60 @@
+<?php 
+//7,8,9,11,15,18,19,20,27,28
+//$this->headLink()->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css');
+
+$this->inlineScript()
+    ->appendFile('/js/forms/project/survey.js')
+/**/;
+
+
+?><div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-sitemap"></i> System Survey</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="setupSurveyLoader" class="loader"></div>
+                <div class="alert alert-block alert-warning fade in">
+                    <h4 class="alert-heading">Important</h4>
+                    <p>
+                        The system survey is used primarily by the lighting design team in order to gain a better understanding of the solution that will be required for the project.  It is important that 
+                        you fill in this survey as completely as possible in order to facilitate lighting design in their efforts to produce a solution that best fits the client requirements.
+                    </p>
+                </div>
+                <form class="form-horizontal" id="SurveyForm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/survey/">
+                <?php
+                    if (!empty($questions)) {
+                        $i=0;
+                        foreach ($questions as $prop) {
+                            $i++;
+                            $default = isset($storedProps[$prop->getName()])?$storedProps[$prop->getName()]->getValue():'';
+                            $config = json_decode($prop->getConfig(), true);
+                            $data = $config['data'];
+                            $score = $config['score'];
+                            echo '<div class="control-group">
+                                <label class="control-label span6">'.$i.'. '.$prop->getDescription().'</label>
+                                <div class="controls span6">';
+
+                            if ($config['type']==4) {
+                                echo '<textarea class="span12" name="'.$prop->getName().'" >'.(empty($default)?'':$default).'</textarea>';
+                            }
+                            echo '</div>
+                            </div>';
+                        }
+                    }
+                ?>
+                </form>
+                <?php if ($this->isGranted('project.write')) { ?>
+                                <button class="btn btn-success pull-right" id="btn-modify-survey"><i class="icon-ok icon-white"></i> Save Changes</button>
+                <?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>

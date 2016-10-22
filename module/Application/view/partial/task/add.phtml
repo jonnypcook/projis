@@ -1,0 +1,74 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/js/forms/task/add.js')
+;/**/
+?>
+<div id="modalAddTask" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Add New Task&nbsp;</h3>
+    </div>
+    <div class="modal-body relative">
+        <div id="taskAddLoader" class="loader"></div>
+        <div id="taskAddMsgs"></div>
+        <?php echo $this->form()->openTag($form); ?>
+        <div class="control-group">
+            <label class="control-label">Invited Users</label>
+            <div class="controls">
+                <?php echo $this->formElement($form->get('users'));  ?>
+            </div>
+        </div>
+<?php if (!empty($tType)) {
+        echo '<input type="hidden" name="taskType" value="'.$tType.'" />';
+} else {
+        ?>
+        <div class="control-group">
+            <label class="control-label">Type</label>
+            <div class="controls">
+                <?php echo $this->formElement($form->get('taskType'));  ?>
+            </div>
+        </div>
+<?php } ?>
+        <div class="control-group">
+            <label class="control-label">Completion Date</label>
+            <div class="controls">
+                <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                    <?php echo $this->formElement($form->get('required'));  ?>
+                    <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Description</label>
+            <div class="controls">
+                <?php echo $this->formElement($form->get('description'));  ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Send Email Notification:</label>
+            <div class="controls">
+                <div id="email-toggle-button">
+                    <input type="checkbox" checked="checked" name="sendEmail">
+                </div>
+            </div>
+        </div>
+
+        <?php echo $this->form()->closeTag($form); ?>
+        
+    </div>
+    <div class="modal-footer">
+<?php if ($this->isGranted('task.create')) { ?>
+        <button class="btn btn-success" id="btn-create-task"><i class="icon-plus icon-white"></i> Add Task</button>
+<?php } ?>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>

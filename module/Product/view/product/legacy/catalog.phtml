@@ -1,0 +1,223 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/legacy.js');
+
+$this->headStyle()->captureStart() 
+?>
+    #legacy_tbl tbody td{
+        vertical-align: middle;
+    }
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+    <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget red">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Legacy Product Catalog</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="legacyLoader" class="loader"></div>
+                <div class="clearfix">
+                    <div class="btn-group pull-left">
+                    <?php if ($this->isGranted('legacy.create')) { ?>
+                        <button id="legacy-add-btn" class="btn green">
+                            Add New <i class="icon-plus"></i>
+                        </button>
+                    <?php } ?>    
+                    </div>
+                </div>
+                <div class="space15"></div>
+                <table class="table table-striped table-bordered table-hover" id="legacy_tbl">
+                    <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width: 120px">Type</th>
+                        <th style="width: 60px" >Power</th>
+                        <th style="width: 120px">Created</th>
+                        <th style="width: 35px;">&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>
+    <div id="modalLegacyAdd" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 class="create-title-legacy">Add Legacy Item&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="legacy-widget-color">
+            <div class="widget-title">
+                <h4 ><i class="icon-plus-sign-alt"></i> <span class="create-title-legacy">Add Legacy Item</span></h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="legacyAddLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddProduct">
+                        <li class=""><a data-number="3" href="#widget_tab3" data-toggle="tab">Replacement</a></li>
+                        <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Power</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">General</a></li>
+                    </ul>
+                    <?php echo $this->form()->openTag($form); ?>
+                        <input name="legacyId" value="" type="hidden" />
+                        <div class="tab-content" style="min-height: 270px">
+                            <div class="tab-pane active" id="widget_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Category</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('category'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Description</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('description'));  ?>
+                                    </div>
+                                </div> 
+                                
+                                <div class="control-group">
+                                    <label class="control-label">Emergency</label>
+                                    <div class="controls">
+                                        <div id="active-toggle-button" style="left:0!important">
+                                            <?php echo $this->formElement($form->get('emergency'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="control-group">
+                                    <label class="control-label">Item Dimensions</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('dim_item'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Unit Dimensions</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('dim_unit'));  ?>
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="tab-pane" id="widget_tab2">
+                                <div class="control-group">
+                                    <label class="control-label">Item Quantity</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('quantity'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Power Per Item</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <?php echo $this->formElement($form->get('pwr_item'));  ?>
+                                            <span class="add-on">watts</span>
+                                        </div>
+                                        
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Power Ballast</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <?php echo $this->formElement($form->get('pwr_ballast'));  ?>
+                                            <span class="add-on">watts</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Total Unit Power</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <input type="text" disabled="true" id="total-pwr" class="span6" value="0" />
+                                            <span class="add-on">watts</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="tab-pane" id="widget_tab3">
+                                <div class="control-group">
+                                    <label class="control-label">Replacement Product</label>
+                                    <div class="controls">
+                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                            <option></option>
+                                            <?php
+                                                $group = null;
+                                                if (!empty($products)) {
+                                                    foreach ($products as $product){
+                                                        if ($product['service'] == 1) { // service item should not be displayed here
+                                                            continue;
+                                                        }
+                                                        if ($group != $product['brand']) {
+                                                            $group = $product['brand'];
+                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
+                                                        }
+                                                        
+                                                        $model = $product['model'];
+                                                        if ($product['brandId']==6 ) { // philips product - need to show Philips ID
+                                                            $attr = json_decode($product['attributes']);
+                                                            if (!empty($attr->philips)) {
+                                                                if (!empty($attr->philips->eoc)) {
+                                                                    $model.= ' | '. $attr->philips->eoc;
+                                                                }
+                                                                if (!empty($attr->philips->model)) {
+                                                                    $model.= ' | '. $attr->philips->model;
+                                                                }
+                                                            }
+                                                                
+                                                        } 
+                                                        
+                                                        echo '<option value="'.$product['productId'].'" '.
+                                                                'data-ppu="'.$product['ppu'].'" '.
+                                                                'data-pwr="'.round($product['pwr'], 0).'" '.
+                                                                'data-type="'.$product['type'].'" '.
+                                                                'data-brand="'.$product['brand'].'" '.
+                                                                'data-eca="'.(!empty($product['eca'])?1:0).'" '.
+                                                                '>'.$model.'</option>';
+                                                    }
+                                                    echo (empty($group)?'':'</optgroup>');
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <p>
+                                        <br />Select a replacement product from the list above if there is a preferred natural replacement product for the Legacy item.
+                                    </p>
+                                </div> 
+                            </div>
+                        </div>
+                    <?php echo $this->form()->closeTag($form); ?>
+                </div>
+                <div id="productMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next">Next <i class="icon-arrow-right icon-white"></i></button>
+                <?php if ($this->isGranted('legacy.create')) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-legacy-add"><i class="icon-plus icon-white"></i> <span id="btn-legacy-add-text">Add Legacy</span></button>
+                <?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>

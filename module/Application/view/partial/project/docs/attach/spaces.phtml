@@ -1,0 +1,141 @@
+<style>
+    table.space_details {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    table.space_details {
+        border-spacing: 0;
+
+    }
+
+    table.space_details thead {
+        border-bottom: 1px #ccc solid;
+    }
+
+    table.space_details tbody tr td {
+        border-bottom: 1px #ccc solid;
+    }
+
+    table.space_details tfoot tr td {
+        border-bottom: 1px #ccc solid;
+    }
+
+    table.space_details tfoot tr th {
+        border-bottom: 1px #ccc solid;
+    }
+
+</style>
+<?php
+$proposalStyle = !empty($form['proposalstyle'])?$form['proposalstyle']:1;
+
+switch ($proposalStyle) {
+    case 2: // architectural style
+        $first = true;
+        foreach ($breakdown as $buildingId=>$building) {
+            $echoBuilding = false;
+            
+            foreach ($building['spaces'] as $spaceId=>$space) {
+                $archProd = array();
+                $otherProd = array();
+                foreach ($space['products'] as $systemId=>$system) {
+                    if (($system[2]==100) || ($system[2]==101) || ($system[2]==103)) {
+                        continue;
+                    }
+                    if ($system[2]==3) {
+                        $attributes = json_decode($system[16]);
+                        $archProd[] = '<td class="left">'.(!empty($system[17])?$system[17].' - ':'').$system[8].' <span style="font-size:10px;">['.$system[4].']</span></td>'
+                        . '<td class="right">'.number_format(($attributes->sLen/1000), 2).'m</td>'
+                        . '<td class="right">'.number_format(($attributes->dLen/1000), 2).'m</td>';
+                    } else {
+                        $otherProd[] = '<td class="left">'.(!empty($system[17])?$system[17].' - ':'').$system[8].' <span style="font-size:10px;">['.$system[4].']</span></td>'
+                        . '<td class="right">&nbsp;</td>'
+                        . '<td class="right">'.$system[5].' units</td>';
+                    }
+                }
+                if (empty($archProd) && empty($otherProd)) {
+                    continue;
+                }
+                
+                if (!$echoBuilding) {
+                    echo '<h2 '.($first?'':'style="padding-top:30px"').'>'.(($buildingId==0)?'Standalone Setup':'Building: '.$building['name']).'</h2>';
+                    $echoBuilding = true;
+                }
+                echo '<h3>'.(($buildingId==0)?'Configuration':'Space: '.$space['name']).'</h3>';
+                echo '<table class="space_details">'
+                        . '<thead>'
+                        . '<tr>'
+                        . '<th class="left">Details</th>'
+                        . '<th class="right" style="width: 100px">Specified</th>'
+                        . '<th class="right" style="width: 100px">Achievable</th>'
+                        . '</tr>'
+                        . '</thead>'
+                        . '<tbody>';
+                if (!empty($archProd)) {
+                    echo '<tr>'.implode('</tr><tr>', $archProd).'</tr>';
+                }
+                if (!empty($otherProd)) {
+                    if(!empty($archProd)) {
+                        echo '<tr><td colspan="3">&nbsp;</td></tr>';
+                    }
+                    echo '<tr>'.implode('</tr><tr>', $otherProd).'</tr>';
+                }
+                echo '</tbody></table>';
+                
+            }
+            $first = false;
+        }
+        break;
+    default:
+        $first = true;
+        foreach ($breakdown as $buildingId=>$building) {
+            $echoBuilding = false;
+            
+            foreach ($building['spaces'] as $spaceId=>$space) {
+                $otherProd = array();
+                foreach ($space['products'] as $systemId=>$system) {
+                    if (($system[2]==100) || ($system[2]==101) || ($system[2]==103)) {
+                        continue;
+                    }
+                    $otherProd[] = 
+                    '<td class="left">'.$system[4].' <span style="font-size:10px;">['.$system[3].']</span></td>'
+                    . '<td class="right">'.round($system[7],2).'</td>'
+                    . '<td class="right">'.round($system[15],2).'</td>'
+                    . '<td class="right">'.round($system[14],2).'</td>'
+                    . '<td class="right">'.$system[5].'</td>';
+                }
+                
+                if (empty($otherProd)) {
+                    continue;
+                }
+                
+                if (!$echoBuilding) {
+                    echo '<h2 '.($first?'':'style="padding-top:30px"').'>'.(($buildingId==0)?'Standalone Setup':'Building: '.$building['name']).'</h2>';
+                    $echoBuilding = true;
+                }
+                echo '<h3>'.(($buildingId==0)?'Configuration':'Space: '.$space['name']).'</h3>';
+                echo '<table class="space_details">'
+                        . '<thead>'
+                        . '<tr>'
+                        . '<th class="left">Details</th>'
+                        . '<th class="right" style="width: 90px">Power (W)</th>'
+                        . '<th class="right" style="width: 90px">kW Save</th>'
+                        . '<th class="right" style="width: 90px">CO<sub>2</sub> Save</th>'
+                        . '<th class="right" style="width: 90px">Units</th>'
+                        . '</tr>'
+                        . '</thead>';
+                echo '<tr>'.implode('</tr><tr>', $otherProd).'</tr>';
+                echo '</table>';
+                
+            }
+            $first = false;
+        }
+        break;
+}
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+

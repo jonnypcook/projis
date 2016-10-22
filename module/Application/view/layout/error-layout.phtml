@@ -1,0 +1,55 @@
+<?php echo $this->doctype(); ?>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+    <meta charset="utf-8" />
+    <?php 
+    echo $this->headTitle();
+            
+    $this->headLink()
+        ->appendStylesheet('/assets/bootstrap/css/bootstrap.min.css')
+        ->appendStylesheet('/assets/bootstrap/css/bootstrap-responsive.min.css')
+        ->appendStylesheet('/assets/font-awesome/css/font-awesome.css')
+        ->appendStylesheet('/assets/jquery-ui/jquery-ui-1.10.1.custom.min.css')
+        ->appendStylesheet('/css/style.css')
+        ->appendStylesheet('/css/style-responsive.css')
+        ->appendStylesheet('/css/style-default.css', 'screen', false, array('id'=>'style_color'));
+
+    $this->headMeta()->appendName('description', '8point3 CRM');
+    $this->headMeta()->appendName('author', '8point3 Limited');
+    $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1.0');
+    
+    echo $this->headLink(), chr(13).chr(10);
+    echo $this->headScript(), chr(13).chr(10);
+    echo $this->headMeta(), chr(13).chr(10);
+    echo $this->headStyle(), chr(13).chr(10);
+    ?>
+</head>
+<!-- END HEAD -->
+<!-- BEGIN BODY -->
+<body class="error-404">
+    <div class="error-wrap error-wrap-404">
+        <div class="metro big terques">
+           <span> OOPS! </span>
+        </div>
+        <div class="metro green">
+            <span> 4 </span>
+        </div>
+        <div class="metro yellow">
+            <span> 0 </span>
+        </div>
+        <div class="metro purple">
+            <span> 4 </span>
+        </div>
+        <div class="metro double red">
+            <span class="page-txt"> Page Not Found </span>
+        </div>
+        <div class="metro gray">
+            <a href="/" class="home"><i class="icon-home"></i> </a>
+        </div>
+    </div>
+</body>
+<!-- END BODY -->
+</html>

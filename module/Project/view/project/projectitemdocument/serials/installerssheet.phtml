@@ -1,0 +1,117 @@
+<?php
+    $client = $project->getClient();
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <style type="text/css" >
+            h3 {
+                margin: 0;
+                padding: 0;
+                line-height: 40px;
+            }
+
+            
+            table.tblbarcode {
+                padding: 0;
+                margin: 0;
+                border-spacing: 15px;
+                border-collapse: separate;
+            }
+            
+            table.tblbarcode td {
+                border: 1px #ccc solid; 
+                height: 265px;
+                width: 200px;
+                text-align: center;
+                font-size: 0.9em!important;
+            }
+
+            table.tblbarcode td.silent {
+                border: 0; 
+            }
+
+        </style>
+        <?php 
+            $gcnt = 0;
+            
+            function createPageBanner($building, $space, $barcode, $page=1) {
+                return '<article class="page_break_before">
+                    <section style="height: 75px; border-bottom: 1px #ccc solid; ">
+                    <table style="width:100%">
+                        <tr>
+                            <td style="vertical-align: top; width: 400px">
+                                Building: ' . $building . '<br />
+                                Space: '.$space .'<br />
+                                Page: '.$page.'
+                            </td>
+                            <td class="right"><img src="'.$barcode.'" /></td>
+                        </tr>
+                    </table>
+                </section></article>
+                ';          
+            }
+
+            if (!empty($breakdown)) {
+                foreach ($breakdown as $buildingId=>$building) {
+                    foreach ($building['spaces'] as $spaceId=>$space) {
+                        $gcnt++;
+                        if ($gcnt>1) {
+                            echo '<br class="clear" /><div style="page-break-after: always"></div>';
+                        }
+                        echo createPageBanner($building['name'].' ['.$buildingId.']', $space['name'].' ['.$spaceId.']', $dirbc.$spaceId.'.jpg', 1);          
+                        $cnt = 0;
+                        $arr = array();
+                        echo '<table class="tblbarcode">';
+                        foreach ($space['products'] as $systemId=>$system) {
+                            if (($system[2]==1) || ($system[2]==3)) {
+                                for ($i=1; $i<=$system[5]; $i++ ) {
+                                    $cnt++;
+                                    $arr[] = '<td><span>'.$system[4].'<br />x '.$system[5].'</span></td>';
+                                    
+                                    if (count($arr)==3) {
+                                        echo '<tr>'.implode('', $arr).'</tr>';
+                                        $arr = array();
+                                    } 
+                                    
+                                    if ($cnt>0) {
+                                        if (($cnt%9)==0) {
+                                            echo '</table><div style="page-break-after: always"></div>';
+                                            echo createPageBanner($building['name'].' ['.$buildingId.']', $space['name'].' ['.$spaceId.']', $dirbc.$spaceId.'.jpg', (abs($cnt/9)+1));          
+                                            echo '<table class="tblbarcode">';
+                                            //echo createPageBanner($building_id, $space_configs[0], $space_configs[1], (abs($cnt/9)+1));          
+                                        }
+                                    }/**/
+                                    //echo '<div class="barcode'.((($cnt%3)==0)?' last':'').'" ><span>'.$system[4].'<br />x '.$system[5].'</span></div>';
+                                }
+                            }
+                        }
+                        
+                        if (count($arr)) {
+                            while (count($arr)<3) {
+                                $arr[] = '<td class="silent"></td>';
+                            }
+                            echo '<tr>'.implode('', $arr).'</tr>';
+                        }
+                        
+                        echo '</table>';
+                    }
+                }
+            }
+
+            
+        
+            if (!empty($footer['pages'])) {
+                echo $this->partial('partial/project/docs/pages.phtml'); 
+            }
+            
+        ?>
+    </body>
+</html>

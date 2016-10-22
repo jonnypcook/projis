@@ -1,0 +1,37 @@
+<?php if ($this->isGranted('calendar.share') && !empty($users)) { ?>
+<div class="row-fluid">
+    <div class="span12 responsive" data-tablet="span7 fix-margin" data-desktop="span7">
+        <!-- BEGIN CALENDAR PORTLET-->
+        <select id="changeCalendar">
+            <option value="0">My Calendar</option>
+            <?php
+                foreach ($users as $usr) {
+                    echo '<option value="'.$usr->getUserId().'" '.(($usr->getUserId()==$calendarUser->getUserId())?'selected="selected"':'').'>'.$usr->getName().'\'s Calendar</option>';
+                }
+            ?>
+        </select>
+        <?php
+        $this->inlineScript()->captureStart();
+echo <<<JS
+        $(function(){
+            $('#changeCalendar').on('change', function(e) {
+                document.location = '/calendar/'+(($(this).val()>0)?'?userId='+$(this).val():'');
+            });
+        });
+JS;
+$this->inlineScript()->captureEnd();
+        ?>
+        <!-- END CALENDAR PORTLET-->
+    </div>
+</div>
+<?php } ?>
+<div class="row-fluid">
+    <div class="span12 responsive" data-tablet="span7 fix-margin" data-desktop="span7">
+        <!-- BEGIN CALENDAR PORTLET-->
+        <?php 
+            $this->calendarSelectable = true;
+            echo $this->partial('partial/panels/calendar.phtml'); 
+        ?>
+        <!-- END CALENDAR PORTLET-->
+    </div>
+</div>

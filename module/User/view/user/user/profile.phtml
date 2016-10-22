@@ -1,0 +1,164 @@
+<?php
+
+$this->inlineScript()
+    ->appendFile('/js/forms/user/google.js')
+    ;
+
+?>
+<div class="row-fluid relative">
+    <div class="span2">
+        <div class="metro-nav metro-fix-view">
+            <div class="metro-nav-block nav-block-blue">
+                <a href="javascript:" class="text-center" data-original-title="">
+                    <span class="value">
+                        <i class="icon-user"></i>
+                    </span>
+                    <div class="status">User Profile</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="span10">
+        <div id="profileLoader" class="loader"></div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 120px">Property</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        Forename
+                    </td>
+                    <td>
+                        <?php echo $user->getForename(); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Surname
+                    </td>
+                    <td>
+                        <?php echo $user->getSurname(); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Handle
+                    </td>
+                    <td>
+                        <?php echo $user->getHandle(); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Position
+                    </td>
+                    <td>
+                        <?php echo $user->getPosition()->getName(); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Created
+                    </td>
+                    <td>
+                        <?php echo $user->getRegistrationDate()->format('l jS F, Y \a\t\ H:i'); ?>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row-fluid relative">
+    <div class="span12">
+        <hr />
+        <div class="space20"></div>
+    </div>
+</div>
+<div class="row-fluid relative">
+    <div class="span2">
+        <div class="metro-nav metro-fix-view">
+            <div class="metro-nav-block nav-block-green">
+                <a href="javascript:" class="text-center" data-original-title="">
+                    <span class="value">
+                        <i class="icon-google-plus-sign"></i>
+                    </span>
+                    <div class="status">Google Account</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="span10">
+        <div id="googleLoader" class="loader"></div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 120px">Property</th>
+                    <th>Value</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        Google Account
+                    </td>
+                    <td>
+                        <?php echo $user->getEmail(); ?>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        Google Identifier
+                    </td>
+                    <td>
+                        <?php echo empty($user->getGoogle_Id())?'-':$user->getGoogle_Id(); ?>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        Access Token
+                    </td>
+                    <td>
+                        <?php 
+                            if (!empty($user->gettoken_access())) {
+                                echo 'Access token found ';
+                            } else {
+                                echo 'Access token not found';
+                            }
+                            
+                        ?>
+                    </td>
+                    <td><?php 
+                            if (!empty($user->gettoken_access())) {
+                                echo '<a href="javascript:" class="btn btn-mini" id="btn-google-revoke">Revoke</a>';
+                            } else {
+                                echo '<a href="/oauth2google" class="btn btn-mini">Create</a>';
+                            }
+                            
+                        ?></td>
+                </tr>
+                <tr>
+                    <td>
+                        Refresh Token
+                    </td>
+                    <td>
+                        <?php 
+                            if (!empty($user->gettoken_refresh())) {
+                                echo 'Refresh token found';
+                            } else {
+                                echo 'Refresh token not found';
+                            }
+                        ?>
+                    </td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

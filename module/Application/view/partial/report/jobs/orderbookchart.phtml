@@ -1,0 +1,118 @@
+<?php
+$this->inlineScript()
+    ->appendFile( 'https://code.highcharts.com/highcharts.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/funnel.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/exporting.js' );
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(document).ready(function() {
+    Highcharts.setOptions({
+        lang: {
+            thousandsSep: ','
+        }
+    });
+
+   var options = {
+        chart: {
+            renderTo: 'jobsRatingChart',
+            type: 'column'
+        },
+        title: {
+            text: 'Order Book By Value'
+        },
+        subtitle: {
+            text: 'Source: 8Point3 Ltd.'
+        },
+        xAxis: {
+            categories: [
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+                'Jan',
+                'Feb',
+                'Mar'
+            ],
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: "Jobs Value"
+            }
+        },
+        tooltip: {
+            headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+            pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:,.0f}</b></td></tr>',
+            footerFormat: '</table>',
+            shared: true,
+            useHTML: true
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0
+            }
+        },
+        series: []
+    };
+    
+    options.series.push({
+        name : {$data['chartData'][0]['name']},
+        data : []
+    });
+    json_data = {$data['chartData'][0]['data']}    
+    for(var key in json_data)
+    {
+        options.series[0].data.push(parseInt(json_data[key]));
+    }
+
+    options.series.push({
+        name : {$data['chartData'][1]['name']},
+        data : []
+    });
+    json_data = {$data['chartData'][1]['data']}   
+    for(var key in json_data)
+    {
+        options.series[1].data.push(parseInt(json_data[key]));
+    }
+
+    options.series.push({
+        name : {$data['chartData'][2]['name']},
+        data : []
+    });
+    json_data = {$data['chartData'][2]['data']}    
+    for(var key in json_data)
+    {
+        options.series[2].data.push(parseInt(json_data[key]));
+    }
+
+    options.series.push({
+        name : {$data['chartData'][3]['name']},
+        data : []
+    });
+    json_data = {$data['chartData'][3]['data']}    
+    for(var key in json_data)
+    {
+        options.series[3].data.push(parseInt(json_data[key]));
+    }
+
+    
+    chart = new Highcharts.Chart(options);
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="jobsRatingChart"></div>
+    </div>
+</div>
+<hr/>

@@ -1,0 +1,265 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-wizard/jquery.bootstrap.wizard.min.js')
+    ->appendFile('/js/forms/contact/add.js');
+
+echo $this->partial('partial/address.phtml', array('formAddr'=>$this->formAddr, 'callback'=>'reloadAddresses'));
+
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+function reloadAddresses(aid) {
+    try {
+        var url = '/client-{$client->getClientId()}/addressfind/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000);
+        $('#refresh-address').fadeOut();
+        
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params, // Just send the Base64 content in POST body
+            processData: false, // No need to process
+            timeout: 60000, // 1 min timeout
+            dataType: 'text', // Pure Base64 char data
+            beforeSend: function onBeforeSend(xhr, settings) {},
+            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+            success: function onUploadComplete(response) {
+                //console.log(response); return;
+                try{
+                    var obj=jQuery.parseJSON(response);
+                    var k = 0;
+                    // an error has been detected
+                    if (obj.err == true) {
+
+                    } else{ // no errors
+                        var addr = $('select[name=addressId]');
+                        addr.empty();
+                        addr.append($('<option>').text('Please Select'));
+                        for(var i in obj.addr){
+                            var opt = $('<option>').val(obj.addr[i]['addressId']).text(obj.addr[i]['postcode']+' '+obj.addr[i]['line1']);
+                            if (aid!=undefined) {
+                                if(aid==obj.addr[i]['addressId']) {
+                                    opt.attr('selected', true);
+                                }
+                            }
+                            addr.append(opt);
+                        }
+                    }
+                }
+                catch(error){
+                    $('#errors').html($('#errors').html()+error+'<br />');
+                }
+            },
+            complete: function(jqXHR, textStatus){
+                $('#refresh-address').fadeIn();
+            }
+        });
+
+    } catch (ex) {
+
+    }/**/
+
+}
+
+$(function() {
+    $('#refresh-address').on('click', function(e) {
+        reloadAddresses();
+    });
+        
+    $('#cancel-buildingadd').on('click', function(e) {
+        document.location = '/client-{$client->getClientId()}/building/';
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<?php echo $this->form()->openTag($form); ?>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <div class="widget box green relative">
+            <div id="setupLoader" class="loader"></div>
+            <div class="widget-title">
+                <h4>
+                    <i class="icon-plus-sign-alt"></i> Add Contact
+                </h4>
+           <span class="tools">
+              <a href="javascript:;" class="icon-remove" id="cancel-buildingadd"></a>
+           </span>
+            </div>
+            <div class="widget-body">
+                   <div id="pills" >
+                    <ul>
+                        <li><a href="#pills-tab1" data-toggle="tab">Step 1</a></li>
+                        <li><a href="#pills-tab2" data-toggle="tab">Step 2</a></li>
+                        <li><a href="#pills-tab3" data-toggle="tab">Step 3</a></li>
+                        <li><a href="#pills-tab4" data-toggle="tab">Step 4</a></li>
+                        <li><a href="#pills-tab5" data-toggle="tab">Finish</a></li>
+                    </ul>
+                    <div class="progress progress-success progress-striped active">
+                        <div class="bar"></div>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane" id="pills-tab1">
+                            <h3>Step 1 - Personal Details</h3>
+                            <div class="control-group">
+                                <label class="control-label">Title</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('titleId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Forename</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('forename'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Surname</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('surname'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Position</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('position'));  ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab2">
+                            <h3>Step 2 - Contact Details</h3>
+                            <div class="control-group">
+                                <label class="control-label">Telephone (Primary)</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('telephone1'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Telephone (Additional)</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('telephone2'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Email Address</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('email'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Address<span id="refresh-address" class="add-on" style="margin-left: 5px;"><i class="icon-refresh"></i></span></label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('addressId'));  ?>
+                                </div>
+                            </div>
+                            <div id="new-address">
+                                <a href="#myModal2" role="button" class="btn btn-primary" data-toggle="modal"><i class="icon-plus"></i> Add New Address</a>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab3">
+                            <h3>Step 3 - Influence</h3>
+                            <p>
+                                This information will be used on the blue sheet analysis of project
+                            </p>
+                            <div class="control-group">
+                                <label class="control-label">Buying Type</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('buyingtypeId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Influence</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('influenceId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Mode</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('modeId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Key Win Result</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('keywinresult'));  ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab4">
+                            <h3>Step 4 - Notes</h3>
+                            <div id="new-address">
+                                <div class="control-group">
+                                    <label class="control-label">Enter any additional information regarding the contact:</label>
+                                </div>
+                            </div>
+                            <div id="notes">
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #1"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #2"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #3"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="new-note">
+                                <a class="btn btn-primary"><i class="icon-plus"></i> Add Note</a>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab5">
+                            <h3>Step 5 - Confirmation</h3>
+                            <div class="control-group">
+                                <label class="control-label">Name:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-name">-</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Details:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-details">-</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Address:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-address">-</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Contact Details:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-contact">-</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Additional Notes:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-notes">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="pager wizard">
+                            <li class="previous first"><a href="javascript:;">First</a></li>
+                            <li class="previous"><a href="javascript:;">Previous</a></li>
+                            <li class="next last"><a href="javascript:;">Last</a></li>
+                            <li class="next"><a  href="javascript:;">Next</a></li>
+                            <li class="next create" style="display:none;"><a href="javascript:;">Create Contact</a></li>
+                            <li class="next finish" style="display:none;"><a href="javascript:;">Finish</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php echo $this->form()->closeTag($form); ?>

@@ -1,0 +1,19 @@
+<?php
+$route = ($project->getType()->getTypeId()==3)?'trial':((($project->getStatus()->getJob()==1) || (($project->getStatus()->getJob()==0)&&($project->getStatus()->getWeighting()==1)&&($project->getStatus()->getHalt()==1)))?'job':'project');
+?>
+<div >
+    <ul class="nav nav-pills">
+        <li class="<?php echo ($navRoute=='model')?'active':''; ?>"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/<?php echo $route.'-'.$project->getProjectId(); ?>/model/">System Costings Model</a></li>
+        <li class="<?php echo ($navRoute=='forecast')?'active':''; ?>"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/<?php echo $route.'-'.$project->getProjectId(); ?>/forecast/">Payback Forecast Model</a></li>
+        <li class="<?php echo ($navRoute=='breakdown')?'active':''; ?>"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/<?php echo $route.'-'.$project->getProjectId(); ?>/breakdown/">Space Breakdown</a></li>
+        <li class="dropdown">
+            <a href="#" data-toggle="dropdown" role="button" id="drop6" class="dropdown-toggle">Documents <b class="caret"></b></a>
+            <ul aria-labelledby="drop5" role="menu" class="dropdown-menu" id="menu3">
+                <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/generate/?documentId=4&documentInline=0&modelyears=<?php echo $project->getModel();?>" tabindex="-1" role="menuitem">Forecast (PDF)</a></li>
+                <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystem/" tabindex="-1" role="menuitem">System Model (Excel)</a></li>
+                <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportproductlist/" tabindex="-1" role="menuitem">Product List (Excel)</a></li>
+                <!--<li class="divider" role="presentation"></li><!-- -->
+            </ul>
+        </li>
+    </ul>
+</div>

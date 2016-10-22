@@ -1,0 +1,1340 @@
+<?php
+$editable = $this->isGranted('project.write');
+$this->inlineScript()->captureStart();
+echo <<<JS
+
+function calculateArchitecturalChange() {
+    try {
+        $('form[name=SpaceAddArchitecturalForm] input[name=altId]').val('');
+        $('form[name=SpaceAddArchitecturalForm] input[name=altSz]').val('');
+        var productId = $('form[name=SpaceAddArchitecturalForm] select[name=product]').val();
+        var length = $('form[name=SpaceAddArchitecturalForm] input[name=length]').val();
+        var maximumunitlength = $('form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').val();
+
+        if (productId=='') {
+            throw "no product defined";
+        }
+
+        if (length=='') {
+            throw "no length defined";
+        }
+
+        var url = '/tools/rpQuickCalculate/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&productId='+productId+'&length='+length+'&maxunitlen='+maximumunitlength;
+            
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params, // Just send the Base64 content in POST body
+            processData: false, // No need to process
+            timeout: 60000, // 1 min timeout
+            dataType: 'text', // Pure Base64 char data
+            beforeSend: function onBeforeSend(xhr, settings) {},
+            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+            success: function onUploadComplete(response) {
+                //console.log(response); //return;
+                try{
+                    var obj=jQuery.parseJSON(response);
+                    var k = 0;
+                    // an error has been detected
+                    var tab = 3;
+                    var additional='';
+                    if (obj.err == true) {
+                        throw "error calculating";
+                    } else{ // no errors
+                        $('#architecturalLength')
+                            .removeClass('label-important')
+                            .addClass('label-inverse')
+                            .text('Maximum achievable length of '+obj.info.dLen+'mm ('+obj.info.dBillU+' units)');
+
+                        var configs = $('select[name=configurations]');
+                        configs.empty();
+                        configs.append($('<option>').val(0).text('Use default configuration'));
+
+                        var editMode = (chsnLen!==false) && (chsnConf!==false);
+                        for (var i in obj.info.dAlts) {
+                            var matchMode = editMode?(i==chsnLen):false;
+                            var optGroup = $('<optgroup>');
+                            optGroup.attr('label', 'Length: '+number_format(i,2)+'mm');
+                            for (var j in obj.info.dAlts[i]) {
+                                var opt = $('<option>').attr('data-sz',i).attr('data-id',j).val(j).text(obj.info.dAlts[i][j]+((obj.info.dAltsId==j)?' (default)':''));
+                                if ((!editMode && (obj.info.dAltsId==j)) || (matchMode && (obj.info.dAlts[i][j]==chsnConf))) {
+                                    opt.attr('selected','selected');
+                                }
+                                
+                                if(matchMode && (obj.info.dAlts[i][j]==chsnConf)) {
+                                    $('form[name=SpaceAddArchitecturalForm] input[name=altId]').val(j);
+                                    $('form[name=SpaceAddArchitecturalForm] input[name=altSz]').val(i);
+                                }
+
+                                optGroup.append(opt);
+                            }
+                            configs.append(optGroup);
+                        }
+                    }
+                }
+                catch(error){
+                    $('#architecturalLength')
+                        .removeClass('label-inverse')
+                        .addClass('label-important')
+                        .text('select a product to calculate achievable length and units required');
+                }
+            },
+            complete: function(jqXHR, textStatus){}
+        });
+    } catch (e) {
+    }
+}
+
+function saveSystemItem(type) {
+    var formName = (type=='product')?'SpaceAddProductForm':((type=='architectural')?'SpaceAddArchitecturalForm':'SpaceAddServiceForm');
+    var saveName = (type=='product')?'systemProductLoader':((type=='architectural')?'systemArchitecturalLoader':'systemServiceLoader');
+    var msgsName = (type=='product')?'productMsgs':((type=='architectural')?'architecturalMsgs':'serviceMsgs');
+    
+    try {
+        resetFormErrors(formName);
+        $('#'+msgsName).empty();
+        var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/addsystem/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&'+$('#'+formName).serialize();
+        //console.log(params);return;
+        $('#'+saveName).fadeIn(function(){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: params, // Just send the Base64 content in POST body
+                processData: false, // No need to process
+                timeout: 60000, // 1 min timeout
+                dataType: 'text', // Pure Base64 char data
+                beforeSend: function onBeforeSend(xhr, settings) {},
+                error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                success: function onUploadComplete(response) {
+                    //console.log(response); //return;
+                    try{
+                        var obj=jQuery.parseJSON(response);
+                        var k = 0;
+                        // an error has been detected
+                        var tab = 3;
+                        var additional='';
+                        if (obj.err == true) {
+                            if (obj.info != undefined) {
+                                for(var i in obj.info){
+                                    if (!addFormError(i, obj.info[i])) {
+                                        additional+=obj.info[i]+'<br>';
+                                    }
+                                    if (tab>1){
+                                        if (type=='architectural') {
+                                            switch (i) {
+                                                case 'product': case 'quantity': case 'ppu': case 'ippu': case 'length': tab = 1; break;
+                                                case 'label': case 'lux': case 'occupancy': case 'hours': tab = 2; break;
+                                            }
+                                        } else {
+                                            switch (i) {
+                                                case 'product': case 'quantity': case 'hours': case 'ppu': case 'ippu': case 'length': tab = 1; break;
+                                                case 'legacy': case 'legacyWatts': case 'legacyQuantity': case 'legacyMcpu': case 'label': case 'lux': case 'occupancy': tab = 2; break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (additional != '') {
+                                msgAlert(msgsName,{
+                                    mode: 3,
+                                    body: 'Error: '+additional,
+                                    empty: true
+                                });
+                            }
+                            
+                            if(type=='product') {
+                                $('ul#tabsAddProduct a[href=#widget_tab'+tab+']').tab('show');
+                            } else if(type=='architectural') {
+                                $('ul#tabsAddArchitectural a[href=#widgetA_tab'+tab+']').tab('show');
+                            }
+
+                        } else{ // no errors
+                            window.location.reload();
+                        }
+                    }
+                    catch(error){
+                        
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    $('#'+saveName).fadeOut(function(){});
+                }
+            });
+        });
+
+    } catch (ex) {
+
+    }/**/
+}
+        
+function setTabButtons (tab, type, maxtabs) {
+    if (maxtabs==undefined) {
+        maxtabs=2;
+    }
+    if (tab > 1) {
+        $('#btn-last-'+type).removeAttr('disabled');
+    } else if (tab == 1) {
+        $('#btn-last-'+type).attr('disabled','disabled');
+    } 
+    
+    if (tab == maxtabs) {
+        $('#btn-next-'+type).attr('disabled','disabled');
+    } else if (tab < maxtabs) {
+        $('#btn-next-'+type).removeAttr('disabled');
+    }
+}
+
+function resetTabForm () {
+    setupTabForm({});
+}
+
+function setupTabForm (obj) {
+    $('form[name=SpaceAddProductForm] select[name=product]').val((obj.productId==null)?'':obj.productId);
+    $('form[name=SpaceAddProductForm] select[name=product]').trigger('liszt:updated');
+    if (obj.modify!=null) {
+        $('form[name=SpaceAddProductForm] select[name=product]').trigger('change');
+    }
+    $('form[name=SpaceAddProductForm] input[name=quantity]').val((obj.quantity==null)?'':obj.quantity);
+    $('form[name=SpaceAddProductForm] input[name=hours]').val((obj.hours==null)?'0':obj.hours);
+    $('form[name=SpaceAddProductForm] input[name=ppu]').val((obj.ppu==null)?'':obj.ppu);
+    $('form[name=SpaceAddProductForm] input[name=ippu]').val((obj.ippu==null)?'0':obj.ippu);
+    $('form[name=SpaceAddProductForm] input[name=legacyWatts]').val((obj.legacyWatts==null)?'0':obj.legacyWatts);
+    $('form[name=SpaceAddProductForm] input[name=legacyQuantity]').val((obj.legacyQuantity==null)?'0':obj.legacyQuantity);
+    $('form[name=SpaceAddProductForm] input[name=legacyMcpu]').val((obj.legacyMcpu==null)?'':obj.legacyMcpu);
+    $('form[name=SpaceAddProductForm] input[name=label]').val((obj.label==null)?'':obj.label);
+    $('form[name=SpaceAddProductForm] select[name=lux]').val((obj.lux==null)?0:obj.lux);
+    $('form[name=SpaceAddProductForm] select[name=occupancy]').val((obj.occupancy==null)?0:obj.occupancy);
+    $('form[name=SpaceAddProductForm] select[name=legacy]').val((obj.legacy==null)?'':obj.legacy);
+    
+    if (obj.modify!=null) {
+        $('#btn-modify-system-entry').show();
+        $('#btn-create-system-entry').hide();
+        $('.modify-title-product').show();
+        $('.create-title-product').hide();
+        $('#product-widget-color').removeClass('green').addClass('blue');
+        $('form[name=SpaceAddProductForm] input[name=systemId]').val(obj.modify);
+    } else {
+        $('#btn-modify-system-entry').hide();
+        $('#btn-create-system-entry').show();
+        $('.modify-title-product').hide();
+        $('.create-title-product').show();
+        $('#product-widget-color').removeClass('blue').addClass('green');
+        $('form[name=SpaceAddProductForm] input[name=systemId]').val('');
+        $('#productInfo').attr('data-original-title','No product selected');
+    }
+    
+    
+    resetFormErrors('SpaceAddProductForm');
+    $('#msgs').empty();
+    
+    $('a[href=#widget_tab1]').tab('show');
+}
+        
+function resetArchitecturalTabForm () {
+    $('#architecturalLength')
+        .removeClass('label-inverse')
+        .addClass('label-important')
+        .text('select a product to calculate achievable length and units required');
+    setupArchitecturalTabForm({});
+}
+
+        
+var chsnConf, chsnLen;
+function setupArchitecturalTabForm (obj) {
+    $('form[name=SpaceAddArchitecturalForm] input[name=length]').val((obj.length==null)?'':obj.length);
+    $('form[name=SpaceAddArchitecturalForm] select[name=product]').val((obj.productId==null)?'':obj.productId);
+    $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('liszt:updated');
+    if (obj.modify!=null) {
+        $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('change');
+    }
+    $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val((obj.ppu==null)?'':obj.ppu);
+    $('form[name=SpaceAddArchitecturalForm] input[name=ippu]').val((obj.ippu==null)?'0':obj.ippu);
+    $('form[name=SpaceAddArchitecturalForm] input[name=label]').val((obj.label==null)?'':obj.label);
+    $('form[name=SpaceAddArchitecturalForm] input[name=quantity]').val((obj.units==null)?1:obj.units);
+    $('form[name=SpaceAddArchitecturalForm] input[name=hours]').val((obj.hours==null)?'0':obj.hours);
+    
+    $('form[name=SpaceAddArchitecturalForm] input[name=legacyWatts]').val((obj.legacyWatts==null)?'0':obj.legacyWatts);
+    $('form[name=SpaceAddArchitecturalForm] input[name=legacyQuantity]').val((obj.legacyQuantity==null)?'0':obj.legacyQuantity);
+    $('form[name=SpaceAddArchitecturalForm] input[name=legacyMcpu]').val((obj.legacyMcpu==null)?'':obj.legacyMcpu);
+    $('form[name=SpaceAddArchitecturalForm] select[name=legacy]').val((obj.legacy==null)?'':obj.legacy);
+    $('form[name=SpaceAddArchitecturalForm] select[name=lux]').val((obj.lux==null)?0:obj.lux);
+    $('form[name=SpaceAddArchitecturalForm] select[name=occupancy]').val((obj.occupancy==null)?0:obj.occupancy);
+    $('form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').val((obj.mul==null)?5000:obj.mul);
+        
+    chsnConf = (obj.chsnConf==null)?false:obj.chsnConf;
+    chsnLen = (obj.dLen==null)?false:obj.dLen;
+    if (obj.modify!=null) {
+        $('#btn-modify-architectural-entry').show();
+        $('#btn-create-architectural-entry').hide();
+        $('.modify-title-architectural').show();
+        $('.create-title-architectural').hide();
+        $('#architectural-widget-color').removeClass('green').addClass('blue');
+        $('form[name=SpaceAddArchitecturalForm] input[name=systemId]').val(obj.modify);
+    } else {
+        $('#btn-modify-architectural-entry').hide();
+        $('#btn-create-architectural-entry').show();
+        $('.modify-title-architectural').hide();
+        $('.create-title-architectural').show();
+        $('#architectural-widget-color').removeClass('blue').addClass('green');
+        $('form[name=SpaceAddArchitecturalForm] input[name=systemId]').val('');
+        $('#serviceInfo').attr('data-original-title','No service selected');
+    }
+    
+    
+    resetFormErrors('SpaceAddServiceForm');
+    $('#msgs').empty();
+    
+    $('a[href=#widgetA_tab1]').tab('show');
+}        
+
+
+function resetServiceTabForm () {
+    setupServiceTabForm({});
+}
+
+function setupServiceTabForm (obj) {
+    $('form[name=SpaceAddServiceForm] select[name=product]').val((obj.productId==null)?'':obj.productId);
+    $('form[name=SpaceAddServiceForm] select[name=product]').trigger('liszt:updated');
+    if (obj.modify!=null) {
+        $('form[name=SpaceAddServiceForm] select[name=product]').trigger('change');
+    }
+    //$('form[name=SpaceAddServiceForm] input[name=quantity]').val((obj.quantity==null)?'':obj.quantity);
+    $('form[name=SpaceAddServiceForm] input[name=cpu]').val((obj.cpu==null)?'':obj.cpu);
+    $('form[name=SpaceAddServiceForm] input[name=ppu]').val((obj.ppu==null)?'':obj.ppu);
+    $('form[name=SpaceAddServiceForm] input[name=ippu]').val((obj.ippu==null)?'0':obj.ippu);
+    $('form[name=SpaceAddServiceForm] input[name=label]').val((obj.label==null)?'':obj.label);
+    
+    if (obj.modify!=null) {
+        $('#btn-modify-system-service-entry').show();
+        $('#btn-create-system-service-entry').hide();
+        $('.modify-title-service').show();
+        $('.create-title-service').hide();
+        $('#service-widget-color').removeClass('green').addClass('blue');
+        $('form[name=SpaceAddServiceForm] input[name=systemId]').val(obj.modify);
+    } else {
+        $('#btn-modify-system-service-entry').hide();
+        $('#btn-create-system-service-entry').show();
+        $('.modify-title-service').hide();
+        $('.create-title-service').show();
+        $('#service-widget-color').removeClass('blue').addClass('green');
+        $('form[name=SpaceAddServiceForm] input[name=systemId]').val('');
+        $('#serviceInfo').attr('data-original-title','No service selected');
+    }
+    
+    
+    resetFormErrors('SpaceAddServiceForm');
+    $('#msgs').empty();
+    
+    $('a[href=#widget_tab1]').tab('show');
+}
+
+function deleteSystem(systemId) {
+    try {
+        var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/deletesystem/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&sid='+systemId;
+
+        $('#systemDeleteLoader').fadeIn(function(){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: params, // Just send the Base64 content in POST body
+                processData: false, // No need to process
+                timeout: 60000, // 1 min timeout
+                dataType: 'text', // Pure Base64 char data
+                beforeSend: function onBeforeSend(xhr, settings) {},
+                error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                success: function onUploadComplete(response) {
+                    //console.log(response); //return;
+                    try{
+                        var obj=jQuery.parseJSON(response);
+                        // an error has been detected
+                        var additional='';
+                        if (obj.err == true) {
+                            $('#modalDeleteSystem').modal('hide');
+                            growl('Failure!', 'The product could not be deleted from the system.', {time: 3000});
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                    catch(error){
+                        $('#errors').html($('#errors').html()+error+'<br />');
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    $('#systemDeleteLoader').fadeOut(function(){});
+                }
+            });
+        });
+
+    } catch (ex) {
+
+    }/**/
+    return false;
+}
+        
+
+function changeHours() {
+    try {
+        var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/changehours/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&'+$('#changeHoursForm').serialize();
+
+        $('#changeHoursLoader').fadeIn(function(){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: params, // Just send the Base64 content in POST body
+                processData: false, // No need to process
+                timeout: 60000, // 1 min timeout
+                dataType: 'text', // Pure Base64 char data
+                beforeSend: function onBeforeSend(xhr, settings) {},
+                error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                success: function onUploadComplete(response) {
+                    //console.log(response); //return;
+                    try{
+                        var obj=jQuery.parseJSON(response);
+                        // an error has been detected
+                        var additional='';
+                        if (obj.err == true) {
+                            $('#modalChangeHours').modal('hide');
+                            growl('Failure!', 'The hours could not be updated.', {time: 3000});
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                    catch(error){
+                        $('#errors').html($('#errors').html()+error+'<br />');
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    $('#changeHoursLoader').fadeOut(function(){});
+                }
+            });
+        });
+
+    } catch (ex) {
+
+    }/**/
+    return false;
+}
+        
+        
+function copySystem(systemId) {
+    try {
+        var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/copysystem/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&sid='+systemId;
+
+        $('#systemCopyLoader').fadeIn(function(){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: params, // Just send the Base64 content in POST body
+                processData: false, // No need to process
+                timeout: 60000, // 1 min timeout
+                dataType: 'text', // Pure Base64 char data
+                beforeSend: function onBeforeSend(xhr, settings) {},
+                error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                success: function onUploadComplete(response) {
+                    //console.log(response); //return;
+                    try{
+                        var obj=jQuery.parseJSON(response);
+                        // an error has been detected
+                        var additional='';
+                        if (obj.err == true) {
+                            $('#modalCopySystem').modal('hide');
+                            growl('Failure!', 'The product could not be duplicated.', {time: 3000});
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                    catch(error){
+                        $('#errors').html($('#errors').html()+error+'<br />');
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    $('#systemCopyLoader').fadeOut(function(){});
+                }
+            });
+        });
+
+    } catch (ex) {
+
+    }/**/
+    return false;
+}
+
+var Script = function () {
+    // Copy system dialog caller
+    $(document).on('click', '.action-system-copy', function(e) {
+        e.preventDefault();
+        var systemId = $(this).attr('data-systemid');
+        if (systemId == undefined) {
+            return;
+        }
+        $('#btn-confirm-copy').off('click').on('click', function(e) {
+            copySystem(systemId);
+        });
+        $('#modalCopySystem').modal({});
+        
+    });
+        
+    $('#btn-change-hours').on('click', function(e) {
+        e.preventDefault();
+        changeHours();
+    });
+        
+    $('.btn-change-hrs').on('click', function(e) {
+        e.preventDefault();
+        $('#changeHoursForm input[name=hours]').val(0);
+        $('#changeHoursForm select[name=scope]').val(1);
+        $('#modalChangeHours').modal({});
+    });
+        
+    // Delete system dialog caller
+    $(document).on('click', '.action-system-delete', function(e) {
+        e.preventDefault();
+        var systemId = $(this).attr('data-systemid');
+        if (systemId == undefined) {
+            return;
+        }
+        $('#btn-confirm').off('click').on('click', function(e) {
+            deleteSystem(systemId);
+        });
+        $('#modalDeleteSystem').modal({});
+        
+    });
+    
+    // Edit system dialog caller
+    $(document).on('click', '.action-system-edit', function(e) {
+        e.preventDefault();
+        
+        var systemId = $(this).attr('data-systemid');
+        if (systemId == undefined) {
+            return;
+        }
+        
+        try {
+            var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/retrievesystem/';
+            var params = 'ts='+Math.round(new Date().getTime()/1000)+'&sid='+systemId;
+            
+            
+            $('#systemEditLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: false, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        //console.log(response); //return;
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            // an error has been detected
+                            var additional='';
+                            if (obj.err == true) {
+                                
+                            } else {
+                                if (obj.system.service) {
+                                    setupServiceTabForm({
+                                        productId: obj.system.productId,
+                                        quantity: obj.system.quantity,
+                                        cpu: obj.system.cpu,
+                                        ppu: obj.system.ppu,
+                                        ippu: obj.system.ippu,
+                                        label: obj.system.label,
+
+                                        modify: obj.system.systemId,
+                                    });
+                                    $('#modalSystemService').modal({});
+                                } else if (obj.system.typeId == 3) {
+                                    setupArchitecturalTabForm({
+                                        productId: obj.system.productId,
+                                        quantity: obj.system.quantity,
+                                        hours: obj.system.hours,
+                                        ppu: obj.system.ppu,
+                                        ippu: obj.system.ippu,
+                                        legacyWatts: (obj.system.legacyId==null)?0:obj.system.legacyWatts,
+                                        legacyQuantity: (obj.system.legacyId==null)?0:obj.system.legacyQuantity,
+                                        legacyMcpu: (obj.system.legacyId==null)?'':obj.system.legacyMcpu,
+                                        lux: obj.system.lux,
+                                        occupancy: obj.system.occupancy,
+                                        legacy: obj.system.legacyId,
+                                        label: obj.system.label,
+                                        length: obj.system.attributes.sLen,
+                                        units: (obj.system.attributes.dUnits==null)?1:obj.system.attributes.dUnits,
+                                        chsnConf: (obj.system.attributes.chsnConf==null)?false:obj.system.attributes.chsnConf,
+                                        dLen: (obj.system.attributes.dLen==null)?false:obj.system.attributes.dLen,
+                                        mul: obj.system.attributes.mul,
+                                        modify: obj.system.systemId,
+                                    });
+                                    $('#architecturalLength')
+                                        .removeClass('label-important')
+                                        .addClass('label-inverse')
+                                        .text('Maximum achievable length of '+obj.system.attributes.dLen+'mm ('+obj.system.quantity+' units)');
+                                    $('#modalArchitectural').modal({});
+                                } else {
+                                    setupTabForm({
+                                        productId: obj.system.productId,
+                                        quantity: obj.system.quantity,
+                                        hours: obj.system.hours,
+                                        ppu: obj.system.ppu,
+                                        ippu: obj.system.ippu,
+                                        legacyWatts: (obj.system.legacyId==null)?0:obj.system.legacyWatts,
+                                        legacyQuantity: (obj.system.legacyId==null)?0:obj.system.legacyQuantity,
+                                        legacyMcpu: (obj.system.legacyId==null)?'':obj.system.legacyMcpu,
+                                        lux: obj.system.lux,
+                                        occupancy: obj.system.occupancy,
+                                        legacy: obj.system.legacyId,
+                                        label: obj.system.label,
+
+                                        modify: obj.system.systemId,
+                                    });
+                                    $('#modalSystem').modal({});
+                                }
+                            }
+                        }
+                        catch(error){
+                            $('#errors').html($('#errors').html()+error+'<br />');
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#systemEditLoader').fadeOut(function(){});
+                    }
+                });
+            });
+
+        } catch (ex) {
+
+        }/**/
+        return false;
+    });
+        
+    // Add new system service dialog caller
+    $('#btn-add-service').on('click', function(e){
+        e.preventDefault();
+        resetServiceTabForm();
+        $('#modalSystemService').modal({});
+    });
+
+    // Add new system product dialog caller
+    $('#btn-add-product').on('click', function(e){
+        e.preventDefault();
+        resetTabForm();
+        $('#modalSystem').modal({});
+    });
+            
+    // Add new system architectural dialog caller
+    $('#btn-add-architectural').on('click', function(e){
+        e.preventDefault();
+        resetArchitecturalTabForm();
+        $('#modalArchitectural').modal({});
+    });
+            
+            
+
+    // next button press
+    $('#btn-next-system').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsAddProduct li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab<2)?activeTab+1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab, 'system');
+            $('a[href=#widget_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+    
+    // last button press
+    $('#btn-last-system').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsAddProduct li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab>1)?activeTab-1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab, 'system');
+            $('a[href=#widget_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+            
+   // next button press
+    $('#btn-next-architectural').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsAddArchitectural li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab<2)?activeTab+1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab, 'architectural', 3);
+            $('a[href=#widgetA_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+    
+    // last button press
+    $('#btn-last-architectural').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsAddArchitectural li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab>1)?activeTab-1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab, 'architectural', 3);
+            $('a[href=#widgetA_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+    
+    // tab click
+    $("ul#tabsAddProduct li").on('click', function (e) {
+        e.preventDefault();
+        var activeTab = $(this).find("a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        setTabButtons (activeTab, 'system');
+    });
+            
+   $("ul#tabsAddArchitectural li").on('click', function (e) {
+        e.preventDefault();
+        var activeTab = $(this).find("a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        setTabButtons (activeTab, 'architectural', 3);
+    });
+    
+    // Product Selector change event
+    $('form[name=SpaceAddProductForm] input[name=quantity]').on('change', function(e) {
+        var legQtty = $('input[name=legacyQuantity]');
+        if (legQtty == undefined) {
+            return;
+        }
+        
+        legQtty.val($(this).val());
+    });
+            
+    $('form[name=SpaceAddProductForm] select[name=product]').on('change', function(e) {
+        var opt = $(this).find('option[value='+$(this).val()+']');
+        if (opt == undefined) {
+            return;
+        }
+        $('form[name=SpaceAddProductForm] input[name=ppu]').val(opt.attr('data-ppu'));
+        $('#productInfo').attr('data-original-title',
+            '<div style="text-align: left">'+opt.text()+'<br />'+
+            'RRP: &#163;'+opt.attr('data-ppu')+'<br />'+
+            'Power: '+opt.attr('data-pwr')+'W'+'<br />'+
+            'ECA: '+((opt.attr('data-eca')==1)?'Yes':'No')+'<br />'+
+            'Type: '+opt.attr('data-type')+'</div>'
+        );
+    });
+            
+    $('form[name=SpaceAddArchitecturalForm] input[name=length], form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').on('change', function(e) {
+        calculateArchitecturalChange();
+    });
+    
+    $('form[name=SpaceAddArchitecturalForm] select[name=product]').on('change', function(e) {
+        var opt = $(this).find('option[value='+$(this).val()+']');
+        if (opt == undefined) {
+            return;
+        }
+        $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val(opt.attr('data-ppu'));
+        $('#architecturalInfo').attr('data-original-title',
+            '<div style="text-align: left">'+opt.text()+'<br />'+
+            'RRP: &#163;'+opt.attr('data-ppu')+'<br />'+
+            'Power: '+opt.attr('data-pwr')+'W'+'<br />'+
+            'ECA: '+((opt.attr('data-eca')==1)?'Yes':'No')+'<br />'+
+            'Type: '+opt.attr('data-type')+'</div>'
+        );
+            
+        calculateArchitecturalChange();
+    });
+    
+    $('form[name=SpaceAddServiceForm] select[name=product]').on('change', function(e) {
+        var opt = $(this).find('option[value='+$(this).val()+']');
+        if (opt == undefined) {
+            return;
+        }
+        //$('form[name=SpaceAddServiceForm] input[name=ppu]').val(opt.attr('data-ppu'));
+        $('#serviceInfo').attr('data-original-title',
+            '<div style="text-align: left">'+opt.text()+'<br />'+
+            'RRP: &#163;'+opt.attr('data-ppu')+'<br />'+
+            'Type: '+opt.attr('data-type')+'</div>'
+        );
+    });
+            
+    $('form[name=SpaceAddServiceForm] input[name=cpu]').on('change', function(e) {
+        e.preventDefault();
+        //if ($('form[name=SpaceAddServiceForm] input[name=ppu]').val()!='') {
+        //    return;
+        //}
+        $('form[name=SpaceAddServiceForm] input[name=ppu]').val((parseFloat($(this).val())/0.75).toFixed(2));
+    });
+    
+    
+    // Product Selector change event
+    $('form[name=SpaceAddProductForm] select[name=legacy]').on('change', function(e) {
+        var opt = $(this).find('option[value='+$(this).val()+']');
+        if (opt == undefined) {
+            return;
+        }
+        $('form[name=SpaceAddProductForm] input[name=legacyWatts]').val(opt.attr('data-pwr'));
+        $('form[name=SpaceAddProductForm] input[name=legacyMcpu]').val(opt.attr('data-mcpu'));
+    });
+    
+    
+    //save button
+    $('#btn-create-system-entry, #btn-modify-system-entry').on('click', function(e){ 
+        saveSystemItem('product');
+    });
+    
+    $('#btn-create-architectural-entry, #btn-modify-architectural-entry').on('click', function(e){ 
+        saveSystemItem('architectural');
+    });
+    
+    $('#btn-create-system-service-entry, #btn-modify-system-service-entry').on('click', function(e){ 
+        saveSystemItem('service');
+    });
+            
+    $(document).on('change', 'select[name=configurations]', function(e) {
+        e.preventDefault();
+        var sz = $(this).find('option[value='+$(this).val()+']').attr('data-sz');
+        var id = $(this).find('option[value='+$(this).val()+']').attr('data-id');
+        
+        if ((id==undefined) || (sz==undefined)) {
+            id = '';
+            sz = '';
+        }
+            
+        $('form[name=SpaceAddArchitecturalForm] input[name=altId]').val(id);
+        $('form[name=SpaceAddArchitecturalForm] input[name=altSz]').val(sz);
+        return false;
+    });
+    
+}();
+
+
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div id="modalChangeHours" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Change Hours&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="changeHoursLoader" class="loader"></div>
+        <p>
+            Enter the details and scope of the hourly change that you would like to make
+        </p>
+        <form name="changeHoursForm" id="changeHoursForm" class="form-horizontal form-nomargin">
+            <div class="control-group">
+                <label class="control-label">Hours (if applicable)</label>
+                <div class="controls">
+                    <div class="input-append">
+                        <?php echo $this->formElement($formSystem->get('hours'));  ?>
+                        <span class="add-on">per week</span>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Scope</label>
+                <div class="controls">
+                    <select name="scope">
+                        <option value="1">Products in this Space</option>
+                        <option value="2">Products in this Building</option>
+                        <option value="3">Products in this Project</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-change-hours" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalCopySystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Duplicate System Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="systemCopyLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to duplicate the selected system item?<br /><br />
+            Please note: the item will be an exact copy and you may require editing.
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-copy" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalDeleteSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Delete Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="systemDeleteLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to delete the selected system item?<br /><br />
+            Please note: a deleted item cannot be retrieved.
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3" class="create-title-product">Add Product&nbsp;</h3>
+        <h3 id="myModalLabel3" class="modify-title-product">Modify Product Setup&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="product-widget-color">
+            <div class="widget-title">
+                <h4 class="create-title-product"><i class="icon-plus-sign-alt"></i> Add Product</h4>
+                <h4 class="modify-title-product"><i class="icon-edit-sign"></i> Modify Product</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemProductLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddProduct">
+                        <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Additional</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Product Details</a></li>
+                    </ul>
+                    <?php echo $this->form()->openTag($formSystem); ?>
+                    <input type="hidden" name="systemId" value="" style="display: none" />
+                        <div class="tab-content" style="min-height: 260px">
+                            <div class="tab-pane active" id="widget_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Product <span id="productInfo" class="btn btn-mini btn-default tooltips" data-original-title="No product selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
+                                    <div class="controls">
+                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                            <option></option>
+                                            <?php
+                                                $group = null;
+                                                if (!empty($products)) {
+                                                    foreach ($products as $product){
+                                                        if ($product['typeId'] == 3) { // service item should not be displayed here
+                                                            continue;
+                                                        }
+                                                        
+                                                        if ($product['service'] == 1) { // service item should not be displayed here
+                                                            continue;
+                                                        }
+                                                        if ($group != $product['brand']) {
+                                                            $group = $product['brand'];
+                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
+                                                        }
+                                                        $model = $product['model'];
+                                                        if ($product['brandId']==6 ) { // philips product - need to show Philips ID
+                                                            $attr = json_decode($product['attributes']);
+                                                            if (!empty($attr->philips)) {
+                                                                if (!empty($attr->philips->eoc)) {
+                                                                    $model.= ' | '. $attr->philips->eoc;
+                                                                }
+                                                                if (!empty($attr->philips->model)) {
+                                                                    $model.= ' | '. $attr->philips->model;
+                                                                }
+                                                            }
+                                                                
+                                                        } 
+                                                        echo '<option value="'.$product['productId'].'" '.
+                                                                'data-ppu="'.$product['ppu'].'" '.
+                                                                'data-pwr="'.round($product['pwr'], 0).'" '.
+                                                                'data-type="'.$product['type'].'" '.
+                                                                'data-brand="'.$product['brand'].'" '.
+                                                                'data-eca="'.(!empty($product['eca'])?1:0).'" '.
+                                                                '>'.$model.'</option>';
+                                                    }
+                                                    echo (empty($group)?'':'</optgroup>');
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Quantity</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('quantity'));  ?>
+                                            <span class="add-on">units</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Price</label>
+                                    <div class="controls">
+                                        <div class="input-append input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Install Cost</label>
+                                    <div class="controls">
+                                        <div class="input-append input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('ippu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Hours (if applicable)</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('hours'));  ?>
+                                            <span class="add-on">per week</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="widget_tab2">
+                                <div class="control-group">
+                                    <label class="control-label">Label</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                                    </div>
+                                </div> 
+                                <p>
+                                    If the product you are adding has a LUX or occupancy sensor then you need to measure the 
+                                    percentage energy saving effect that the switch has on the product.
+                                </p>
+                                <hr >
+                                <div class="control-group">
+                                    <label class="control-label">Occupancy Saving</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('occupancy'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">LUX Saving</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('lux'));  ?>
+                                    </div>
+                                </div> 
+                                
+                            </div>
+                        </div>
+                    <?php echo $this->form()->closeTag($formSystem); ?>
+                </div>
+                <div id="productMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-system"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next-system">Next <i class="icon-arrow-right icon-white"></i></button>
+                <?php if ($editable) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-create-system-entry"><i class="icon-plus icon-white"></i> Add Product</button>
+                <button class="btn btn-success" style="float: right" id="btn-modify-system-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>
+<div id="modalSystemService" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3" class="create-title-service">Add Service&nbsp;</h3>
+        <h3 id="myModalLabel3" class="modify-title-service">Modify Service Setup&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="service-widget-color">
+            <div class="widget-title">
+                <h4 class="create-title-service"><i class="icon-plus-sign-alt"></i> Add Service</h4>
+                <h4 class="modify-title-service"><i class="icon-edit-sign"></i> Modify Service</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemServiceLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddService">
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Service Details</a></li>
+                    </ul>
+                    <form name="SpaceAddServiceForm" id="SpaceAddServiceForm" class="form-horizontal form-nomargin">
+                    <input type="hidden" name="systemId" value="" style="display: none" />
+                    <input type="hidden" name="lux" value="0" style="display: none" />
+                    <input type="hidden" name="occupancy" value="0" style="display: none" />
+                    <input type="hidden" name="legacy" value="0" style="display: none" />
+                    <input type="hidden" name="quantity" value="1" style="display: none" />
+                    <input type="hidden" name="ippu" value="0" style="display: none" />
+                    <input type="hidden" name="sMode" value="1" style="display: none" />
+                        <div class="tab-content" style="min-height: 260px">
+                            <div class="tab-pane active" id="widget_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Product <span id="serviceInfo" class="btn btn-mini btn-default tooltips" data-original-title="No service selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
+                                    <div class="controls">
+                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                            <option></option>
+                                            <?php
+                                                $group = null;
+                                                if (!empty($products)) {
+                                                    foreach ($products as $product){
+                                                        if ($product['service'] != 1) { // service item should not be displayed here
+                                                            continue;
+                                                        }
+                                                        if ($group != $product['brand']) {
+                                                            $group = $product['brand'];
+                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
+                                                        }
+                                                        echo '<option value="'.$product['productId'].'" '.
+                                                                'data-ppu="'.$product['ppu'].'" '.
+                                                                'data-type="'.$product['type'].'" '.
+                                                                'data-brand="'.$product['brand'].'" '.
+                                                                '>'.$product['model'].'</option>';
+                                                    }
+                                                    echo (empty($group)?'':'</optgroup>');
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Cost (supplier cost)</label>
+                                    <div class="controls">
+                                        <div class="input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('cpu'));  ?>
+                                        </div>
+                                    </div>
+                                </div>                                 
+                                <div class="control-group">
+                                    <label class="control-label">Price (to client)</label>
+                                    <div class="controls">
+                                        <div class="input-append input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Label</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                                    </div>
+                                </div> 
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div id="serviceMsgs"></div>
+                <?php if ($editable) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-create-system-service-entry"><i class="icon-plus icon-white"></i> Add Service</button>
+                <button class="btn btn-success" style="float: right" id="btn-modify-system-service-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                <?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>
+<div id="modalArchitectural" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3" class="create-title-architectural">Add Architectural&nbsp;</h3>
+        <h3 id="myModalLabel3" class="modify-title-architectural">Modify Architectural Setup&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="architectural-widget-color">
+            <div class="widget-title">
+                <h4 class="create-title-architectural"><i class="icon-plus-sign-alt"></i> Add Architectural</h4>
+                <h4 class="modify-title-architectural"><i class="icon-edit-sign"></i> Modify Architectural</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemArchitecturalLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddArchitectural">
+                        <li class=""><a data-number="3" href="#widgetA_tab3" data-toggle="tab">Options</a></li>
+                        <li class=""><a data-number="2" href="#widgetA_tab2" data-toggle="tab">Additional</a></li>
+                        <li class="active"><a data-number="1" href="#widgetA_tab1" data-toggle="tab">Product</a></li>
+                    </ul>
+                    <form name="SpaceAddArchitecturalForm" id="SpaceAddArchitecturalForm" class="form-horizontal form-nomargin">
+                    <input type="hidden" name="altId" value=""  />
+                    <input type="hidden" name="altSz" value=""  />
+                    <input type="hidden" name="qMode" value="1"  />
+                    <input type="hidden" name="systemId" value="" style="display: none" />
+                        <div class="tab-content" style="min-height: 260px">
+                            <div class="tab-pane active" id="widgetA_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Product <span id="architecturalInfo" class="btn btn-mini btn-default tooltips" data-original-title="No product selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
+                                    <div class="controls">
+                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                            <option></option>
+                                            <?php
+                                                $group = null;
+                                                if (!empty($products)) {
+                                                    foreach ($products as $product){
+                                                        if ($product['typeId'] != 3) { // service item should not be displayed here
+                                                            continue;
+                                                        }
+                                                        if ($group != $product['brand']) {
+                                                            $group = $product['brand'];
+                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
+                                                        }
+                                                        echo '<option value="'.$product['productId'].'" '.
+                                                                'data-ppu="'.$product['ppu'].'" '.
+                                                                'data-pwr="'.round($product['pwr'], 0).'" '.
+                                                                'data-type="'.$product['type'].'" '.
+                                                                'data-brand="'.$product['brand'].'" '.
+                                                                'data-eca="'.(!empty($product['eca'])?1:0).'" '.
+                                                                '>'.$product['model'].'</option>';
+                                                    }
+                                                    echo (empty($group)?'':'</optgroup>');
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Required Length</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('length'));  ?>
+                                            <span class="add-on">mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Price</label>
+                                    <div class="controls">
+                                        <div class="input-append input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Install Cost</label>
+                                    <div class="controls">
+                                        <div class="input-append input-prepend">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($formSystem->get('ippu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Unit Count</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('quantity'));  ?>
+                                            <span class="add-on">Units</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="widgetA_tab2">
+                                <div class="control-group">
+                                    <label class="control-label">Label</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                                    </div>
+                                </div> 
+                                <p>
+                                    If the product you are adding has a LUX or occupancy sensor then you need to measure the 
+                                    percentage energy saving effect that the switch has on the product.
+                                </p>
+                                <hr >
+                                <div class="control-group">
+                                    <label class="control-label">Occupancy Saving</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('occupancy'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">LUX Saving</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formSystem->get('lux'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Hours (if applicable)</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('hours'));  ?>
+                                            <span class="add-on">per week</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="widgetA_tab3">
+                                <p>
+                                    In order to a non-standard setup for the architectural configuration please first enter a length on the &quot;Product&quot; tab.
+                                </p>
+                                <hr >
+                                <div class="control-group">
+                                    <label class="control-label">Configurations: </label>
+                                    <div class="controls">
+                                        <select name="configurations" class="span12">
+                                            <option>No Configurations Available</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Max Unit Length</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('maxunitlength'));  ?>
+                                            <span class="add-on">mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div id="architecturalMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-architectural"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next-architectural">Next <i class="icon-arrow-right icon-white"></i></button>
+                <?php if ($editable) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-create-architectural-entry"><i class="icon-plus icon-white"></i> Add Architectural</button>
+                <button class="btn btn-success" style="float: right" id="btn-modify-architectural-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <div class="label label-important" style="float: left" id="architecturalLength">select a product to calculate achievable length and units required</div>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>

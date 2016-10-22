@@ -1,0 +1,32 @@
+<?php
+    $client = $project->getClient();
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <?php 
+            if (!empty($footer['pages'])) {
+                echo $this->partial('partial/project/docs/pages.phtml'); 
+            }
+            
+            echo $this->partial('partial/project/docs/attach/model.phtml'); 
+            
+        ?>
+        <?php
+            if (!empty($attach)) {
+                foreach ($attach as $name) {
+                    echo '<div style="page-break-before: always">';
+                    echo $this->partial('partial/project/docs/attach/'.$name.'.phtml'); 
+                    echo '</div>';
+                }
+            }
+        ?>
+    </body>
+</html>

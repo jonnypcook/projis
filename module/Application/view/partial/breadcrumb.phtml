@@ -1,0 +1,50 @@
+<?php
+    $hasElements = (count($this->pages)>0);
+?>
+<ul class="breadcrumb relative">
+    <li>
+        <?php if($hasElements): ?>
+            <a href="<?php echo $this->url('home'); ?>">Home</a>
+            <span class="divider">/</span>
+        <?php else: ?>
+            Home
+        <?php endif; ?>
+    </li>
+     
+    <?php
+     // iterate through the pages
+     foreach ($this->pages as $key => $page):
+         $active = ($key < count($this->pages) - 1);
+         ?>
+         <li<?php echo $active?' class="active"':''; ?>><?php
+             
+             // if this isn't the last page, add a link and the separator
+             if ($active):
+                 ?>
+                 <a href="<?php echo $page->getHref(); ?>"><?php echo $page->getLabel(); ?></a>
+                 <span class="divider">/</span>
+             <?php
+             // otherwise, just output the name
+             else:
+                echo $page->getLabel(); 
+             endif; ?></li>
+         
+         <?php endforeach; ?>     
+        <li class="pull-right search-wrap" style="position: absolute; right: 15px; top: 8px; "> <!-- important: this style has been hacked to override style sheet issues of mispositioning of search bar <!-- -->
+            <form id="frmSearch" action="/search" class="hidden-phone">
+                <div class="input-append search-input-area">
+                    <input class="" id="appendedInputButton" type="text" name="searchfull">
+                    <button onclick="javascript: $('#frmSearch').submit();"  class="btn" type="button"><i class="icon-search"></i> </button>
+                </div>
+            </form>
+        </li>
+</ul>
+
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+

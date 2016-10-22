@@ -1,0 +1,110 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-save-resource').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#ResourceForm').submit();
+        return false;
+    });
+
+    $("#ResourceForm").validate({
+        rules: {
+            {$form->get('name')->getName()}: "required",
+            {$form->get('unit')->getName()}: "required",
+            {$form->get('cost')->getName()}: "required"
+        },
+        messages: {
+            {$form->get('name')->getName()}: "Please enter name",
+            {$form->get('unit')->getName()}: "Please enter unit",
+            {$form->get('cost')->getName()}: "Please enter cost"
+        },
+        submitHandler: function(form){
+             var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#ResourceForm').serialize();
+            $('#resourceLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-items/add',
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The resource has been added successfully.', {time: 3000});
+                                window.location.reload();
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#resourceLoader').fadeOut(function(){
+
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+    $('#btn-add-resource').on('click', function(){
+        $('#modalResource').modal();
+    });
+
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalResource" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3 header">Add Resource</h3>
+    </div>
+    <div class="modal-body">
+        <div id="resourceLoader" class="loader"></div>
+        <?php echo $this->form()->openTag( $form ); ?>
+        <div class="control-group">
+            <label class="control-label" for="name"><?php echo $form->get( 'name' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $form->get( 'name' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="unit"><?php echo $form->get( 'unit' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $form->get( 'unit' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="cost"><?php echo $form->get( 'cost' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $form->get( 'cost' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="costCode"><?php echo $form->get( 'costCode' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $form->get( 'costCode' ) ); ?>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag( $form ); ?>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-save-resource" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

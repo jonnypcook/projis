@@ -1,0 +1,523 @@
+<?php
+$this->inlineScript()
+    ->appendFile( 'https://code.highcharts.com/highcharts.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/funnel.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/exporting.js' );
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(document).ready(function() {
+    Highcharts.setOptions({
+		lang: {
+			thousandsSep: ','
+		}
+	});
+          $('#salesChart').highcharts({
+            colors: ['#CCCCCC', '#DE577B', '#F37B53', '#0CA389'],
+            chart: {
+                type: 'funnel',
+                marginRight: 120,
+            },
+            title: {
+                text: 'Sales Rating  (£ Value)',
+                x: -50
+            },
+            tooltip: {
+                pointFormat: '{series.name}: {point.y:,.0f} ({point.percentage:.2f}%)'
+            },
+            plotOptions: {
+                series: {
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b> ({point.y:,.0f}-{point.percentage:.2f}%)',
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
+                        softConnector: true
+                    },
+                    neckWidth: '30%',
+                    neckHeight: '25%'
+                    //-- Other available options
+                    // height: pixels or percent
+                    // width: pixels or percent
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            series :[{
+                    name : 'Value',
+                    data : [
+                        ['UR', {$data["all"][0]["value"]}],
+                        ['RR', {$data["all"][1]["value"]}],
+                        ['AR', {$data["all"][2]["value"]}],
+                        ['GR', {$data["all"][3]["value"]}]
+                    ]
+                }]
+        });
+
+        $('#pieChart').highcharts({
+            colors: ['#CCCCCC', '#DE577B', '#F37B53', '#0CA389'],
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'Sales Rating (# Projects)'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: 'Projects',
+                colorByPoint: true,
+                data: [{
+                    name: 'Un-Rated',
+                    y: {$data["all"][0]["cnt"]},
+                    sliced: true,
+                    selected: true
+
+                }, {
+                    name: 'Red Rated',
+                    y: {$data["all"][1]["cnt"]}
+                }, {
+                    name: 'Amber Rated',
+                    y: {$data["all"][2]["cnt"]}
+                }, {
+                    name: 'Green Rated',
+                    y: {$data["all"][3]["cnt"]}
+                }]
+            }]
+        });
+
+    //var columnChart = $('#sales-chart-container').highcharts();
+    //columnChart.xAxis[0].setCategories("[{'Jan', 'feb'}]");
+
+    $('.sales-rating-chart').on('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        var url = $(this).attr('href');
+        user_id = url.substr(url.lastIndexOf('/') + 1);
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {user_id: user_id},
+            dataType: 'json',
+            success: function(data){
+                var options = {
+                    colors: ['#CCCCCC', '#DE577B', '#F37B53', '#0CA389'],
+                    chart: {
+                        renderTo : 'sales-chart-container',
+                        type: 'column'
+                    },
+                    title: {
+                        text: '12 Months Sales Outlook'
+                    },
+                    xAxis: {
+                        categories: []
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Total Value'
+                        },
+                        stackLabels: {
+                            enabled: true,
+                            style: {
+                                fontWeight: 'bold',
+                                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                            }
+                        }                        
+                    },
+                    legend: {
+                        align: 'right',
+                        x: -30,
+                        verticalAlign: 'top',
+                        y: 25,
+                        floating: true,
+                        backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+                        borderColor: '#CCC',
+                        borderWidth: 1,
+                        shadow: false
+                    },
+                    tooltip: {
+                        headerFormat: '<b>{point.x}</b><br/>',
+                        pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+                    },
+                    plotOptions: {
+                        column: {
+                            stacking: 'normal',
+                            dataLabels: {
+                                enabled: false,
+                                color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+                                style: {
+                                    textShadow: '0 0 3px black'
+                                }
+                            }
+                        },
+                        series: {
+                            cursor: 'pointer',
+                            point: {
+                                events: {
+                                    click: function(){
+                                        var user = $('#user_id').val();
+                                       month = this.category;
+                                       mon = "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(month) / 3 + 1
+                                       var url = '/ratingreport/monthly/rating-all/user-' + user + '/month-' + mon;
+                                       location.href = url;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    series: []
+
+                };
+                
+                for(var key in data[0]['data'])
+                {
+                    options.xAxis.categories.push(data[0]['data'][key]);
+                }
+
+                options.series.push({
+                    name : 'Un-Rated',
+                    data : []
+                });
+
+                for(var key in data[1]['data'])
+                {
+                    options.series[0].data.push(parseInt(data[1]['data'][key]));
+                }
+
+                options.series.push({
+                    name : 'Red Rated',
+                    data : []
+                });
+
+                for(var key in data[2]['data'])
+                {
+                    options.series[1].data.push(parseInt(data[2]['data'][key]));
+                }
+
+                options.series.push({
+                    name : 'Amber Rated',
+                    data : []
+                });
+                for(var key in data[3]['data'])
+                {
+                    options.series[2].data.push(parseInt(data[3]['data'][key]));
+                }
+
+                options.series.push({
+                    name : 'Green Rated',
+                    data : []
+                });
+
+                for(var key in data[4]['data'])
+                {
+                    options.series[3].data.push(parseInt(data[4]['data'][key]));
+                }
+	            chart = new Highcharts.Chart(options);
+	            $('#user_id').val(user_id);
+	            $('#modalRatingChart').modal();
+            }
+        });
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+    <div class="row-fluid">
+        <div class="span5">
+            <div id="salesChart" style="min-width: 410px; max-width: 600px; height: 400px; margin: 0 auto"></div>
+        </div>
+        <div class="span7">
+            <div id="pieChart" style="min-width: 410px; max-width: 600px; height: 400px; margin: 0 auto"></div>
+        </div>
+    </div>
+    <hr/>
+    <div class="row-fluid">
+    <div class="span12">
+<?php if ( !empty($data) ): ?>
+    <div class="row-fluid">
+        <div class="span2">
+            All<br/>
+            <!-- This is for displaying chart in popup -->
+            <!--
+            <a href="<?php echo $this->url( 'ratingchart', array( 'action' => 'chartdata', 'user' => 0 ) ); ?>" class="sales-rating-chart">Show Chart</a>
+            -->
+            <a href="<?php echo $this->url( 'yearlyoutlook', array( 'action' => 'detail', 'user' => 0 ) ); ?>">View Sales Outlook</a>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 green">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'gr', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo number_format( $data['all'][3]['value'], 0 ); ?></p>
+
+                            <p class="month">(<?php echo $data['all'][3]['cnt']; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = $data['all'][3]['cnt'];
+                                $amt = $data['all'][3]['value'];
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 orange">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'ar', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo number_format( $data['all'][2]['value'], 0 ); ?></p>
+
+                            <p class="month">(<?php echo $data['all'][2]['cnt']; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = $data['all'][2]['cnt'];
+                                $amt = $data['all'][2]['value'];
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 red">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'rr', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo number_format( $data['all'][1]['value'], 0 ); ?></p>
+
+                            <p class="month">(<?php echo $data['all'][1]['cnt']; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = $data['all'][1]['cnt'];
+                                $amt = $data['all'][1]['value'];
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 gray">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'ur', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                            <p class="month"><span style="color:#000;">&#163;<?php echo number_format( $data['all'][0]['value'], 0 ); ?></span></p>
+
+                            <p class="month"><span style="color:#000;">(<?php echo $data['all'][0]['cnt']; ?>)</span></p>
+                            <h4>
+                                    <span style="color:#000;">
+                                    Avg. &#163;<?php
+                                        $cnt = $data['all'][0]['cnt'];
+                                        $amt = $data['all'][0]['value'];
+                                        if ( $cnt > 0 )
+                                            echo number_format( $amt / $cnt, 0 );
+                                        else
+                                            echo '0';
+                                        ?>
+                                    </span>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 black">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'all', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo number_format( $data['all']['value'], 0 ); ?></p>
+
+                            <p class="month">(<?php echo $data['all']['cnt']; ?>)</p>
+                            <h4>
+
+                                Avg. &#163;<?php
+                                $cnt = $data['all']['cnt'];
+                                $amt = $data['all']['value'];
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <?php foreach ( $data['user'] as $key => $value ): ?>
+        <div class="row-fluid">
+            <div class="span2">
+                <strong><?php echo $value['user_name']; ?></strong><br/>
+                <!-- This is for displaying chart in popup -->
+                <!--
+                <a href="<?php echo $this->url( 'ratingchart', array( 'action' => 'chartdata', 'user' => $key ) ); ?>" class="sales-rating-chart">Show Chart</a>
+                -->
+                <a href="<?php echo $this->url( 'yearlyoutlook', array( 'action' => 'detail', 'user' => $key ) ); ?>">View Sales Outlook</a>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 green">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'gr', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo isset($value[3]) ? number_format( $value[3]['value'], 0 ) : 0; ?></p>
+                                <p class="month">(<?php echo isset($value[3]) ? $value[3]['cnt'] : 0; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = isset($value[3]) ? $value[3]['cnt'] : 0;
+                                    $amt = isset($value[3]) ? $value[3]['value'] : 0;
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 orange">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'ar', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo isset($value[2]) ? number_format( $value[2]['value'], 0 ) : 0; ?></p>
+
+                                <p class="month">(<?php echo isset($value[2]) ? $value[2]['cnt'] : 0; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = isset($value[2]) ? $value[2]['cnt'] : 0;
+                                    $amt = isset($value[2]) ? $value[2]['value'] : 0;
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 red">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'rr', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo isset($value[1]) ? number_format( $value[1]['value'], 0 ) : 0; ?></p>
+
+                                <p class="month">(<?php echo isset($value[1]) ? $value[1]['cnt'] : 0; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = isset($value[1]) ? $value[1]['cnt'] : 0;
+                                    $amt = isset($value[1]) ? $value[1]['value'] : 0;
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 gray">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'ur', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                                <p class="month"><span style="color:#000;">&#163;<?php echo isset($value[0]) ? number_format( $value[0]['value'], 0 ) : 0; ?></span></p>
+
+                                <p class="month"><span style="color:#000;">(<?php echo isset($value[0]) ? $value[0]['cnt'] : 0; ?>)</span></p>
+                                <h4><span style="color:#000;">
+                                        Avg. &#163;<?php
+                                        $cnt = isset($value[0]) ? $value[0]['cnt'] : 0;
+                                        $amt = isset($value[0]) ? $value[0]['value'] : 0;
+                                        if ( $cnt > 0 )
+                                            echo number_format( $amt / $cnt, 0 );
+                                        else
+                                            echo '0';
+                                        ?></span>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 black">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'all', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo isset($value['total_value']) ? number_format( $value['total_value'], 0 ) : 0; ?></p>
+
+                                <p class="month">(<?php echo isset($value['total_cnt']) ? $value['total_cnt'] : 0; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = isset($value['total_cnt']) ? $value['total_cnt'] : 0;
+                                    $amt = isset($value['total_value']) ? $value['total_value'] : 0;
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+
+
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <?php endforeach; ?>
+<?php endif; ?>
+
+<?php
+echo $this->partial( 'partial/report/dialogs/chart/ratingColumnStacked.phtml' );
+?>

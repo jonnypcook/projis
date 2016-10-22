@@ -1,0 +1,26 @@
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Reference</th>
+            <th>Project</th>
+            <th>Price</th>
+            <th>Properties</th>
+            <th>PPP</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php 
+        if (!empty($data)) {
+            foreach ($data as $row) {
+                echo '<tr>
+            <td><a href="/client-'.$row['client_id'].'/" target="_tab">'.str_pad($row['client_id'], 5, "0", STR_PAD_LEFT),'-',str_pad($row['project_id'], 5, "0", STR_PAD_LEFT).'</a></td>
+            <td><a href="/client-'.$row['client_id'].'/project-'.$row['project_id'].'/" target="_tab">'.$row['pname'].'</a></td>
+            <td>&#163;'.number_format($row['price'], 2).'</td>
+            <td>'.$row['propertyCount'].'</td>
+            <td>&#163;'.number_format($row['price']/$row['propertyCount'], 2).'</td>
+            </tr>';
+            }
+        }
+        ?>
+    </tbody>
+</table>

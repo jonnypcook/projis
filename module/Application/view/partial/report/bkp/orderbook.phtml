@@ -1,0 +1,79 @@
+<?php
+echo $this->partial( 'partial/report/jobs/orderbookchart.phtml' );
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <h3>Order Book by Value</h3>
+        <table class="table table-bordered table-responsive">
+            <?php foreach ( $data['value'] as $key => $value ): ?>
+                <tr>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $key != 'Year' ): ?>
+                            <?php echo $key . ' - ' . ($key + 1); ?>
+                            <?php else: ?>
+                            <?php echo $key; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[0]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[1]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[2]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[3]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[4]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[5]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[6]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[7]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[8]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[9]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[10]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[11]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $value[12] != 'Total' ): ?>
+                            &#163;<?php echo number_format( $value[12], 0 ); ?>
+                        <?php else: ?>
+                            <?php echo $value[12]; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+</div>
+<br/>
+<br/>
+<div class="row-fluid">
+    <div class="span12">
+        <h3>Order Book by Count</h3>
+        <table class="table table-bordered table-responsive">
+            <?php foreach ( $data['count'] as $key => $value ): ?>
+                <tr>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $key != 'Year' ): ?>
+                            <?php echo $key . ' - ' . ($key + 1); ?>
+                        <?php else: ?>
+                            <?php echo $key; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[0]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[1]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[2]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[3]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[4]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[5]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[6]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[7]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[8]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[9]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[10]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;"><?php echo $value[11]; ?></td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $value[12] != 'Total' ): ?>
+                            <?php echo $value[12]; ?>
+                        <?php else: ?>
+                            <?php echo $value[12]; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+</div>

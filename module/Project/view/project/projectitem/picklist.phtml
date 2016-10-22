@@ -1,0 +1,147 @@
+<?php
+
+
+if (!empty($architectural)) {
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget purple">
+            <div class="widget-title">
+                <h4><i class="icon-cogs"></i> Architectural Products</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <div class="clearfix">
+                    <div class="btn-group pull-left">
+                    </div>
+                    <div class="btn-group pull-right">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/picklist/?mode=1" >Download picklist (CSV)</a></li>
+                            <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/" class="btn-config-export-csv">Download system setup (CSV)</a></li>
+                        </ul><!-- -->
+                    </div>
+                </div>
+                <div class="space10"></div>
+                <table class="table table-striped table-bordered table-advance table-hover" id="products_tbl">
+                    <thead>
+                        <tr>
+                            <th > Model</th>
+                            <th > Description</th>
+                            <th style="width: 80px"> Sage ID</th>
+                            <th style="width: 80px"> Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        foreach ($boards as $model=>$boardConfig) {
+                            foreach ($boardConfig as $board) {
+                                if (empty($board[3])) continue;
+                                echo '<tr>'
+                                . '<td>'.$board[1].' - '.$model.'</td>'
+                                . '<td>'.$board[2].' for '.$model.'</td>'
+                                . '<td>'.$board[0].'</td>'
+                                . '<td class="right">'.$board[3].'</td>'
+                                . '</tr>';
+                            }
+                        }/**/
+                        
+                        echo '<tr><td colspan="4">&nbsp;</td></tr>';
+                        foreach ($architectural as $product) {
+                            echo '<tr>'
+                            . '<td>'.$product[1].'</td>'
+                            . '<td>'.$product[2].'</td>'
+                            . '<td>'.$product[0].'</td>'
+                            . '<td class="right">'.$product[3].'</td>'
+                            . '</tr>';
+                        }/**/
+                        
+                        echo '<tr><td colspan="4">&nbsp;</td></tr>';
+                        foreach ($phosphor as $len=>$config) {
+                            foreach ($config as $brds=>$qtty) {
+                                echo '<tr>'
+                                . '<td>'.number_format($len,2, '.', '').'mm Remote Phosphor</td>'
+                                . '<td>'.number_format($len,2, '.', '').'mm Remote Phosphor Length for board config: '.$brds.'</td>'
+                                . '<td></td>'
+                                . '<td class="right">'.($qtty[0]+$qtty[1]).'</td>'
+                                . '</tr>';
+                            }
+                        }/**/
+                        
+                        echo '<tr><td colspan="4">&nbsp;</td></tr>';
+                        foreach ($aluminium as $len=>$config) {
+                            foreach ($config as $brds=>$qtty) {
+                                echo '<tr>'
+                                . '<td>'.number_format($len,2, '.', '').'mm Aluminium</td>'
+                                . '<td>'.number_format($len,2, '.', '').'mm Aluminium Length</td>'
+                                . '<td></td>'
+                                . '<td class="right">'.$qtty.'</td>'
+                                . '</tr>';
+                            }
+                        }/**/
+                        
+                        
+                        
+                        ?>
+                    </tbody>
+                    <tfoot>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<?php 
+} 
+
+if (!empty($standard)) {
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-cogs"></i> Standard Products</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+            
+                <table class="table table-striped table-bordered table-advance table-hover" id="products_tbl">
+                    <thead>
+                        <tr>
+                            <th > Model</th>
+                            <th > Description</th>
+                            <th style="width: 80px"> Sage ID</th>
+                            <th style="width: 80px"> Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        foreach ($standard as $product) {
+                            echo '<tr>'
+                            . '<td>'.$product[1].'</td>'
+                            . '<td>'.$product[2].'</td>'
+                            . '<td>'.$product[0].'</td>'
+                            . '<td class="right">'.$product[3].'</td>'
+                            . '</tr>';
+                        }
+                        ?>
+                    </tbody>
+                    <tfoot>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<?php 
+} 
+?>

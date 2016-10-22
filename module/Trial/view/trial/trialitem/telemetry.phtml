@@ -1,0 +1,185 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/signalr/jquery.signalr-1.1.2.min.js')
+    ->appendFile('https://testing.wattzo.com/api/realtime/hubs')
+    ->appendFile('https://www.google.com/jsapi')
+        
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+        
+    ->appendFile('/assets/flot/jquery.flot.js')
+    ->appendFile('/assets/flot/jquery.flot.resize.js')
+    ->appendFile('/assets/flot/jquery.flot.pie.js')
+    ->appendFile('/assets/flot/jquery.flot.stack.js')
+    ->appendFile('/assets/flot/jquery.flot.crosshair.js')
+    ->appendFile('/js/forms/project/telemetry.js')
+/**/;
+
+
+?>
+<style>
+    .onoff-toggle-mask {
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        z-index: 999; 
+        background-color: #fff; 
+        width: 100%; 
+        height: 100%; 
+        opacity: 0.8; 
+        display: block; 
+        text-align: center;
+    }
+    
+    .onoff-toggle-mask span {
+        margin-top: 12px;
+        display: inline-block;
+    }
+    
+    #devices tbody td {
+        vertical-align: middle;
+    }
+</style>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="alert alert-error">
+            <strong>Important Notice:</strong> telemetry as displayed below is for demonstrative purposes only and does not relate to specific resource deployed to trial.
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span6">
+        <!-- BEGIN INTERACTIVE CHART PORTLET-->
+        <div class="widget yellow">
+            <div class="widget-title">
+                <h4><i class="icon-tablet"></i> Hub: 01-001-ABC123</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <table class="table table-bordered table-striped" id="devices">
+                    <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>Power</th>
+                        <th style='width: 100px'>Control</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr data-device="01-166-542f85" data-state="ready">
+                        <td>
+                            01-166-542f85 <i class="icon-info-sign"></i>
+                        </td>
+                        <td class="deviceWatts">
+                            <span class="badge badge-important">0</span> watts
+                        </td>
+                        <td class="relative">
+                            <div class="controls">
+                                <div class="onoff-toggle">
+                                    <input class="onoff" type="checkbox"  />
+                                </div>
+                            </div>
+                            <div class="onoff-toggle-mask">
+                                <span>connecting ...</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-device="01-166-258ce3" data-state="ready">
+                        <td>
+                            01-166-258ce3 <i class="icon-info-sign"></i>
+                        </td>
+                        <td class="deviceWatts">
+                            <span class="badge badge-important">0</span> watts
+                        </td>
+                        <td class="relative">
+                            <div class="controls">
+                                <div class="onoff-toggle">
+                                    <input class="onoff" type="checkbox" />
+                                </div>
+                            </div>
+                            <div class="onoff-toggle-mask">
+                                <span>connecting ...</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-device="01-166-074f96" data-state="ready">
+                        <td>
+                            01-166-074f96 <i class="icon-info-sign"></i>
+                        </td>
+                        <td class="deviceWatts">
+                            <span class="badge badge-important">0</span> watts
+                        </td>
+                        <td class="relative">
+                            <div class="controls">
+                                <div class="onoff-toggle">
+                                    <input class="onoff" type="checkbox" />
+                                </div>
+                            </div>
+                            <div class="onoff-toggle-mask">
+                                <span>connecting ...</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-device="01-166-0139f4" data-state="ready">
+                        <td>
+                            01-166-0139f4 <i class="icon-info-sign"></i>
+                        </td>
+                        <td class="deviceWatts">
+                            <span class="badge badge-important">0</span> watts
+                        </td>
+                        <td class="relative">
+                            <div class="controls">
+                                <div class="onoff-toggle">
+                                    <input class="onoff" type="checkbox"  />
+                                </div>
+                            </div>
+                            <div class="onoff-toggle-mask">
+                                <span>connecting ...</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END INTERACTIVE CHART PORTLET-->
+    </div>
+    <div class="span6">
+        <!-- BEGIN INTERACTIVE CHART PORTLET-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-bar-chart"></i> Live Power Gauge</h4>
+            <span class="tools">
+            <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <div id="chart_div" style="margin: auto; width: 240px; height: 240px;"></div>
+            </div>
+        </div>
+        <!-- END INTERACTIVE CHART PORTLET-->
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN INTERACTIVE CHART PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-bar-chart"></i> Historic Power Meter</h4>
+            <span class="tools">
+            <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <div id="chart-telemetry" class="chart"></div>
+            </div>
+        </div>
+        <!-- END INTERACTIVE CHART PORTLET-->
+    </div>
+</div>

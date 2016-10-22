@@ -1,0 +1,154 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/cutefilebrowser/css/styles.css')
+    ->appendStylesheet('/assets/dropper/css/jquery.fs.dropper.css')
+    ;
+/**/
+$this->inlineScript()
+    ->appendFile('/assets/cutefilebrowser/js/script.js')
+    ->appendFile('/assets/dropper/js/jquery.fs.dropper.js')
+;/**/
+
+
+if ($this->isGranted('project.explorer.write')) {
+
+$this->inlineScript()->captureStart();
+$url = '/client-'.$project->getClient()->getClientId().'/project-'.$project->getProjectId().'/document/uploadraw';
+echo <<<JS
+    var filequeue = $('#progressItems');
+
+    function onStart(e, files) {
+        var html = '';
+
+        for (var i = 0; i < files.length; i++) {
+            html += '<li data-index="' + files[i].index + '"><h5 class="progress-file">' + files[i].name + '<span class="pull-right progress-text">0%</span></h5><div class="progress progress-striped progress-default active"><div style="width: 0%;" class="bar"></div></div></li>';
+        }
+
+        filequeue.append(html);
+    }
+
+    function onComplete(e) {
+        // complete
+    }
+
+    function onFileStart(e, file) {
+        // file start
+    }
+
+    function onFileProgress(e, file, percent) {
+        filequeue.find("li[data-index=" + file.index + "]").find(".progress-text").text(percent + "%");
+        filequeue.find("li[data-index=" + file.index + "]").find(".progress .bar").css({width:percent+'%'});
+    }
+
+    function onFileComplete(e, file, response) {
+        var item = filequeue.find("li[data-index=" + file.index + "]");
+        if (response.err) {
+            item.find(".progress-file").prepend($('<span class="text-error"><i class="icon-exclamation-sign"></i> Error Uploading File:&nbsp;</span>'));
+            item.on('click', function(e) { $(this).fadeOut(600, function() { $(this).remove(); }); });
+        } else {
+            $('.filemanager .data').trigger('insert', [ file.route, {
+                    name: file.name,
+                    path: file.route+'/'+file.name,
+                    size: file.size,
+                    type: "file"
+                } ]);
+            item.find(".progress-file").prepend($('<span class="text-success"><i class="icon-ok-sign"></i> Successfully Uploaded File:&nbsp;</span>'));
+            item.fadeOut(2000, function() { $(this).remove(); });
+        }
+    }
+
+    function onFileError(e, file, error) {
+        filequeue.find("li[data-index=" + file.index + "]").find(".progress-file").prepend($('<span>ERROR!</span>'));
+
+    }
+
+    $(function(){
+        $(".target").dropper({
+            action: "{$url}",
+            label: "Drag and drop files or click to select files to add to current folder",
+        })
+        .on("start.dropper", onStart)
+        .on("complete.dropper", onComplete)
+        .on("fileStart.dropper", onFileStart)
+        .on("fileProgress.dropper", onFileProgress)
+        .on("fileComplete.dropper", onFileComplete)
+        .on("fileError.dropper", onFileError);
+            
+			
+        $('#btn-add-file').on('click', function(e) {
+            e.preventDefault();
+            $('.dropper-input').trigger('click');
+        });
+		        
+            
+            
+            /**/
+    });
+            
+
+JS;
+$this->inlineScript()->captureEnd();
+
+}
+?><div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-folder-open"></i> File Manager</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <a class="btn btn-large btn-primary" href="javascript: window.location.reload();"><i class="icon-refresh icon-white"></i> Refresh</a>
+<?php if ($this->isGranted('project.explorer.write')) { ?>
+                    <button class="btn btn-large btn-success" id="btn-add-file"><i class="icon-plus-sign icon-white"></i> Add File</button>
+<?php } ?>
+                </div>
+                <div class="space10"></div>
+                <div class="target"></div>
+                <div class="space10"></div>
+                <ul id="progressItems"></ul>
+                <ul class="breadcrumb relative ">
+                    <li >
+                        <i class="icon-folder-open-alt"></i>
+                    </li>
+                    <li >
+                        <div class="breadcrumbs"></div>
+                    </li>
+
+                    <li class="pull-right search-wrap" style="position: absolute; right: 15px; top: 8px; "> <!-- important: this style has been hacked to override style sheet issues of mispositioning of search bar <!-- -->
+                        <div class="input-append search-input-area pull-right">
+                            <input class=""  type="search" id="file-search">
+                            <button class="btn" type="button"><i class="icon-search"></i> </button>
+                        </div>
+                    </li>
+                </ul>
+                <div class="clearfix"></div>
+                <div class="filemanager">
+                    <ul class="data animated"></ul>
+
+                    <div class="nothingfound">
+                        <div class="nofiles"></div>
+                        <span>No files here.</span>
+                    </div>
+
+                </div>
+                <div class="clearfix"></div>
+                <div class="space10"></div>
+                <div class="alert alert-block alert-danger no-margin-bot">
+                    <h4 class="alert-heading">Critical Information:</h4>
+                    <p>
+                        Do not attempt to upload a folder (directory) - this is not currently supported. Complex file manipulation should only be attempted from your Google Drive account.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<form id="documentDownloadFrm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/downloadraw/" target="download-frame">
+    <input type="hidden" name="route" value="" />
+</form>
+<iframe id="download-frame" name="download-frame" style="width:1px; height: 1px; visibility: hidden"></iframe>

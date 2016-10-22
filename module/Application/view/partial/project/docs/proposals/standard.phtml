@@ -1,0 +1,125 @@
+<p class="strong">
+            <?php
+                if(!empty($financing)) {
+                    echo 'RE: Funded LED Solution<br />';
+                }
+            ?>
+                LED Lighting Savings - Energy, Maintenance &amp; Carbon Reduction Solutions
+            </p>
+
+            <?php if(!empty($financing)) { ?>
+            <p>
+                Further to the recent survey of your premises we are pleased to provide you with our proposal for the supply of lighting for this project 
+                and the financial benefits that you could achieve through the installation of a funded 8point3 LED lighting solution. 
+            </p>
+            <p>
+                The attached proposal has been generated based on the results of our survey of your current lighting solution and using the information 
+	you have provided on hours of operation, your current energy pricing and maintenance costs all of which are summarised in the &quot;Summary of Business Proposal&quot; below. 
+	This proposal sets out to identify the potential energy savings, maintenance savings and carbon avoidance achievable as well  
+	as showing financial benefits to the business. 
+            </p>
+            <?php } else { ?>
+            <p>
+                Further to the recent survey of your premises we are pleased to provide you with our proposal for the supply of lighting for this project 
+                and the financial benefits that you could achieve through the installation of 8point3 LED lighting. 
+
+            </p>
+            <p>
+                The attached proposal has been generated based on the results of our survey of your current lighting solution and using the information 
+                you have provided on hours of operation, your current energy pricing and maintenance costs all of which are summarised in the &quot;Summary of Business Proposal&quot; below. 
+                This proposal sets out to identify the potential energy savings, maintenance savings and carbon avoidance achievable as well as showing 
+                budgetary project costs and return on investment. 
+            </p>
+            <?php } ?>
+            
+<?php
+	$eca = ($project->getEca()>0);
+	$crc = ($project->getcarbon()>0);
+	
+	if ($eca && $crc) {
+		echo '<p>Where applicable, we have also shown the benefit available through ECA (Enhanced Capital Allowances for White Light LED) as well as savings achievable through the CRC Energy Efficiency Scheme.</p>';
+	} elseif ($eca) {
+		echo '<p>Where applicable, we have also shown the benefit available through ECA (Enhanced Capital Allowances for White Light LED).</p>';
+	} elseif ($crc) {
+		echo '<p>Where applicable, we have also shown the benefit available through the CRC Energy Efficiency Scheme.</p>';
+	}
+?>            
+            
+<?php if ($figures['space_count']>1) { ?>
+            <p>
+            To provide further clarity on the savings for specific areas within your business, we have segregated the proposed project in to 
+            <?php 
+            echo $this->wordify($figures['space_count']); 
+            ?> bespoke spaces, each space having a breakdown of the lighting types to be replaced, the 
+            energy savings available, the hours of usage and the cost of the project.
+            </p>
+<?php } ?>
+            <h6 style="padding: 0; margin: 0">Summary of Business Proposal - Business Model</h6>
+            We have based our calculations for the business illustration upon a number of different factors as detailed below:
+            <ul>
+                <li>Hours of operation of lighting as shown in business illustration</li>
+                <li>Energy price per kWh of &#163;<?php echo round($project->getfueltariff(), 4); ?></li>
+                <li>Inflation (RPI) predicted at <?php echo ($project->getrpi()*100); ?>% p.a.</li>
+                <li>Energy Price Inflation (EPI) predicted at <?php echo ($project->getEPI()*100); ?>% p.a.</li>
+                <li>Average annual maintenance cost of current lighting system of &#163;<?php echo number_format($forecast[1][3],0); ?>.</li>
+                <?php if ($project->geteca()>0) { ?>
+                <li>ECA allowance: <?php echo (($project->getECA()>0)?($project->getECA()*100).'%':'N/A'); ?></li>
+                <?php } ?>
+                <?php if ($project->getcarbon()>0) { ?>
+                <li>CRC allowance: <?php echo (($project->getCarbon()>0)?('&#163;'.$project->getCarbon().' per tonne'):'N/A'); ?></li>
+                <?php } ?>
+            </ul>
+
+            <h6 class="break-before" style="padding: 0; margin: 0">Summary of Benefits</h6>
+            <ul>
+                <?php if(!empty($financing)) { ?>
+                <li class="strong">Funded programme over <?php echo $this->wordify($figures['finance_years']); ?> year<?php echo ($figures['finance_years']==1)?'':'s'; ?></li>
+            <?php } else { 
+                        if (!empty($figures['payback_year'])) { // check that ROI makes business sense
+            ?>
+                <li class="strong">Return on investment (ROI) in year <?php echo $this->wordify($figures['payback_year']); ?></li>
+            <?php 
+                        } 
+                }?>
+            <?php if (!empty($forecast[1][0])) { ?>
+                <li>Average per luminaire power consumption reduction of <span class="strong"><?php echo (100-round((($forecast[1][1]/$forecast[1][0])*100),2));  ?>%</span> (<?php echo number_format($figures['kwhYear']);?> kW per year)</li>
+            <?php } ?>
+                <li><span class="strong">Zero maintenance costs</span> for the full guarantee period - negates current spend of &#163;<?php echo number_format($forecast[1][3],0); ?> per annum</li>
+                <li>Carbon emissions reduction of <span class="strong"><?php echo number_format($forecast[1][7],2); ?> tonnes</span> per year</li>
+
+            <?php if(!empty($financing)) { ?>
+                <li>Net cash saving in year one from installing 8point3 LED lighting of <span class="strong">&#163;<?php echo number_format($forecast[1][2]+$forecast[1][3]-$forecast[1][11],2); ?></span></li>
+            <?php } else { ?>
+                <li>Net cash saving in year one from installing 8point3 LED lighting of <span class="strong">&#163;<?php echo number_format($forecast[1][4],2); ?></span></li>
+            <?php } ?>
+
+            <?php if(!empty($figures['eca'])) { ?>
+                <li>ECA benefit of <span class="strong">&#163;<?php echo number_format($figures['eca'],2); ?></span></li>
+            <?php } ?>
+            <?php if(!empty($figures['carbonallowance'])) { ?>
+                <li>CRC Energy Efficiency Scheme entitlement of <span class="strong">&#163;<?php echo number_format($figures['carbonallowance'],2); ?></span></li>
+            <?php } ?>
+                <?php 
+                    if (!empty($figures['payback_year'])) {
+                        echo '<li>A total '.$this->wordify($figures['payback_year']).' year profit of <span class="strong">&#163;'.number_format($forecast[$figures['payback_year']][9],2).'</span></li>';
+                    }/**/
+                ?>
+            </ul>
+            
+            <?php if ($forecast[1][2]>0) { ?>
+                <h6 style="padding: 0; margin: 0;" class="upper">The cost to your business in <span style="text-decoration: underline">electricity alone</span> by not moving to LED is &#163;<?php echo number_format($forecast[1][2],0); ?> p.a.</h6>
+            <?php } ?>
+            <p>
+            A full breakdown of the benefits, calculations and projected savings over the next <?php echo $modelyears; ?> years is shown in the schedules attached.&nbsp;&nbsp;Please 
+            note that all costs are exclusive of delivery, installation, setup &amp; commissioning of sensor &amp; lighting controls, and VAT unless itemised on the attached Business Illustration.
+            </p>
+
+            <h6 style="padding: 0; margin: 0">Our Guarantee</h6>
+            <p > 
+                Our products come with a five year full product repair or replacement guarantee. If in the rare event one of our lights 
+                fails during this time, we will repair or replace it at our cost. The standard lead time for product delivery is 4-8 weeks from date of order.
+            </p>
+            <p>
+                I will contact you shortly in order to arrange a meeting to discuss this further but in the meantime, 
+                should you have any questions, please do not hesitate to contact me.
+            </p>

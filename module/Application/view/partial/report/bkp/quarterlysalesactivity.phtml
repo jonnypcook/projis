@@ -1,0 +1,249 @@
+<?php
+$url = $this->url( 'reports', array( 'action' => 'ajax', 'group' => 'client', 'report' => 6 ) );
+$this->inlineScript()->captureStart();
+echo <<<JS
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+$(document).ready(function(){
+    $('#user_id').change(function(){
+        $.ajax({
+            type: 'post',
+            url: "$url",
+            data: {'user_id': $('#user_id').val()},
+            dataType: 'json',
+            beforeSend:function(){
+                $('#table-body').empty();
+                $('#loading-data').show();
+            },
+            success:function(response){
+                $('#loading-data').hide();
+                var stats = response.stats;
+                //console.log(stats);
+                for( var key in stats )
+                {
+                    var html = '<tr>';
+                    if ( stats[key][0] == 'Total' )
+                    {
+                        html += '<td>' + stats[key][0] + '</td>';
+                        html += '<td><a href="/reportall/view/clients/'+ $('#user_id').val() +'">' + stats[key][1] + '</a></td>';
+                        html += '<td><a href="/reportall/view/contacts/'+ $('#user_id').val() +'">' + stats[key][2] + '</a></td>';
+                        html += '<td><a href="/reportall/view/quotations/'+ $('#user_id').val() +'">' + stats[key][3] + '</a></td>';
+                        html += '<td><a href="/reportall/view/proposals/'+ $('#user_id').val() +'">' + stats[key][4] + '</a></td>';
+                        html += '<td><a href="/reportall/view/allprojects/'+ $('#user_id').val() +'">' + stats[key][5] + '</a></td>';
+                        html += '<td><a href="/reportall/view/wonprojects/'+ $('#user_id').val() +'">' + stats[key][6] + '</a></td>';
+                        html += '<td><a href="/reportall/view/lostprojects/'+ $('#user_id').val() +'">' + stats[key][7] + '</a></td>';
+                        html += '<td><a href="/reportall/view/openprojects/'+ $('#user_id').val() +'">' + stats[key][8] + '</a></td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][9] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][10] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][11] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][12] ) + '</td>';
+                    }
+                    else if ( stats[key][0] == 'All Total' )
+                    {
+                        html += '<td>' + stats[key][0] + '</td>';
+                        html += '<td>' + stats[key][1] + '</td>';
+                        html += '<td>' + stats[key][2] + '</td>';
+                        html += '<td>' + stats[key][3] + '</td>';
+                        html += '<td>' + stats[key][4] + '</td>';
+                        html += '<td>' + stats[key][5] + '</td>';
+                        html += '<td>' + stats[key][6] + '</td>';
+                        html += '<td>' + stats[key][7] + '</td>';
+                        html += '<td>' + stats[key][8] + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][9] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][10] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][11] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][12] ) + '</td>';
+                    }
+                    else
+                    {
+                        var str_date = stats[key][0];
+                        var mth = str_date.substring(0,3);
+                        var year = str_date.substring(4,8);
+                        var day = 1;
+                        var generated_date = mth + ' ' + 1 + ', ' + year + ' 00:00:00';
+                        var dt = new Date(generated_date);
+                        html += '<td>' + stats[key][0] + '</td>';
+                        html += '<td><a href="/reportlist/view/newclients/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][1] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/newcontacts/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][2] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/quotations/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][3] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/newproposals/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][4] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/newprojects/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][5] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/wonproposals/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][6] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/lostproposals/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][7] + '</a></td>';
+                        html += '<td><a href="/reportlist/view/openprojects/'+ ( dt.getMonth() + 1) +'/' + dt.getFullYear() + '/' + $('#user_id').val()  + '">' + stats[key][8] + '</a></td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][9] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][10] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][11] ) + '</td>';
+                        html += '<td style="text-align:right!important;">&#163; ' + numberWithCommas( stats[key][12] ) + '</td>';
+                    }
+                    html += '</tr>';
+                    $('#table-body').append(html);
+
+                }
+            }
+        });
+    });
+    if ( $('#user_id').val() > 0 )
+    {
+        $('#user_id').trigger('change');
+    }
+
+    });
+JS;
+$this->inlineScript()->captureEnd();
+
+?>
+
+<table class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th colspan="9">User:
+            <select id="user_id">
+                <?php foreach ( $data['users'] as $key => $value ): ?>
+                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                <?php endforeach; ?>
+            </select>
+            <span id="loading-data" style="display:none;"><img src="<?php echo $this->basePath( '/img/ajax-loader.gif' ); ?>" width="20" align="middle"/> Loading</span>
+        </th>
+    </tr>
+    <tr>
+        <th width="100" rowspan="2"></th>
+        <!--
+        <?php foreach ( $data['headings'] as $heading ): ?>
+            <th><?php echo $heading; ?></th>
+        <?php endforeach; ?>
+        -->
+        <th colspan="4" style="text-align:center!important">Client Engagements</th>
+        <th colspan="4" style="text-align:center!important">Projects</th>
+
+        <th colspan="4" style="text-align:center!important">Projects &#163;</th>
+
+    </tr>
+    <tr>
+        <th>Clients</th>
+        <th>Contacts</th>
+        <th>Quotations</th>
+        <th>Proposals</th>
+        <th>All</th>
+        <th>Won</th>
+        <th>Lost</th>
+        <th>Open</th>
+        <th style="text-align:right;">All</th>
+        <th style="text-align:right;">Won</th>
+        <th style="text-align:right;">Lost</th>
+        <th style="text-align:right;">Open</th>
+    </tr>
+    </thead>
+    <tbody id="table-body">
+    <?php $q = 4; ?>
+    <?php foreach ( $data['stats'] as $key => $value ): ?>
+        <tr>
+            <td nowrap="nowrap">
+                <?php
+                if ( $key == 'total' )
+                {
+                    echo '<strong>Total</strong>';
+                }
+                elseif ( $key  == 'allTotal' )
+                {
+                    echo 'All Total';
+                }
+                else
+                {
+                    echo '<strong>Q' . $q-- . '</strong> ';
+                    echo date( 'M Y', $key ) . ' - ' . date('M Y', strtotime("+2 month", $key) );
+
+                }
+                ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'clients' ) ); ?>"><?php echo $value[0] ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[0] ?>
+                <?php else: ?>
+                    <a href="<?php echo $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'newclients', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[0] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'contacts' ) ); ?>"><?php echo $value[1] ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[1] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[1] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'newcontacts', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[1] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'quotations' ) ); ?>"><?php echo $value[2]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[2] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[2] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'quotations', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[2] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'proposals' ) ); ?>"><?php echo $value[3]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[3] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[3] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'newproposals', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[3] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'allprojects' ) ); ?>"><?php echo $value[4]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[4] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[4] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'newprojects', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[4] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'wonprojects' ) ); ?>"><?php echo $value[5]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[5] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[5] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'wonproposals', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[5] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'lostprojects' ) ); ?>"><?php echo $value[6]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[6] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[6] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'lostproposals', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[6] ?></a>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ( $key == 'total' ): ?>
+                    <a href="<?php echo $this->url( 'totalreport', Array( 'action' => 'view', 'type' => 'openprojects' ) ); ?>"><?php echo $value[7]; ?></a>
+                <?php elseif ( $key == 'allTotal' ): ?>
+                    <?php echo $value[7] ?>
+                <?php else: ?>
+                    <a href="<?php echo $key == 'total' ? $value[7] : $this->url( 'reportlist', Array( 'action' => 'view', 'type' => 'openprojects', 'month' => date( 'm', $key ), 'year' => date( 'Y', $key ) ) ); ?>"><?php echo $value[7] ?></a>
+                <?php endif; ?>
+            </td>
+
+            <td style="text-align:right!important;" nowrap="nowrap">
+                &#163; <?php echo number_format( $value[8], 2 ); ?>
+            </td>
+            <td style="text-align:right!important;" nowrap="nowrap">
+                &#163; <?php echo number_format( $value[9], 2 ) ?>
+            </td>
+            <td style="text-align:right!important;" nowrap="nowrap">
+                &#163; <?php echo number_format( $value[10], 2 ); ?>
+            </td>
+            <td style="text-align:right!important;" nowrap="nowrap">
+                &#163; <?php echo number_format( $value[11], 2 ); ?>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>

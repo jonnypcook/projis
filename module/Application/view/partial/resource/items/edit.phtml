@@ -1,0 +1,52 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalResourceEdit" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3 header">Edit Resource</h3>
+    </div>
+    <div class="modal-body">
+        <div id="resourceChangeLoader" class="loader"></div>
+        <?php echo $this->form()->openTag( $formEdit ); ?>
+        <div class="control-group">
+            <label class="control-label" for="name"><?php echo $formEdit->get( 'name' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <input type="hidden" name="resource_id" id="resource_id" value="" />
+                <?php echo $this->formElement( $formEdit->get( 'name' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="unit"><?php echo $formEdit->get( 'unit' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $formEdit->get( 'unit' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="cost"><?php echo $formEdit->get( 'cost' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $formEdit->get( 'cost' ) ); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="costCode"><?php echo $formEdit->get( 'costCode' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $formEdit->get( 'costCode' ) ); ?>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag( $formEdit ); ?>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-confirm-changeresource" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

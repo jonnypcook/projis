@@ -1,0 +1,314 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-add-resource').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        $('#resourceForm').submit();
+        return false;
+    });
+
+    $("#resourceForm").validate({
+        rules: {
+            expected_date: {
+                required : true
+            },
+            resource: "required",
+            costCode: "required",
+            project: "required",
+            quantity: "required",
+            rate: "required",
+            start_date: "required",
+            end_date: "required"
+        },
+        messages: {
+            expected_date:{
+               required: "Plaease enter date"
+            },
+            resource: "Please select resource",
+            costCode: "Please select cost code",
+            project: "Please enter valid project id",
+            quantity: "Please enter quantity",
+            rate: "Please enter rate",
+            start_date: "Please enter start date",
+            end_date: "Please enter end date"
+        },
+        submitHandler: function(form){
+             var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#resourceForm').serialize();
+            $('#resourceLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activities/add',
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                            try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The resource has been added successfully.', {time: 3000});
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#resourceLoader').fadeOut(function(){
+                            var d = new Date();
+                            var currDate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+
+                            $('#expected_date').val(currDate);
+
+                            $('#resource, #costCode, #project, #reference, #details, #quantity, #rate, #start_date, #end_date ').val('');
+                            $('#resourceForm #input[type="radio"]').attr('checked', false);
+                            $('#total_cost, #project_ref').html('');
+
+                            $('#expected_date').focus();
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+
+    //$('#expected_date').mask('00/00/0000');
+
+    $('#expected_date, #start_date, #end_date').on('blur', function(){
+        var d = $(this).val();
+        var currDate = new Date();
+        var new_date = '';
+        if ( d.length >= 8 )
+        {
+            //$(this).select();
+            return false;
+        }
+        else if ( d.length == 2 && !isNaN(d)  )
+        {
+            currMonth = (currDate.getMonth() + 1 );
+            if ( currMonth < 10 )
+            {
+                currMonth = '0'  + currMonth;
+            }
+
+            new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 4 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 6 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+            $(this).val(new_date);
+        }
+        else if( d.length == 8 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+            $(this).val(new_date);
+        }
+        else {
+        }
+    });
+
+    $('#quantity, #rate').on('keyup', function(){
+        var quantity = $('#quantity').val();
+        var rate = $('#rate').val();
+        var total = 0;
+        if ( quantity != '' && rate != '' )
+        {
+            total  = parseFloat(quantity * rate);
+        }
+
+        $('#total_cost').html(total);
+    });
+
+    $('#project').on('blur', function(){
+        var project_id = $(this).val();
+        $.ajax({
+            type : 'POST',
+            url : '/resource-activities/getclientid',
+            data: {'project_id' : project_id},
+            beforeSend: function(){
+                $('#project_ref').css('color', '#000');
+                $('#project_ref').html('Loading...');
+            },
+            success: function(res){
+                $('#project_ref').html('');
+                if ( res.error )
+                {
+                    $('#project_ref').html('Invalid Project');
+                    $('#project_ref').css('color', 'red');
+                }
+                else
+                {
+                   $('#project_ref').html(res.project_ref);
+                }
+            }
+        });
+    });
+
+    $('#resource').on('change', function(){
+        var id = $(this).val();
+        url = '/resource-item/resource-' + id + '/fetchresource';
+        $.ajax({
+            type : 'POST',
+            url : url,
+            data: {'resource_id' : id},
+            beforeSend: function(){
+                $('#resource_ref').css('color', '#000');
+                $('#resource_ref').html('Processing...');
+            },
+            success: function(res){
+                $('#resource_ref').html('');
+                if ( res.error > 0 )
+                {
+                    $('#resource_ref').css('color', '#000');
+                    $('#resource_ref').html('Invalid Resource');
+                   return false;
+                }
+                else
+                {
+                    $('#costCode').val(res.costCode);
+                    $('#rate').val(res.rate);
+                }
+            }
+        });
+    });
+
+    $('#btn-add-activity-modal').on('click', function(){
+        $('#modalResource').modal();
+    });
+
+    $('#modalResource').on('shown.bs.modal', function(){
+        if ( $(this).attr('data-modal-shown' ) == 'yes' )
+        {
+           return false
+        }
+        $('#expected_date').focus();
+        $(this).attr('data-modal-shown', 'yes');
+    });
+
+    $("#modalResource").on("hidden", function () {
+        $(this).removeAttrs('data-modal-shown');
+    });
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalResource" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="width:80%;left:10%;margin-left:0px;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Resource Activity - Add</h3>
+    </div>
+    <div class="modal-body">
+        <div id="resourceLoader" class="loader"></div>
+        <form id="resourceForm" action="/resource-activites/add" class="form-horizontal form-nomargin">
+            <table class="table noborder">
+                <tr>
+                    <td nowrap="nowrap"><strong>Date:</strong></td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="expected_date" id="expected_date" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                    </td>
+                    <td nowrap="nowrap"><strong>Resource:</strong></td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'resource' ) ); ?>
+                        <div id="resource_ref"></div>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'resource' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap"><strong>Cost Code:</strong></td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'costCode' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'costCode' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Project:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'project' ) ); ?>
+                        <div id="project_ref"></div>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'project' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Reference:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'reference' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Details:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'details' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'details' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Quantity:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'quantity' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'quantity' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Rate:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <?php echo $this->formElement( $resource_form->get( 'rate' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'rate' ), array( 'class' => 'error-msg' ) ); ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Total Cost:</strong>
+                    </td>
+                    <td>
+                        &#163; <span id="total_cost"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Start Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" tabindex="9" type="text" name="start_date" id="start_date" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>End Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" tabindex="10" type="text" name="end_date" id="end_date" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Status:</strong>
+                    </td>
+                    <td>
+                        <?php if ( !empty($status) ): ?>
+                                <?php foreach ( $status as $item ): ?>
+                                    <label class="radio" style="margin-left:25px;">
+                                            <input tabindex="11" type="radio" name="status" value="<?php echo $item->getResourceStatusId(); ?>" <?php echo $item->getName() == 'Completed' ? 'checked' : ''; ?> /> <?php echo $item->getName(); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="12" id="btn-add-resource" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" id="btn-close-resource" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

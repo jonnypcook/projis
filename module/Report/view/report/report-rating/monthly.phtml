@@ -1,0 +1,112 @@
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-eye-open"></i> <?php echo $title; ?> Report</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="reportLoader" class="loader"></div>
+                <h4><?php echo $title; ?> Report</h4>
+                <!-- BEGIN REPORT PARTIAL-->
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Rating</th>
+                        <th>Reference</th>
+                        <th>Project</th>
+                        <th>Client</th>
+                        <th>Value</th>
+                        <th>Owner</th>
+                        <th>Added</th>
+                        <th>Expected</th>
+                    </tr>
+                    <?php if ( !empty($data) ): ?>
+                        <?php $total = 0; ?>
+                        <?php foreach ( $sub_total as $d ):?>
+                            <?php $subtotal = 0; ?>
+                        <?php foreach ( $d as $value ): ?>
+                             <?php
+                                $ratingColor = '#fff';
+                                switch ( $value['rating'] )
+                                {
+                                    case 0: // Unrated
+                                        $ratingColor = '#ccc';
+                                        break;
+                                    case 1: // Red Rated
+                                        $ratingColor = '#DE577B';
+                                        break;
+                                    case 2: // Amber Rated
+                                        $ratingColor = '#F37B53';
+                                        break;
+                                    case 3: // Green Rated
+                                        $ratingColor = '#0CA389';
+                                        break;
+                                    default:
+                                        $ratingColor = '#fff';
+                                }
+                            ?>
+                                <td style="background-color:<?php echo $ratingColor; ?>;text-align:center;color:#fff;">
+                                    <strong>
+                                        <?php
+                                            if( $value['project_status_id'] == 1 )
+                                            {
+                                                echo 'P';
+                                            }
+                                            elseif( $value['project_status_id'] >= 40 && $value['project_satus_id'] <= 100 )
+                                            {
+                                                echo 'J';
+                                            }
+                                            elseif( $value['project_status_id'] == 600 )
+                                            {
+                                                echo 'L';
+                                            }
+                                        ?>
+                                    </strong>
+                                </td>
+                                <td><?php echo str_pad( $value['client_id'], 5, "0", STR_PAD_LEFT ) . '-' . str_pad( $value['project_id'], 5, "0", STR_PAD_LEFT ) ?></td>
+                                <td><a href="<?php echo $this->url( 'project', Array( 'cid' => $value['client_id'], 'pid' => $value['project_id'] ) ); ?>"> <?php echo $value['project_name'] ?></a></td>
+                                <td><a href="<?php echo $this->url( 'client', Array( 'id' => $value['client_id'] ) ); ?>"><?php echo $value['client_name']; ?></a></td>
+                                <td nowrap="nowrap">&#163;<?php echo number_format($value['price'],2); ?></td>
+                                <td nowrap="nowrap"><?php echo $value['user_name']; ?></td>
+                                <td nowrap="nowrap"><?php echo date('d M, Y', strtotime($value['created'])); ?></td>
+                                <td nowrap="nowrap"><?php echo date('d M, Y', strtotime($value['expected_date'])); ?></td>
+                            </tr>
+                            <?php $subtotal += $value['price']; ?>
+                            <?php endforeach; ?>
+                            <tr style="background-color:<?php echo $ratingColor; ?>;text-align:center;color:#fff;">
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><strong>Sub Total</strong></td>
+                                <td>&#163;<?php echo number_format($subtotal, 2); ?></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <?php $total += $subtotal; ?>
+
+                        <?php endforeach; ?>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><strong>Grand Total</strong></td>
+                            <td><strong>&#163;<?php echo number_format($total, 2); ?></strong></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    <?php endif; ?>
+                </table>
+                <!-- END  REPORT PARTIAL-->
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>

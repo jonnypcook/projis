@@ -1,0 +1,89 @@
+<?php
+
+/*$this->headLink()
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');/**/
+
+$this->inlineScript()
+    ->appendFile('/js/forms/assets/installers.js')
+;
+
+?>
+<div class="row-fluid">
+    <div class="span6">
+        <!-- BEGIN GRID SAMPLE PORTLET-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-barcode"></i> Scan Information</h4>
+                        <span class="tools">
+                        </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="serialLoader" class="loader"></div>
+                <p>Start scanning by clicking on the play button.</p>
+                <input type="text" class="span12" name="serialId" id="serialId" disabled="true" />
+                <input type="hidden" name="spaceId" id="spaceId" />
+                <div class="space10"></div>
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th>Client</th>
+                            <td id="details-client">None Selected</td>
+                        </tr>
+                        <tr>
+                            <th>Project</th>
+                            <td id="details-project">None Selected</td>
+                        </tr>
+                        <tr>
+                            <th>Building</th>
+                            <td id="details-building">None Selected</td>
+                        </tr>
+                        <tr>
+                            <th>Space</th>
+                            <td id="details-space">None Selected</td>
+                        </tr>
+                        <tr>
+                            <th>Product</th>
+                            <td id="details-system"><select name="systemId" id="systemId"></select></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="space10"></div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="btnPlay"><i class="icon-play"></i></button>
+                    <button class="btn btn-primary" id="btnStop"><i class="icon-stop"></i></button>
+                </div>
+                <div class="space10"></div>
+                <div>
+                    <code id="serialMsg">Scanning Stopped</code>
+                </div>
+            </div>
+        </div>
+        <!-- END GRID SAMPLE PORTLET-->
+    </div>
+    <div class="span6">
+        <!-- BEGIN GRID SAMPLE PORTLET-->
+        <div class="widget red">
+            <div class="widget-title">
+                <h4><i class="icon-reorder"></i> Scan Live Feed</h4>
+                        <span class="tools">
+                        </span>
+            </div>
+            <div class="widget-body" style="min-height: 250px">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>Live scan feed</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Feed not connected</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END GRID SAMPLE PORTLET-->
+    </div>
+</div>

@@ -1,0 +1,6 @@
+<?php 
+if ($this->identity() instanceof \Application\Entity\User) { // we are logged in
+    $this->layout('layout/uauth-layout'); 
+} else {
+    $this->layout('layout/session-expired');
+}

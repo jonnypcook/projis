@@ -1,0 +1,272 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(document).ready(function(){
+$('.show_report').on('click', function(){
+        var id = $(this).attr('data-id');
+
+        $('.sub_report_' + id).slideToggle(function(){
+        var icon_class = $('#icon_' + id).attr('class');
+
+        if ( icon_class == 'icon-plus' )
+        {
+            $('#icon_' + id).removeClass(icon_class);
+            $('#icon_' + id).addClass('icon-minus');
+        }
+        else
+        {
+            $('#icon_' + id).removeClass(icon_class);
+            $('#icon_' + id).addClass('icon-plus');
+        }
+        });
+    });
+ });
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <a class="btn btn-success pull-right" href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'exportorderbook', 'year' => $year, 'month' => $month ) ); ?>">Download CSV</a>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <table class="table table-bordered">
+            <tr>
+                <th>Rating</th>
+                <th>Reference</th>
+                <th>Project</th>
+                <th>Customer</th>
+                <th>Project Value</th>
+                <th>Margin Value</th>
+                <th>Margin %</th>
+                <th>Owner</th>
+                <th>Department</th>
+                <th>Started</th>
+                <th>Completed</th>
+            </tr>
+            <?php if ( !empty($data) ): ?>
+                <?php
+                $total             = 0; // Complete total
+                $margin            = 0; // Complete margin
+                $totalSalesTarget  = 0; // Grand Total of sales target
+                $totalMarginTarget = 0; // Grand Total of margin target
+                $i = 0;
+                ?>
+                <?php foreach ( $data as $dKey => $dValue ): ?> <!-- Department level Loop -->
+                    <?php
+                    $dTValue  = 0; // Department Target Value
+                    $dTMargin = 0; // Department Target Margin
+                    $dTotal   = 0; // Deparment Total
+                    $dMargin  = 0; // Department Margin
+
+                    ?>
+                    <?php foreach ( $dValue as $oKey => $oValue ): ?> <!-- Owner level loop -->
+                        <?php
+                        $oTotal  = 0;  // Owner Total
+                        $oMargin = 0;  // Owner Margin
+                        foreach ($oValue['data'] as $val)
+                        {
+                            $oTotal += $val['price'];
+                            $oMargin += ($val['priceMCD'] - $val['cost']);
+
+                        }
+                        $i++;
+                        ?>
+
+                        <?php foreach ( $oValue['data'] as $value ): ?>
+                            <tr  class="sub_report_<?php echo $i; ?>" style="display:none;">
+                                <?php
+                                $ratingColor = '#fff';
+                                switch ( $value['rating'] )
+                                {
+                                    case 9: // Red Rated
+                                        $ratingColor = '#DE577B';
+                                        break;
+                                    case 8: // Amber Rated
+                                        $ratingColor = '#F37B53';
+                                        break;
+                                    case 7: // Green Rated
+                                        $ratingColor = '#0CA389';
+                                        break;
+                                    default:
+                                        $ratingColor = '#fff';
+                                }
+                                ?>
+                                <td style="background-color:<?php echo $ratingColor; ?>;text-align:center;color:#fff;">
+                                    <strong>
+                                        <?php
+                                        if ( $value['project_status_id'] == 1 )
+                                        {
+                                            echo 'P';
+                                        }
+                                        elseif ( $value['project_status_id'] >= 40 && $value['project_satus_id'] <= 100 )
+                                        {
+                                            echo 'J';
+                                        }
+                                        elseif ( $value['project_status_id'] == 600 )
+                                        {
+                                            echo 'L';
+                                        }
+                                        ?>
+                                    </strong>
+                                </td>
+                                <td nowrap="nowrap"><?php echo str_pad( $value['client_id'], 5, "0", STR_PAD_LEFT ) . '-' . str_pad( $value['project_id'], 5, "0", STR_PAD_LEFT ) ?></td>
+                                <td><a href="<?php echo $this->url( 'project', Array( 'cid' => $value['client_id'], 'pid' => $value['project_id'] ) ); ?>"> <?php echo $value['project_name'] ?></a></td>
+                                <td><a href="<?php echo $this->url( 'client', Array( 'id' => $value['client_id'] ) ); ?>"><?php echo $value['client_name']; ?></a></td>
+                                <td style="text-align:right !important;" nowrap="nowrap">&#163; <?php echo number_format( $value['priceMCD'], 2 ); ?></td>
+                                <td style="text-align:right !important;" nowrap="nowrap">&#163; <?php echo number_format( $value['priceMCD'] - $value['cost'], 2 ); ?></td>
+                                <td nowrap="nowrap"><?php
+                                    if ( $value['priceMCD'] > 0 )
+                                    {
+                                        echo number_format( round( (($value['priceMCD'] - $value['cost']) / $value['priceMCD']) * 100, 2 ), 2, '.', '' ) . ' %';
+                                    }
+                                    else
+                                    {
+                                        echo '0 %';
+                                    }
+                                    ?></td>
+                                <td><?php echo $value['user_name']; ?></td>
+                                <td><?php echo $value['department_name']; ?></td>
+                                <td nowrap="nowrap"><?php echo date( 'd M, Y', strtotime( $value['contracted'] ) ); ?></td>
+                                <td nowrap="nowrap"><?php echo empty($value['completed']) ? 'Date not set' : date( 'd M, Y', strtotime( $value['completed'] ) ); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td rowspan="4" style="padding-top:45px;padding-left:20px;">
+                                <span class="show_report" data-id="<?php echo $i; ?>"><i id="icon_<?php echo $i; ?>" class="icon-plus" style="cursor:pointer;"></i></span>
+                            </td>
+                        </tr>
+                        <tr style="background-color:#eee;">
+
+                            <td colspan="3" style="text-align:right;">Sub Total <?php echo !empty($oValue['data']) ? $value['user_name'] : $oValue['target']['user_name']; ?></td>
+                            <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $oTotal, 2 ); ?></td>
+                            <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $oMargin, 2 ); ?></td>
+                            <td><?php echo ($oTotal > 0) ? round( ($oMargin / $oTotal) * 100, 2 ) : 0; ?> %</td>
+                            <td colspan="4"></td>
+                        </tr>
+
+                        <tr style="background-color:#eee;">
+
+                            <td colspan="3"  style="text-align:right;">Target</td>
+                            <td nowrap="nowrap" style="text-align:right;">&#163;
+                                <?php
+                                $otValue = 0;
+                                if ( $month > 0 )
+                                {
+                                    $otValue = $oValue['target']['sales'][$month];
+                                }
+                                else
+                                {
+                                    $otValue = $oValue['sales'];
+                                }
+                                echo number_format( $otValue, 2 );
+                                ?></td>
+                            <td nowrap="nowrap" style="text-align:right;">&#163; <?php
+                                $otMargin = 0;
+                                if ( $month > 0 )
+                                {
+                                    $otMargin = $oValue['target']['margin'][$month];
+                                }
+                                else
+                                {
+                                    $otMargin = $oValue['margin'];
+                                }
+                                echo number_format( $otMargin, 2 );
+                                ?></td>
+                            <td><?php echo ($otValue > 0) ? number_format( ($otMargin / $otValue) * 100, 2 ) : 0; ?> %</td>
+                            <td colspan="4"></td>
+                        </tr>
+                        <tr style="">
+                            <td colspan="3" style="text-align:right;border-bottom:solid 3px #000;">Achieved</td>
+                            <td style="text-align:right;border-bottom:solid 3px #000;"><?php echo number_format( ($oTotal / $otValue) * 100, 2 ); ?>%</td>
+                            <td style="text-align:right;border-bottom:solid 3px #000;"><?php echo number_format( ($oMargin / $otMargin) * 100, 2 ); ?>%</td>
+
+                            <td colspan="5" style="border-bottom:solid 3px #000"></td>
+                        </tr>
+                        <?php if ( empty($oValue['data'] ) ): ?>
+                            <tr style="background-color:#cc0000;color:#fff;display:none;"  class="sub_report_<?php echo $i; ?>">
+                                <td></td>
+                                <td><?php echo $oValue['target']['user_name']; ?></td>
+                                <td colspan="9"><?php echo $oValue['target']['department_name']; ?></td>
+                            </tr>
+                        <?php endif; ?>
+
+
+                        <?php
+                        if ( $month > 0 )
+                        {
+                            $dTValue += $oValue['target']['sales'][$month];
+                            $dTMargin += $oValue['target']['margin'][$month];
+                        }
+                        else
+                        {
+                            $dTValue += $oValue['sales'];
+                            $dTMargin += $oValue['margin'];
+                        }
+
+                        $dTotal += $oTotal;
+                        $dMargin += $oMargin;
+
+                        ?>
+
+                    <?php endforeach; ?>
+                    <tr style="background-color:#888;color:#fff;">
+                        <td colspan="4" style="text-align:right;">Sub Total <?php echo $value['department_name']; ?></td>
+                        <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $dTotal, 2 ); ?></td>
+                        <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $dMargin, 2 ); ?></td>
+                        <td><?php echo ($dTotal > 0) ? number_format( ($dMargin / $dTotal) * 100, 2 ) : 0; ?> %</td>
+                        <td colspan="4"></td>
+                    </tr>
+                    <tr style="background-color:#888;color:#fff;">
+                        <td colspan="4" style="text-align:right;">Target Department</td>
+                        <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $dTValue, 2 ); ?></td>
+                        <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $dTMargin, 2 ); ?></td>
+                        <td><?php echo ($dTValue > 0) ? number_format( ($dTMargin / $dTValue) * 100, 2 ) : 0; ?> %</td>
+                        <td colspan="4"></td>
+                    </tr>
+                    <tr style="background-color:#888;color:#fff;">
+                        <td colspan="4" style="text-align:right;border-bottom:solid 3px #000">Achieved</td>
+                        <td style="text-align:right;border-bottom:solid 3px #000"><?php echo number_format( ($dTotal / $dTValue) * 100, 2 ); ?>%</td>
+                        <td style="text-align:right;border-bottom:solid 3px #000"><?php echo number_format( ($dMargin / $dTMargin) * 100, 2 ); ?>%</td>
+                        <td style="border-bottom:solid 3px #000;" colspan="5"></td>
+                    </tr>
+                    <?php
+                    $total += $dTotal;
+                    $margin += $dMargin;
+                    $totalSalesTarget += $dTValue;
+                    $totalMarginTarget += $dTMargin;
+                    ?>
+                <?php endforeach; ?>
+                <tr style="background-color:#333;color:#fff;font-weight:bold;">
+                    <td colspan="4" style="text-align:right;">Grand Total</td>
+                    <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $total, 2 ); ?></td>
+                    <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $margin, 2 ); ?></td>
+                    <td><?php echo number_format( ($margin / $total) * 100, 2 ); ?> %</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr style="background-color:#333;color:#fff;font-weight:bold;">
+                    <td colspan="4" style="text-align:right;">Grand Total Target</td>
+                    <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $totalSalesTarget, 2 ); ?></td>
+                    <td nowrap="nowrap" style="text-align:right;">&#163; <?php echo number_format( $totalMarginTarget, 2 ); ?></td>
+                    <td><?php echo number_format( ($totalMarginTarget / $totalSalesTarget) * 100, 2 ); ?> %</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr style="background-color:#333;color:#fff;font-weight:bold;">
+                    <td colspan="4" style="text-align:right;">Achieved</td>
+                    <td style="text-align:right;"><?php echo number_format( ($total / $totalSalesTarget) * 100, 2 ); ?>%</td>
+                    <td style="text-align:right;"><?php echo number_format( ($margin / $totalMarginTarget) * 100, 2 ); ?>%</td>
+                    <td></td>
+                    <td colspan="4"></td>
+                </tr>
+
+            <?php else: ?>
+                <tr>
+                    <td colspan="8">
+                        No record found
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </table>
+    </div>
+</div>

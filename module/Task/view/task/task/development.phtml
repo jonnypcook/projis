@@ -1,0 +1,59 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/forms/task/dlist.js')
+    ;
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-tasks"></i> Team Development Tasks</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="wizardLoader" class="loader"></div>
+                <div class="clearfix">
+<?php if ($this->isGranted('task.create')) { ?>                    
+                    <div class="btn-group pull-left">
+                        <a class="btn green" href="#modalAddTask" data-original-title="" role="button" data-toggle="modal">
+                            Create Development Task <i class="icon-plus"></i>
+                        </a>
+                    </div>
+<?php } ?>                    
+                    <div class="btn-group pull-right">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                        </ul>
+                    </div>
+                </div>
+                <div class="space15"></div>                
+                <table class="table table-advance table-bordered table-striped table-hover" id="tbl-tasks">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px">Id</th>
+                            <th>Type</th>
+                            <th class="hidden-phone">Description</th>
+                            <th style="width: 170px" class="hidden-phone">Originator</th>
+                            <th style="width: 100px">Target Date</th>
+                            <th style="width: 120px">Status</th>
+                            <th style="width: 40px">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BLANK PAGE PORTLET-->
+    </div>
+</div>
+<?php echo $this->partial('partial/task/add.phtml'); ?>

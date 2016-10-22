@@ -1,0 +1,75 @@
+<style>
+    #quotefoot_notes {
+        margin-top: 15px;
+        padding-top: 5px;
+        border-top: 1px #ccc solid;
+    }
+    
+    #quotefoot_notes strong {
+        font-size: 0.9em;
+    }
+    
+    #quotefoot_notes ul {
+        margin: 0;
+        padding: 0;
+        padding-left: 10px;
+    }
+    
+    #quotefoot_notes li {
+        font-size: 0.8em;
+    }
+</style>
+<div>
+    <table style="width:100%">
+        <tr>
+            <td style="width:75%">
+                Print Name:
+            </td>
+            <td>
+                Date:
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <br />
+                Signed:
+            </td>
+            <td>
+                <br />
+                PO Number:
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="quotefoot_notes">
+    <ul>
+        <li><?php echo $project->getClient()->getPaymentTerms()->getDescription(); ?>.</li>
+        <li>The standard lead time for product delivery is 4-8 weeks from date of order.</li>
+        <li>The quotation relates to areas and luminaires listed within the enclosed schedule only. Any additional areas
+            or luminaires which 8point3 were not shown during the survey process are not included within the project costs and will be charged accordingly</li>
+        <?php
+            if (!empty($form['notes'])) {
+                $notes = explode(chr(13), $form['notes']);
+                foreach ($notes as $note) {
+                    $note = trim($note);
+                    if (!empty($note)) {
+                        echo '<li>'.trim($note).'</li>';
+                    }
+                }
+            }
+        ?>
+        <?php
+        $notes = $project->getNotes();
+        if (!empty($notes)) {
+            $notesArr  = json_decode($notes, true);
+            if (!empty($notesArr['delivery'])) {
+                $cnt = 0;
+                foreach ($notesArr['delivery'] as $dnote) {
+                    $cnt++;
+                    echo '<li><strong>Delivery Note:</strong> '.trim($dnote).'</li>';
+                }
+            }
+        }
+        ?>        
+    </ul>
+</div>

@@ -1,0 +1,219 @@
+<?php
+//print_r($data['chartData']);
+// echo json_encode($data['chartData'][0]['data']); exit;
+$this->inlineScript()
+    ->appendFile( 'https://code.highcharts.com/highcharts.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/funnel.js' )
+    ->appendFile( 'https://code.highcharts.com/modules/exporting.js' );
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(document).ready(function() {
+    Highcharts.setOptions({
+		lang: {
+			thousandsSep: ','
+		}
+	});
+
+    var options = {
+            colors: ['#CCCCCC', '#DE577B', '#F37B53', '#0CA389'],
+            chart: {
+                renderTo : 'sales-chart-container',
+                type: 'column'
+            },
+            title: {
+                text: '12 Months Sales Outlook'
+            },
+            xAxis: {
+                categories: []
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Total Value'
+                },
+                stackLabels: {
+                    enabled: true,
+                    style: {
+                        fontWeight: 'bold',
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+                }
+            },
+            legend: {
+                align: 'right',
+                x: -30,
+                verticalAlign: 'top',
+                y: 25,
+                floating: true,
+                backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+                borderColor: '#CCC',
+                borderWidth: 1,
+                shadow: false
+            },
+            tooltip: {
+                headerFormat: '<b>{point.x}</b><br/>',
+                pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal:,.0f}'
+            },
+            plotOptions: {
+                column: {
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: false,
+                        color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+                        style: {
+                            textShadow: '0 0 3px black'
+                        }
+                    }
+                },
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function(){
+                               var user = $('#user_id').val();
+                               month = this.category;
+                               mon = "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(month) / 3 + 1
+                               var url = '/ratingreport/monthly/rating-all/user-{$user}/month-' + mon;
+                               location.href = url;
+                            }
+                        }
+                    }
+                }
+            },
+            series: []
+
+        };
+
+        var categories = [{$data["chartData"][0]["data"]}]
+        console.log(categories);
+
+        for(var key in categories)
+        {
+            options.xAxis.categories.push(categories[key]);
+        }
+
+        options.series.push({
+            name : 'Un-Rated',
+            data : []
+        });
+
+        var unRated = [{$data["chartData"][1]["data"]}]
+        for(var key in unRated)
+        {
+            options.series[0].data.push(Math.round(parseInt(unRated[key])));
+        }
+
+        options.series.push({
+            name : 'Red Rated',
+            data : []
+        });
+
+        var redRated = [{$data["chartData"][2]["data"]}]
+
+        for(var key in redRated)
+        {
+            options.series[1].data.push(Math.round(redRated[key]));
+        }
+
+        options.series.push({
+            name : 'Amber Rated',
+            data : []
+        });
+
+        var amberRated = [{$data["chartData"][3]["data"]}]
+        for(var key in amberRated)
+        {
+            options.series[2].data.push(Math.round(parseInt(amberRated[key])));
+        }
+
+        options.series.push({
+            name : 'Green Rated',
+            data : []
+        });
+
+        var greenRated = [{$data["chartData"][4]["data"]}]
+
+        for(var key in greenRated)
+        {
+            options.series[3].data.push(Math.round(parseInt(greenRated[key])));
+        }
+        chart = new Highcharts.Chart(options);
+        Highcharts.numberFormat(this.y, 0);
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+
+<div class="row-fluid">
+    <div class="span12">
+        <div id="sales-chart-container"></div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-eye-open"></i> <?php echo $title; ?> Report</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="reportLoader" class="loader"></div>
+                <h4><?php echo $title; ?> Report</h4>
+                <!-- BEGIN REPORT PARTIAL-->
+                <table class="table table-bordered">
+
+                    <tr>
+                        <th>Month/Rating</th>
+                        <?php foreach( explode(',', $data['chartData'][0]['data'] ) as $value ): ?>
+                            <th style="text-align:right;"><?php echo trim($value, '"'); ?></th>
+                        <?php endforeach; ?>
+                        <th style="text-align:right;">Total</th>
+                    </tr>
+                    <tr style="background-color:#ccc;color:#fff;">
+                        <td>Un-Rated</td>
+                    <?php foreach( explode(',', $data['chartData'][1]['data'] ) as $value ): ?>
+                        <td style="text-align:right;"><?php echo number_format(trim($value, '"'),0); ?></td>
+                    <?php endforeach; ?>
+                        <td style="text-align:right;"><?php echo number_format(array_sum(explode(',', $data['chartData'][1]['data'])),0); ?></td>
+                    </tr>
+                    <tr style="background-color:#DE577B;color:#fff;">
+                        <td>Red-Rated</td>
+                        <?php foreach( explode(',', $data['chartData'][2]['data'] ) as $value ): ?>
+                            <td style="text-align:right;"><?php echo number_format(trim($value, '"'),0); ?></td>
+                        <?php endforeach; ?>
+                        <td style="text-align:right;"><?php echo number_format(array_sum(explode(',', $data['chartData'][2]['data'])),0); ?></td>
+                    </tr>
+                    <tr style="background-color:#F37B53;color:#fff;">
+                        <td>Amber-Rated</td>
+                        <?php foreach( explode(',', $data['chartData'][3]['data'] ) as $value ): ?>
+                            <td style="text-align:right;"><?php echo number_format(trim($value, '"'),0); ?></td>
+                        <?php endforeach; ?>
+                        <td style="text-align:right;"><?php echo number_format(array_sum(explode(',', $data['chartData'][3]['data'])),0); ?></td>
+                    </tr>
+                    <tr style="background-color:#0CA389;color:#fff;">
+                        <td>Green-Rated</td>
+                        <?php foreach( explode(',', $data['chartData'][4]['data'] ) as $value ): ?>
+                            <td style="text-align:right;"><?php echo number_format(trim($value, '"'),0); ?></td>
+                        <?php endforeach; ?>
+                        <td style="text-align:right;"><?php echo number_format(array_sum(explode(',', $data['chartData'][4]['data'])),0); ?></td>
+                    </tr>
+                    <tr style="background-color:#555;color:#fff;">
+                        <td>Total</td>
+                        <?php foreach( $data['chartData'][5] as $value ): ?>
+                            <td style="text-align:right;"><?php echo number_format(trim($value, '"'),0); ?></td>
+                        <?php endforeach; ?>
+                            <td style="text-align:right;"><?php echo number_format(array_sum($data['chartData'][5]),0); ?></td>
+                    </tr>
+                </table>
+                <!-- END  REPORT PARTIAL-->
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>

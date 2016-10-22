@@ -1,0 +1,29 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/js/forms/project/notes.js')
+        ;
+
+?><div id="myModalAddNote" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Add Note&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="noteLoader" class="loader"></div>
+        <p>
+            Enter the note that you would like to add to the client in the box provided and then click on the Add Note button.
+        </p>
+        <div class="control-group">
+        <form id="AddNoteForm" action="/client-<?php echo $client->getClientId(); ?>/addnote/">
+            <div class="controls">
+                <textarea class="span12" name="note" placeholder="enter your note here"></textarea>
+            </div>
+        </form>
+        </div>   
+        <div id="msgs3"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-save-note" aria-hidden="true"><i class="icon-plus"></i> Add Note</button>
+    </div>
+</div>

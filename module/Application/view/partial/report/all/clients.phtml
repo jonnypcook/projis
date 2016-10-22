@@ -1,0 +1,22 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Client Name</th>
+        <th>Owner</th>
+        <th>Date</th>
+    </tr>
+    <?php if ( !empty($data) ): ?>
+        <?php foreach ( $data as $key => $value ): ?>
+            <tr>
+                <td><a href=""><?php echo $value['client_name']; ?> - (<?php echo $value['client_id']; ?>)</a></td>
+                <td><?php echo $value['user_name']; ?></td>
+                <td><?php echo date('d M, Y', strtotime($value['created'])); ?></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="3">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

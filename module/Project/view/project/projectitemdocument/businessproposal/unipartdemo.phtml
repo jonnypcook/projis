@@ -1,0 +1,196 @@
+<?php
+    $financing = ($figures['finance_amount'] > 0);
+    $client = $project->getClient();
+
+    
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <style>
+            #footer {
+              position: fixed;
+            }
+
+            #footer  {
+                bottom: 25px;
+                text-align: center;
+                width: 100%;
+            }
+
+            #footer .page {
+                font-size: 9px;
+                line-height: 12px!important;
+            }
+
+        </style>
+        <!-- Important: if you don't want a page number on the first page then you must include partial file after first page html <!-- -->
+        <div id="footer">
+            <p class="page">
+                Registered Office:  Unipart Rail Limited, Unipart House, Cowley, Oxford, OX4 2PG<br />
+                Registered in England and Wales:  Registered No 3038418
+            </p>
+        </div>
+        <style>
+            #letterhead_logo {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            #letterhead_logo img {
+                width: 220px;
+                display: inline-block;
+            }
+
+            #letterhead_originator {
+                position: absolute;
+                right: 0;
+                top: 0px;
+                font-size: 9pt;
+                line-height: 10pt;
+                text-align: right;
+            }
+
+            #letterhead_recipient {
+                margin-top: 0px;
+                margin-bottom: 10px;
+            }
+
+            #letterhead_date {
+                position: absolute;
+                right: 0;
+            }
+            
+            #covertable img {
+                width: 280px;
+            }
+            
+        </style>
+        <div id="letterhead_logo"><img src="<?php echo $resourcesUri; ?>img/unipart/logo.png"  /></div>
+        <div style="position: relative">
+            <div id="letterhead_originator">
+                Unipart Rail<br />
+                Gresty Road<br />
+                Crewe<br />
+                CW2 6EH<br /><br />
+                Tel: 07880 056 172<br />
+                Fax: 01270 847 601
+            </div>
+            <div id="letterhead_recipient">
+                <?php 
+                    echo $contact->getTitle()->getName(),' ', $contact->getForename(), ' ', $contact->getSurname(), '<br />'; 
+                    echo $project->getClient()->getName(),'<br />';
+                    if (!empty($contact->getAddress())) {
+                        echo $contact->getAddress()->assemble('<br />');
+                    }
+                ?>
+                <br /><br /><br />
+                <strong>Reference:</strong> <?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT);
+                    if (isset ($invoiceNo)) {
+                        echo ' / '.$invoiceNo;
+                    }
+                ?> 
+                <div id="letterhead_date">
+                    <?php echo date('jS F Y'); ?>
+                </div>
+            </div>
+        </div>
+        Dear <?php
+            if (!empty($salutation)) {
+                echo $salutation;
+            } else {
+                echo 'Sir/Madam';
+            }
+        ?>, <br />
+        
+        <p >
+            Please find enclosed the Unipart quotation for the Potter Logistics Limited.  As requested, Unipart has quoted for a full LED Smart solution and compared this against your current lighting installation.  The Unipart solution will result in a £22,964 per annum saving in energy costs, minimum maintenance costs and a 5 year UK warranty, with the capital cost being allowable under the Enhanced Capital Allowance Scheme.
+        </p>
+        <p>
+            Included within our quote to Potter Logistics Limited is the following:
+        </p>
+        <ul>
+            <li>Review of the Exterior lighting, Container Pad, Bulk (Rice) Store, and Warehouse 37 to reduce energy costs</li>
+            <li>Improve the lighting in the Bailing Area and reduce energy costs</li>
+            <li>Identify potential benefits of smart controls</li>
+            <li>Full installation and commissioning of all of the above</li>
+        </ul>
+        <p>
+            Unipart has also provided details of how this solution will contribute to reducing Potter Logistics Limited impact on the environment.
+        </p>
+        <p>
+            I would like to request that once you have had the opportunity to review the quote that we arrange a mutually agreeable date to discuss the proposal and next steps.   Unipart are currently working to a 6 week lead time on the lighting products specified.
+        </p>
+        <p>
+            Please note, all information supplied by Unipart Rail is commercial in confidence, and is not to be disclosed to third parties, with full copyright belonging to Unipart Rail Limited.
+        </p>
+        <p>
+            At this stage of the process, I trust you will find enclosed all that is required, however should you need any further additional information please do not hesitate to contact me. 
+        </p>
+        
+        <p>
+            Yours sincerely<br><br>
+            <?php 
+            if(!empty($user->getSignature())){
+                echo '<img src="'.$resourcesUri.'user/signature/'.$user->getSignature().'.png" alt="" />';
+            } else {
+                echo '<br><br>';
+            } 
+
+            ?>
+            <?php echo $user->getName(); ?><br>
+            <?php if (false){//$user->getCompany()->getThirdParty() == 1) { 	
+                echo 'On behalf of<br /><span style="font-weight: bold">'.$user->getCompany()->getName(),'</span><br />';
+            } else {
+                echo ucwords($user->getPosition()->getLabel()).'<br />';
+                echo '<a href="mailto: ',$user->getEmail(),'">', $user->getEmail(), '</a>';
+            }
+
+            ?>
+        </p>
+        <div style="page-break-before: always; position: relative">
+            <div class="strong" style="font-size: 16px; text-align: right; line-height: 26px!important;">
+                Proposal For LED Lighting Solutions<br />
+                <?php echo $project->getClient()->getName(); ?><br />
+                <?php if (!empty($contact->getAddress())) {
+                        echo $contact->getAddress()->assemble(', ', array('line1', 'line2','line3', 'postcode'));
+                    } ?><br />
+            </div> 
+            <div style="margin: 30px 0 30px 0;  border-top: 3px #f00 solid; padding-top: 30px;" >
+                <table id="covertable" style="margin: auto;">
+                    <tr>
+                        <td>
+                            <img src="<?php echo $resourcesUri; ?>img/unipart/demo1.jpg"  />
+                        </td>
+                        <td>
+                            <img src="<?php echo $resourcesUri; ?>img/unipart/demo2.jpg"  />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="<?php echo $resourcesUri; ?>img/unipart/demo3.jpg"  />
+                        </td>
+                        <td>
+                            <img src="<?php echo $resourcesUri; ?>img/unipart/demo4.jpg"  />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="strong" style="text-align: right; font-size: 14px">
+                Commercial In Confidence<br />
+                Date: <?php echo date('F jS Y'); ?>
+            </div>
+            <div style="position: absolute; left: 0; bottom: 40px; ">
+                <img src="<?php echo $resourcesUri; ?>img/unipart/footerlogo.jpg" style="width: 100%" />
+            </div>
+        </div>
+        
+    </body>
+</html>

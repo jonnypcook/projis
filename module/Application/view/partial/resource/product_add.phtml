@@ -1,0 +1,306 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-add-product').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#productAddForm').submit();
+        return false;
+    });
+
+    $("#productAddForm").validate({
+        rules: {
+            productDate: {
+                required : true
+            },
+            productProject: "required",
+            productQuantity: "required",
+            productRate: "required"
+        },
+        messages: {
+            productDate:{
+               required: "Plaease enter date"
+            },
+            productProject: "Please enter valid project id",
+            productQuantity: "Please enter quantity",
+            productRate: "Please enter rate"
+        },
+        submitHandler: function(form){
+             var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#productAddForm').serialize();
+            $('#productLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activities/addproduct',
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The product resource has been added successfully.', {time: 3000});
+                                //window.location.reload();
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#productLoader').fadeOut(function(){
+                            var d = new Date();
+                            var currDate = d.getDate() + '/' + ( d.getMonth() + 1 ) + '/' + d.getFullYear();
+                            $('#productDate').val(currDate);
+                            $('#productProject').val('');
+                            $('#productProjectRef').html('');
+                            $('#productReferenceRef').html('');
+                            $('#productReference').val('');
+                            $('#productQuantity').val('');
+                            $('#productRate').val('');
+                            $('#productTotalCost').html('');
+                            $('#productStartDate').val('');
+                            $('#productEndDate').val('');
+                            $('input[type=radio]').attr('checked', false);
+                            $('#productDate').focus();
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+    //$('#expected_date').mask('00/00/0000');
+    $('#productDate, #productStartDate, #productEndDate').on('blur', function(){
+        var d = $(this).val();
+        var currDate = new Date();
+        var new_date = '';
+        if ( d.length >= 8 )
+        {
+            return false;
+        }
+        else if ( d.length == 2 && !isNaN(d)  )
+        {
+            currMonth = (currDate.getMonth() + 1 );
+            if ( currMonth < 10 )
+            {
+                currMonth = '0'  + currMonth;
+            }
+
+            new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 4 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+            $(this).val(new_date);
+        }
+        else if( d.length == 6 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+            $(this).val(new_date);
+        }
+        else if( d.length == 8 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+            $(this).val(new_date);
+        }
+        else {
+        }
+    });
+
+    $('#productQuantity, #productRate').on('keyup', function(){
+        var quantity = $('#productQuantity').val();
+        var rate = $('#productRate').val();
+        var total = 0;
+        if ( quantity != '' && rate != '' )
+        {
+            total  = parseFloat(quantity * rate);
+        }
+
+        $('#productTotalCost').html(total);
+    });
+
+    $('#productProject').on('blur', function(){
+        var project_id = $(this).val();
+        $.ajax({
+            type : 'POST',
+            url : '/resource-activities/getclientid',
+            data: {'project_id' : project_id},
+            beforeSend: function(){
+                $('#productProjectRef').css('color', '#000');
+                $('#productProjectRef').html('Loading...');
+            },
+            success: function(res){
+                $('#productProjectRef').html('');
+                if ( res.error )
+                {
+                    $('#productProjectRef').html('Invalid Project');
+                    $('#productProjectRef').css('color', 'red');
+                }
+                else
+                {
+                    $('#productProjectRef').html(res.project_ref);
+                }
+            }
+        });
+    });
+
+    $('#productReference').on('blur', function(){
+        var reference_id = $(this).val();
+        $.ajax({
+            type : 'POST',
+            url : '/resource-activities/getproductinfo',
+            data: {'product_id' : reference_id},
+            beforeSend: function(){
+                $('#productReferenceRef').css('color', '#000');
+                $('#productReferenceRef').html('Loading...');
+            },
+            success: function(res){
+                $('#productReferenceRef').html('');
+                if ( res.error )
+                {
+                    $('#productReferenceRef').html('Invalid Project');
+                    $('#productReferenceRef').css('color', 'red');
+                }
+                else
+                {
+                    $('#productReferenceRef').html(res.model);
+                    $('#productRate').val(res.cpu);
+                }
+            }
+        });
+    });
+
+    $('#btn-add-product-modal').on('click', function(){
+        $('#modalProduct').modal();
+    });
+
+    $('#modalProduct').on('shown.bs.modal', function(){
+        if ( $(this).attr('data-modal-shown' ) == 'yes' )
+        {
+           return false
+        }
+        $('#productDate').focus();
+        $(this).attr('data-modal-shown', 'yes');
+    });
+
+    $("#modalProduct").on("hidden", function () {
+        $(this).removeAttrs('data-modal-shown');
+    });
+
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalProduct" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="width:80%;left:10%;margin-left:0px;">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Product - Add</h3>
+    </div>
+    <div class="modal-body">
+        <div id="productLoader" class="loader"></div>
+        <form id="productAddForm" action="/resource-activites/addProduct" class="form-horizontal form-nomargin">
+            <table class="table noborder">
+                <tr>
+                    <td nowrap="nowrap"><strong>Date:</strong></td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" name="productDate" id="productDate" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                    </td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap">
+                    </td>
+                    <td nowrap="nowrap"></td>
+                    <td nowrap="nowrap">
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Project:</strong>
+                    </td>
+                    <td>
+                        <input type="text" name="productProject" id="productProject" tabindex="2" value=""/>
+
+                        <div id="productProjectRef"></div>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Reference:</strong>
+                    </td>
+                    <td>
+                        <input type="text" name="productReference" id="productReference" tabindex="3" value=""/>
+
+                        <div id="productReferenceRef"></div>
+                    </td>
+                    <td nowrap="nowrap">
+                    </td>
+                    <td nowrap="nowrap">
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Quantity:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="productQuantity" id="productQuantity" tabindex="4" value=""/>
+                        <?php /*
+                        <?php echo $this->formElement( $resource_form->get( 'quantity' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'quantity' ), array( 'class' => 'error-msg' ) ); ?>
+                        */ ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Rate:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input type="text" name="productRate" id="productRate" tabindex="5" value=""/>
+                        <?php /*
+                        <?php echo $this->formElement( $resource_form->get( 'rate' ) ); ?>
+                        <?php echo $this->formElementErrors( $resource_form->get( 'rate' ), array( 'class' => 'error-msg' ) ); ?>
+                        */ ?>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Total Cost:</strong>
+                    </td>
+                    <td>
+                        &#163; <span id="productTotalCost"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td nowrap="nowrap">
+                        <strong>Start Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" tabindex="6" type="text" name="productStartDate" id="productStartDate" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>End Date:</strong>
+                    </td>
+                    <td nowrap="nowrap">
+                        <input onfocus="this.select()" type="text" tabindex="7" name="productEndDate" id="productEndDate" value="<?php echo date( 'd/m/Y' ); ?>"/>
+                    </td>
+                    <td nowrap="nowrap">
+                        <strong>Status:</strong>
+                    </td>
+                    <td>
+                        <?php if ( !empty($status) ): ?>
+                            <?php foreach ( $status as $item ): ?>
+                                <label class="radio radio_status" style="margin-left:25px;">
+                                    <input type="radio" name="productStatus" tabindex="8" value="<?php echo $item->getResourceStatusId(); ?>"/> <?php echo $item->getName(); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-add-product" tabindex="9" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" id="btn-close-product" tabindex="10" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

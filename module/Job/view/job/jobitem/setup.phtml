@@ -1,0 +1,205 @@
+<?php 
+$this->inlineScript()
+    ->appendFile('/js/forms/job/setup.js')
+    ;
+
+
+$this->headStyle()->captureStart() 
+?>
+    #tbl-competitors tr:hover {
+        cursor: pointer;
+    } 
+    #tbl-competitors tr.active {
+        color: white;
+        background-color: #4A8BC2;
+    }
+    
+    #tbl-competitors tr.active:hover {
+        color: black;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+
+
+?>
+<div id="modalProjectLostActivate" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Job <?php echo ($project->getCancelled()?'Re-Activate':'Cancellation'); ?> Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <form id="FormProjectLostActivate" class="form-nomargin" action="/client-<?php echo $project->getClient()->getClientId();?>/job-<?php echo $project->getProjectId(); ?>/<?php echo $project->getCancelled()?'activate':'close'; ?>/"></form>
+        <div id="projectLostActivateLoader" class="loader"></div>
+        <p>
+            <?php 
+                if ($project->getCancelled()) {
+                    echo 'Are you sure that you would like to re-activate this job?<br /><br />
+                        Please note: you will need to review the job configuration once re-activated.';
+                } else {
+                    echo 'Are you sure that you would like to cancel this job?<br /><br />
+                        Please note: you can re-activate this job at a later stage if required.';
+                }
+            ?>
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-<?php echo $project->getCancelled()?'success':'danger'; ?>" id="btn-confirm-project-lostactivate" aria-hidden="true"><i class="icon-<?php echo $project->getCancelled()?'refresh':'warning-sign'; ?>"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalProjectSigned" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Confirm Revert To Project&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <form id="FormProjectSigned" name="FormProjectSigned" enctype="multipart/form-data" method="post" accept-charset="UTF-8" action="/client-<?php echo $project->getClient()->getClientId();?>/job-<?php echo $project->getProjectId(); ?>/rollback/" class="form-nomargin">
+        <div id="projectSignedLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to roll back this job to project status?<br />
+            <span class="text-info"><strong>Important:</strong> this will take the job back to project status and allow configuration changes</span><br /><br />
+        </p>
+        </form>
+        <div id="signederrormsgs"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-project-signed" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div class="row-fluid">
+    <!--BEGIN METRO STATES-->
+    <div class="metro-nav metro-fix-view">
+<?php if ($this->isGranted('project.delete')) { ?>  
+<?php if ($project->getCancelled()) { ?>  
+        <div class="metro-nav-block  nav-block-green">
+            <a href="#modalProjectLostActivate" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-refresh"></i>
+                </div>
+                <div class="status">Re-Activate</div>
+            </a>
+        </div>
+<?php } else {     ?>
+        <div class="metro-nav-block  nav-block-blue">
+            <a href="#modalProjectSigned" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-undo"></i>
+                </div>
+                <div class="status">Project Rollback</div>
+            </a>
+        </div>
+        <div class="metro-nav-block  nav-block-red">
+            <a href="#modalProjectLostActivate" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-warning-sign"></i>
+                </div>
+                <div class="status">Cancel Job</div>
+            </a>
+        </div>
+<?php } ?>    
+<?php } ?>    
+    </div>
+    <div class="space10"></div>
+    <!--END METRO STATES-->
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="widget widget-tabs blue" id="product-widget-color">
+            <div class="widget-title">
+                <h4 class="modify-title-product"><i class="icon-cog"></i> Settings</h4>
+            </div>
+            <div class="widget-body relative">
+                <div class="alert alert-block alert-info fade in">
+                    <h4 class="alert-heading">Information</h4>
+                    <p>
+                      The settings for the job have been frozen and cannot be modified.  Once a project progresses to a job key configuration values are locked and can only be modified by an administrator.
+                    </p>
+                </div>
+                <table class="table table-bordered table-advance table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><?php echo $project->getName(); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Mode</th>
+                            <td><?php echo $project->getTest()?'Test Mode':'Live Mode'; ?></td>
+                        </tr>
+                        <tr>
+                            <th>Sector</th>
+                            <td><?php echo $project->getSector()->getName(); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td><?php echo $project->getType()->getName(); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Build</th>
+                            <td><?php echo $project->getRetrofit()?'Retrofit':'New Build'; ?></td>
+                        </tr>
+<?php 
+    $i = 0;
+    foreach ($project->getContacts() as $contact) {
+        $i++;
+        echo '<tr>'
+        . '<th>Contact #'.$i.'</th>'
+        . '<td>'.$contact->getName().'</td>'
+        . '</tr>';
+    }
+
+?>
+                        <tr>
+                            <th>Finance Provider</th>
+                            <td><?php echo $project->getfinanceProvider()?$project->getfinanceProvider()->getName().' over '.$project->getfinanceYears().' years':'No Finance'; ?></td>
+                        </tr>
+                        <tr>
+                            <th>MCD</th>
+                            <td><?php echo number_format($project->getMcd()*100,2).'%'; ?></td>
+                        </tr>
+                        <tr>
+                            <th>Warranty Type</th>
+                            <td><?php echo $project->getIBP()?'Insurance Backed Premium':'Standard Warranty'; ?></td>
+                        </tr>
+                        <tr>
+                            <th>Fuel Tariff</th>
+                            <td><?php echo $project->getfuelTariff(); ?> pence per unit</td>
+                        </tr>
+                        <tr>
+                            <th>Maintenance</th>
+                            <td>&#163;<?php echo number_format($project->getmaintenance(),2); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Carbon Factor</th>
+                            <td><?php echo $project->getCO2(); ?></td>
+                        </tr>
+                        <tr>
+                            <th>RPI</th>
+                            <td><?php echo number_format($project->getRPI()*100,2); ?>%</td>
+                        </tr>
+                        <tr>
+                            <th>EPI</th>
+                            <td><?php echo number_format($project->getEPI()*100,2); ?>%</td>
+                        </tr>
+                        <tr>
+                            <th>ECA Factor</th>
+                            <td><?php echo number_format($project->getECA()*100,2); ?>%</td>
+                        </tr>
+                        <tr>
+                            <th>Carbon Allowance</th>
+                            <td><?php echo $project->getcarbon(); ?>%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+<div id="modalProductInfo" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Product Information&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <table class="table table-advance table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="4" id="product-model"><?php echo isset($philips)?$philips->getModel():''; ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="width: 120px">Description:</th>
+                    <td colspan="3" id="product-desc"><?php echo isset($philips)?$philips->getDescription():''; ?></td>
+                </tr>
+                <tr>
+                    <th>Category:</th>
+                    <td id="product-category"><?php echo isset($philips)?$philips->getCategory()->getName():''; ?></td>
+                    <th>Brand:</th>
+                    <td id="product-brand"><?php echo isset($philips)?$philips->getBrand()->getName():''; ?></td>
+                </tr>
+                <tr>
+                    <th>12NC:</th>
+                    <td id="product-nc"><?php echo isset($philips)?$philips->getNc():''; ?></td>
+                    <th>EOC:</th>
+                    <td id="product-eoc"><?php echo isset($philips)?$philips->getEoc():''; ?></td>
+                </tr>
+                <tr>
+                    <th>Min Target:</th>
+                    <td id="product-tmin"><?php echo isset($philips)?$philips->getTargetMin():''; ?></td>
+                    <th>Max Target:</th>
+                    <td id="product-tmax"><?php echo isset($philips)?$philips->getTargetMax():''; ?></td>
+                </tr>
+                <tr>
+                    <th>Nett Trade:</th>
+                    <td id="product-ntrade"><?php echo isset($philips)?$philips->getNetTrade():''; ?></td>
+                    <th>CPU:</th>
+                    <td id="product-cpu"><?php echo isset($philips)?$philips->getCpu():''; ?></td>
+                </tr>
+                <tr>
+                    <th>PPU:</th>
+                    <td id="product-ppu"><?php echo isset($philips)?$philips->getPPU():''; ?></td>
+                    <th>8P3 Model:</th>
+                    <td id="product-8p3"><?php echo isset($product)?$product->getModel():''; ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

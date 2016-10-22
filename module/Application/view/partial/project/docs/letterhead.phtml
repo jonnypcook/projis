@@ -1,0 +1,63 @@
+<style>
+    #letterhead_logo {
+        width: 240px;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+    
+    #letterhead_originator {
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 9pt;
+        line-height: 10pt;
+        text-align: right;
+    }
+    
+    #letterhead_recipient {
+        margin-top: 100px;
+        margin-bottom: 30px;
+    }
+    
+    #letterhead_date {
+        position: absolute;
+        right: 0;
+    }
+</style>
+<img id="letterhead_logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-1.png" />
+<div id="letterhead_originator">
+    8point3 Limited<br />
+    SusCon<br />
+    Brunel Way<br />
+    Dartford, Kent<br />
+    DA1 5FW<br /><br />
+    T: 01322 270 400<br />
+    F: 0844 9934 561<br />
+    www.8point3led.co.uk
+</div>
+<div id="letterhead_recipient">
+    <?php 
+        echo $contact->getTitle()->getName(),' ', $contact->getForename(), ' ', $contact->getSurname(), '<br />'; 
+        echo $project->getClient()->getName(),'<br />';
+        if (!empty($contact->getAddress())) {
+            echo $contact->getAddress()->assemble('<br />');
+        }
+    ?>
+    <br /><br />
+    <strong>Reference:</strong> <?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT);
+        if (isset ($invoiceNo)) {
+            echo ' / '.$invoiceNo;
+        }
+    ?> 
+    <div id="letterhead_date">
+        <?php echo date('jS F Y'); ?>
+    </div>
+</div>
+Dear <?php
+    if (!empty($salutation)) {
+        echo $salutation;
+    } else {
+        echo 'Sir/Madam';
+    }
+?>, <br />

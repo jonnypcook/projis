@@ -1,0 +1,85 @@
+<?php
+
+$this->headStyle()->captureStart() 
+?>
+    .term {
+        color: #468847!important;
+        text-decoration: underline;
+        font-weight: bold!important;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div class="row-fluid ">
+    <div class="span12">
+        <!-- BEGIN TAB PORTLET-->
+        <div class="widget widget-tabs red">
+            <div class="widget-title">
+                <!--<h4><i class=" icon-search"></i>Search Result</h4>-->
+            </div>
+            <div class="widget-body">
+                <div class="tabbable portlet-tabs">
+                    <ul class="nav nav-tabs pull-left">
+                        <li class="active"><a href="#portlet_tab1" data-toggle="tab">Client Search</a></li>
+                    </ul>
+                    <div class="clearfix"></div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="portlet_tab1">
+                            <form class="form-horizontal search-result">
+                                <div class="control-group">
+                                    <label class="control-label">Search</label>
+                                    <div class="controls">
+                                        <input type="text" class="input-xxlarge" name="searchfull" value="<?php echo $term; ?>">
+                                        <p class="help-block">Enter search term above and click on the search button (or press return)</p>
+                                    </div>
+                                    <button type="submit" class="btn ">SEARCH</button>
+                                </div>
+                            </form>
+                            <div class="space20"></div>
+                            <!-- BEGIN CLASSIC SEARCH-->
+                            <div  style="min-height: 500px; ">
+                                <?php
+                                    if (empty($projects)) {
+                                        echo '<h4>No search results found for term: <span class="term">'.$term.'</span></h4><hr />';
+                                        echo '<div class="alert alert-block alert-warning fade in">
+                                                <p>Please try again with another search term - search terms are matched on the project and client name</p>
+                                            </div>';
+                                    } else {
+                                        $cid = false;
+                                        $clients = array();
+                                        foreach ($projects as $clientId=>$project) {
+                                            if ($cid != $project['clientId']) {
+                                                $cid = $project['clientId'];
+                                                $clients[$cid] = array(
+                                                    'name'=>preg_replace("/($term)/i","<span class=\"term\">\${1}</span>",$project['cName']),
+                                                    'data'=>array()
+                                                );
+                                            }
+                                            $clients[$cid]['data'][] = (($project['typeId']==3)?'Trial':(($project['weighting']==1)?'Job':'Project')).': <a href="/client-'.$cid.'/project-'.$project['projectId'].'/">'.preg_replace("/($term)/i","<span class=\"term\">\${1}</span>",$project['pName']).
+                                                    '&nbsp;&nbsp;<small class="text-warning">['.str_pad($cid, 5, "0", STR_PAD_LEFT).'-'.str_pad($project['projectId'], 5, "0", STR_PAD_LEFT).']</small></a>'.
+                                                    ($project['test']?'&nbsp;<small>[Test Project]</small>':'').
+                                                    ($project['cancelled']?'&nbsp;<small class="text-error">[Cancelled]</small>':'');
+                                        }
+
+                                        echo '<h4><strong>'.ucwords($this->wordify($count)).' Match'.(($count==1)?'':'es').' Found</strong> in which the keyword &quot;<span class="term">'.$term.'</span>&quot; matches elements of the client or project name</h4><hr />';
+                                        $i = 0;
+                                        foreach ($clients as $clientId=>$client) {
+                                            $i++;
+                                            echo '<div class="classic-search">';
+                                            echo '<h4>'.$i.'. <a href="/client-'.$clientId.'/">Client: '.$client['name'].'</a></h4>';
+                                            echo implode('<br />', $client['data']);
+                                            echo '</div>';
+                                        }
+                                    }
+                                ?>
+                                </div>
+                            <!-- END CLASSIC SEARCH-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END TAB PORTLET-->
+    </div>
+</div>

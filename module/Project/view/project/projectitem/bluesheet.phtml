@@ -1,0 +1,461 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/js/forms/project/bluesheet.js')
+/**/;
+
+
+?>
+
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <div class="widget widget-tabs blue" id="product-widget-color">
+            <div class="widget-title">
+                <h4><i class="icon-cog"></i> Blue Sheet</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="setupBSLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsProjectBluePaper">
+                        <li class=""><a data-number="5" href="#widgetBS_tab5" data-toggle="tab">Page 5</a></li>
+                        <li class=""><a data-number="4" href="#widgetBS_tab4" data-toggle="tab">Page 4</a></li>
+                        <li class=""><a data-number="3" href="#widgetBS_tab3" data-toggle="tab">Page 3</a></li>
+                        <li class=""><a data-number="2" href="#widgetBS_tab2" data-toggle="tab">Page 2</a></li>
+                        <li class="active"><a data-number="1" href="#widgetBS_tab1" data-toggle="tab">Page 1</a></li>
+                    </ul>
+                        <div class="tab-content" style="min-height: 420px">
+                            <div class="tab-pane active" id="widgetBS_tab1">
+                                <form class="form-horizontal" id="BlueSheetForm1" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/bluesheet/">
+                                <h4>Competition</h4>
+                                <hr />
+                                <?php
+                                    if (!empty($props['competition'])) {
+                                        foreach ($props['competition'] as $prop) {
+                                            $default = isset($storedProps[$prop->getName()])?$storedProps[$prop->getName()]->getValue():'';
+                                            $config = json_decode($prop->getConfig(), true);
+                                            $data = $config['data'];
+                                            echo '<div class="control-group">
+                                                <label class="control-label">'.$prop->getDescription().'</label>
+                                                <div class="controls">';
+                                            if ($config['type']==1) {
+                                                echo '<select name="'.$prop->getName().'" data-content="TBC" data-original-title="TBC" data-trigger="hover" class="span6  popovers" >';
+                                                echo '<option value="">Please Select</option>';
+                                                foreach ($data as $i=>$v) {
+                                                    echo '<option value="'.$i.'" '.(($default==$i)?'selected':'').'>'.$v.'</option>';
+                                                }
+                                                echo '</select>';
+                                            }
+                                            echo '</div>
+                                            </div>';
+                                        }
+                                    }
+                                ?>
+                                </form>
+                                <div class="space15"></div>
+                                <form class="form-horizontal" id="BlueSheetForm2" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/%m/">
+                                    <input type="hidden" name="cid" value="" />
+                                <h4>Competition Analysis</h4>
+                                <hr />
+                                <table class="table table-advance table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Competitor</th>
+                                            <th>Details</th>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                <?php if ($this->isGranted('project.write')) { ?>
+                                                <div class="pull-left">
+                                                    <button class="btn btn-default" id="btn-competitors-refresh"  data-pid="<?php echo $project->getProjectId(); ?>"><i class="icon-refresh"></i></button>
+                                                    <select id="competitors">
+                                                        <option value="">Please Select</option>
+                                                        <?php
+                                                            if (!empty($competitorList)) {
+                                                                foreach ($competitorList as $comp) {
+                                                                    echo '<option value="'.$comp['competitorId'].'">'.$comp['name'].'</option>';
+                                                                }
+                                                            }
+                                                        ?>
+                                                    </select>
+                                                    <button class="btn btn-primary" id="btn-competitors-add-existing" ><i class="icon-plus"></i></button>
+                                                    <button class="btn btn-success" id="btn-competitors-add-new"><i class="icon-plus-sign"></i> New</button>
+                                                </div>
+                                                <div class="pull-right">
+                                                    <button class="btn btn-danger hidden" id="btn-competitors-delete"><i class="icon-remove"></i> Delete</button>
+                                                    <button class="btn btn-success hidden" id="btn-competitors-modify"><i class="icon-save"></i> Update</button>
+                                                </div>
+                                <?php } ?>
+
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align: top">
+                                                <table class="table table-hover" id="tbl-competitors">
+                                                    <tbody>
+                                                        <?php
+                                                            if (!empty($competitors)) {
+                                                                foreach ($competitors as $competitorLnk) {
+                                                                    echo '<tr data-cid="'.$competitorLnk->getCompetitor()->getCompetitorId().'" >
+                                                                        <td>'.$competitorLnk->getCompetitor()->getName().'</td>
+                                                                    </tr>';
+                                                                }
+                                                                
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function(){
+        $('#tbl-competitors tbody tr:first-child').trigger('click');
+    });
+
+JS;
+$this->inlineScript()->captureEnd();                                                                
+                                                            }
+                                                        
+                                                        ?>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                            <td style="border-left: 1px #eee solid" class="relative">
+                                                <div id="competitorLoader" class="loader"></div>
+                                                <div id="competitorInfo" style="visibility: hidden">
+                                                    <h4>Competitor: <span id="lbl-competitor-name"></span></h4>
+                                                    <h4>Website: <a href="#" id="lbl-competitor-url" target="_blank"></a></h4>
+                                                    <div class="space15"></div>
+                                                    <h4 class="pull-left">Strengths</h4><a id="add-strength" class="pull-right" href="javascript:">Add Strength <i class="icon-plus"></i></a>
+                                                    <div class="clearfix"></div>
+                                                    <div class="control-group" id="sec-competitor-strengths"></div>
+                                                    
+                                                    <div class="space15"></div>
+                                                    <h4 class="pull-left">Weaknesses</h4><a id="add-weakness" class="pull-right" href="javascript:">Add Weakness <i class="icon-plus"></i></a>
+                                                    <div class="clearfix"></div>
+                                                    <div class="control-group" id="sec-competitor-weaknesses"></div>
+                                                    
+                                                    <div class="space15"></div>
+
+                                                    <h4>Probable Competitive Strategy</h4>
+                                                    <div class="control-group">
+                                                        <textarea class="span12" name="strategy"></textarea>
+                                                    </div>
+                                                    <h4><?php echo $this->identity()->getCompany()->getName(); ?>'s Competitor Strategy</h4>
+                                                    <div class="control-group">
+                                                        <textarea class="span12" name="response"></textarea>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr >
+                                            <td colspan="2">
+                                                <div class="alert no-margin-bot" >
+                                                    <strong>Important:</strong> Please ensure that you click on the update button if you make any changes to a competitor configuration
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                </form>
+                            </div>
+                            <div class="tab-pane " id="widgetBS_tab2">
+                                <form class="form-horizontal" id="BlueSheetForm3">
+                                    <h4>Ideal Customer Criteria</h4>
+                                <hr />
+                                <?php
+                                    $total = 0;
+                                    $totalScore = 0;
+                                    if (!empty($props['criteria'])) {
+                                        foreach ($props['criteria'] as $prop) {
+                                            $default = isset($storedProps[$prop->getName()])?$storedProps[$prop->getName()]->getValue():'';
+                                            $config = json_decode($prop->getConfig(), true);
+                                            $data = $config['data'];
+                                            $score = $config['score'];
+                                            echo '<div class="control-group">
+                                                <label class="control-label span6">'.$prop->getDescription().'</label>
+                                                <div class="controls span6">';
+                                            
+                                            if ($config['type']==1) {
+                                                echo '<select name="'.$prop->getName().'" data-content="TBC" data-original-title="TBC" data-trigger="hover" class="span10  popovers viability-field" >';
+                                                echo '<option value="" data-flag="3">Please Select</option>';
+                                                $max = 0;
+                                                foreach ($data as $i=>$v) {
+                                                    if ($max<$score[$i]) {
+                                                        $max = $score[$i];
+                                                    }
+                                                    $flag = (!empty($config['warn'][$i])?$config['warn'][$i]:'0');
+                                                    echo '<option value="'.$i.'" '.(($default==$i)?'selected':'').' data-flag="'.$flag.'" data-score="'.$score[$i].'">'.$v.'</option>';
+                                                    if ($default==$i) {
+                                                        $totalScore+= $score[$i];
+                                                    }
+                                                }
+                                                $total+=$max;
+                                                echo '</select>';
+                                                $mode = (($default=='')?-1:(!empty($config['warn'][$default])?$config['warn'][$default]:0));
+                                                echo ' <span class="label label-'.(($mode==-1)?'info':(($mode==0)?'success':(($mode==1)?'warning':'important'))).' viability-icon"><i class="icon-'.(($mode==-1)?'arrow-left':(($mode==0)?'ok':(($mode==1)?'warning-sign':'warning-sign'))).'"></i></span>';
+                                                
+                                            } elseif ($config['type']==2) {
+                                                echo '<input type="text" value="'.(empty($default)?0:$default).'" name="'.$prop->getName().'" />';
+                                            } elseif ($config['type']==3) {
+                                                echo '<input type="text" class="viability-date" value="'.(empty($default)?'':$default).'" name="'.$prop->getName().'" />';
+                                            }
+                                            echo '</div>
+                                            </div>';
+                                        }
+                                    }
+                                ?>
+                                <hr />
+                                <div><span class="label label-important"><span class="viability-score">Score: <?php echo $totalScore; ?></span> / <?php echo $total; ?></span></div>
+                                </form>
+                            </div>
+                            <div class="tab-pane" id="widgetBS_tab3">
+                                <h4>Buying Influences</h4>
+                                <hr />
+                                <table class="table table-advance table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Position</th>
+                                            <th>Role</th>
+                                            <th>Influence</th>
+                                            <th>Mode</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        if (!empty($contacts)) {
+                                            foreach ($contacts as $contact) {
+                                                echo '<tr>
+                                                        <td>'.$contact->getName().'</td>
+                                                        <td>'.$contact->getPosition().'</td>
+                                                        <td>'.ucwords(!empty($contact->getBuyingType())?$contact->getBuyingType()->getName():'-').'</td>
+                                                        <td>'.($contact->getInfluence()?$contact->getInfluence()->getName():'-').' </td>
+                                                        <td>'.($contact->getMode()?$contact->getMode()->getName():'-').' </td>
+                                                    </tr>';
+                                            }
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                                <div class="space15"></div>
+                                <h4>Buying Influences - Key Win Results</h4>
+                                <hr />
+                                <form id="BlueSheetForm5">
+                                <table class="table table-advance table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 200px">Name</th>
+                                            <th >Key Win Result</th>
+                                            <th style="width: 100px">Rating</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        if (!empty($contacts)) {
+                                            $buyInf = !empty($storedProps['BuyingInfluence'])?json_decode($storedProps['BuyingInfluence']->getValue(), true):array();
+                                            foreach ($contacts as $contact) {
+                                                $kwr = '<input type="text" name="kwr[]" class="span12" placeholder="No key win result entered for this contact for project" value="'.(!empty($buyInf[$contact->getContactId()])?$buyInf[$contact->getContactId()][0]:'').'" />';
+                                                //$kwr = trim($contact->getKeyWinResult());
+                                                $rating = (!empty($buyInf[$contact->getContactId()])?$buyInf[$contact->getContactId()][1]:1);
+                                                echo '<tr>
+                                                        <td>'.$contact->getName().'<input type="hidden" name="kwrcontactid[]" value="'.$contact->getContactId().'" /></td>
+                                                        <td>'.$kwr.'</td>
+                                                        <td><select class="span12" name="kwrrating[]"><option value="1" '.(($rating==1)?'selected':'').'>1</option>
+                                                            <option value="2" '.(($rating==2)?'selected':'').'>2</option>
+                                                            <option value="3" '.(($rating==3)?'selected':'').'>3</option>
+                                                            <option value="4" '.(($rating==4)?'selected':'').'>4</option>
+                                                            <option value="5" '.(($rating==5)?'selected':'').'>5</option>
+                                                            </select></td>
+                                                    </tr>';
+                                            }
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                                <div class="space15"></div>
+                            </div>
+                            <div class="tab-pane" id="widgetBS_tab4">
+                                <form class="form-horizontal" id="BlueSheetForm4">
+                                    <h4>Summary Of My Position Today</h4>
+                                    <hr />
+                                    <h4 class="pull-left">Strengths</h4><a id="add-position-strengths" class="pull-right" href="javascript:">Add Strength <i class="icon-plus"></i></a>
+                                    <div class="clearfix"></div>
+                                    <div class="control-group" id="sec-position-strengths"><?php
+                                        if (isset($storedProps['PositionStrengths'])) {
+                                            $i=0;
+                                            $positionStrengths = json_decode($storedProps['PositionStrengths']->getValue());
+                                            foreach ($positionStrengths as $posStrength) {
+                                                $i++;
+                                                echo '<input type="text" name="PositionStrengths[]" class="span12 " placeholder="Position Strength #'.$i.'" value="'.$posStrength.'" />'
+                                                        . '<div class="space5"></div>';
+                                            }
+                                        } else {
+                                            echo '<p>No strengths have been added to position</p>';
+                                        }
+                                    ?></div>
+
+                                    <div class="space15"></div>
+                                    <h4 class="pull-left">Red Flags</h4><a id="add-position-redflags" class="pull-right" href="javascript:">Add Red Flag <i class="icon-plus"></i></a>
+                                    <div class="clearfix"></div>
+                                    <div class="control-group" id="sec-position-redflags"><?php
+                                        if (isset($storedProps['PositionRedFlags'])) {
+                                            $i=0;
+                                            $positionRedFlags = json_decode($storedProps['PositionRedFlags']->getValue());
+                                            foreach ($positionRedFlags as $posRedFlag) {
+                                                $i++;
+                                                echo '<input type="text" name="PositionRedFlags[]" class="span12 " placeholder="Position Red Flag #'.$i.'" value="'.$posRedFlag.'" />'
+                                                        . '<div class="space5"></div>';
+                                            }
+                                        } else {
+                                            echo '<p>No red flags have been added to position</p>';
+                                        }
+                                    ?></div>
+                                    <div class="space15"></div>
+                                    <h4 class="pull-left">Possible Actions</h4><a id="add-position-actions" class="pull-right" href="javascript:">Add Action <i class="icon-plus"></i></a>
+                                    <div class="clearfix"></div>
+                                    <div class="control-group" id="sec-position-actions"><?php
+                                        if (isset($storedProps['PositionActions'])) {
+                                            $i=0;
+                                            $positionActions = json_decode($storedProps['PositionActions']->getValue());
+                                            foreach ($positionActions as $posAction) {
+                                                $i++;
+                                                echo '<input type="text" name="PositionActions[]" class="span12 " placeholder="Position Action #'.$i.'" value="'.$posAction.'" />'
+                                                        . '<div class="space5"></div>';
+                                            }
+                                        } else {
+                                            echo '<p>No actions have been added to position</p>';
+                                        }
+                                    ?></div>
+                                </form>
+                            </div>
+                            <div class="tab-pane" id="widgetBS_tab5">
+                                    <h4>Expected Order Date</h4>
+                                    <hr />
+                                    <p >Enter the expected order date based on project environment and blue sheet analysis.</p>
+                                    <div class="space15"></div>
+                                    <?php echo $this->form()->openTag($formOrderDate); ?>
+                                    <div class="control-group">
+                                        <label class="control-label">Expected Order Date</label>
+                                        <div class="controls">
+                                            <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                                                <?php echo $this->formElement($formOrderDate->get('OrderDate'));  ?>
+                                                <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                                                <a class="btn btn-success" id="btn-add-orderdate" style="margin-left: 4px" href="javascript:">Change</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php echo $this->form()->closeTag($formOrderDate); ?>
+                                    <div id="orderDateMsgs"></div>
+                                    <div class="space15"></div>
+                                    <h4>Best Action Plan</h4>
+                                    <hr />
+                                    <p>
+                                        This section is under construction - on completion tasks will be assigned to users in the organization
+                                    </p>
+
+                                </form>
+                            </div>
+                        </div>
+                </div>
+                <div id="BSMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-bs"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next-bs">Next <i class="icon-arrow-right icon-white"></i></button>
+<?php if ($this->isGranted('project.write')) { ?>
+                <button class="btn btn-success pull-right" id="btn-modify-bs"><i class="icon-ok icon-white"></i> Save Changes</button>
+<?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalCompetitor" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Create Competitor&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="product-widget-color">
+            <div class="widget-title">
+                <h4><i class="icon-plus-sign-alt"></i> Add Product</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemCompetitorLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddCompetitor">
+                        <li class=""><a data-number="3" href="#widgetC_tab3" data-toggle="tab">Weaknesses</a></li>
+                        <li class=""><a data-number="2" href="#widgetC_tab2" data-toggle="tab">Strengths</a></li>
+                        <li class="active"><a data-number="1" href="#widgetC_tab1" data-toggle="tab">General</a></li>
+                    </ul>
+                    <?php echo $this->form()->openTag($formCompetitorAdd); ?>
+                    <input type="hidden" name="systemId" value="" style="display: none" />
+                        <div class="tab-content" style="min-height: 260px">
+                            <div class="tab-pane active" id="widgetC_tab1">
+                                <h5 >General Details</h5>
+                                <p>
+                                    Enter the unique name and website address of the competitor:
+                                </p>
+                                <hr >
+                                <div class="control-group">
+                                    <label class="control-label">Name</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formCompetitorAdd->get('name'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Website</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($formCompetitorAdd->get('url'));  ?>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="tab-pane" id="widgetC_tab2">
+                                <h5 >Core Strengths</h5>
+                                <p>
+                                    Enter the core, non-project-specific strengths of the competitor.  These strengths should not be specific to the current 
+                                    project and should reflect the transferable strengths of the competitor. 
+                                </p>
+                                <hr >
+                                <input type="text" name="competitorCoreStrength[]" value="" class="span12" placeholder="Core Strength #1" />
+                                <div class="space5"></div>
+                                <input type="text" name="competitorCoreStrength[]" value="" class="span12" placeholder="Core Strength #2" />
+                                <div class="space5"></div>
+                                <input type="text" name="competitorCoreStrength[]" value="" class="span12" placeholder="Core Strength #3" />
+                            </div>
+                            <div class="tab-pane" id="widgetC_tab3">
+                                <h5 >Core Weaknesses</h5>
+                                <p>
+                                    Enter the core, non-project-specific weaknesses of the competitor.  These weaknesses should not be specific to the current 
+                                    project and should reflect the transferable weaknesses of the competitor. 
+                                </p>
+                                <hr >
+                                <input type="text" name="competitorCoreWeakness[]" value="" class="span12" placeholder="Core Weakness #1" />
+                                <div class="space5"></div>
+                                <input type="text" name="competitorCoreWeakness[]" value="" class="span12" placeholder="Core Weakness #2" />
+                                <div class="space5"></div>
+                                <input type="text" name="competitorCoreWeakness[]" value="" class="span12" placeholder="Core Weakness #3" />
+                            </div>
+                        </div>
+                    <?php echo $this->form()->closeTag($formCompetitorAdd); ?>
+                </div>
+                <div id="competitorMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-competitor"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next-competitor">Next <i class="icon-arrow-right icon-white"></i></button>
+<?php if ($this->isGranted('project.write')) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-create-competitor"><i class="icon-plus icon-white"></i> Add Competitor</button>
+<?php } ?>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>

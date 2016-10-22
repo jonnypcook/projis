@@ -1,0 +1,106 @@
+<?php $this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/js/forms/client/setup.js')
+/**/;
+
+
+$form = $this->form;
+$form->setAttribute('class', 'form-horizontal');
+$form->prepare();
+
+if (!$this->isGranted('client.finance.write')) {
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function() {
+        $('select[name=paymentTerms] option:not(:selected)').attr('disabled', true);
+    });
+JS;
+$this->inlineScript()->captureEnd();
+}
+?>
+<?php echo $this->form()->openTag($form); ?>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <!-- BEGIN SAMPLE FORMPORTLET-->
+        <div class="widget green relative">
+            <div id="setupLoader" class="loader"></div>
+            <div class="widget-title">
+                <h4><i class="icon-cog"></i> Client Configuration </h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <!-- BEGIN FORM-->
+                <div class="control-group">
+                    <label class="control-label">Name</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('name'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Registration Number</label>
+                    <div class="controls">
+                        <div id="text-toggle-button">
+                            <?php echo $this->formElement($form->get('regno'));  ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Company Website</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('url'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Owner</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('user'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Source</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('source'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Payment Terms</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('paymentTerms'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Available Funds</label>
+                    <div class="controls">
+                        <div class="input-prepend input-append">
+                        <span class="add-on">&#163;</span><?php echo $this->formElement($form->get('fund'));  ?><span class="add-on">available</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Finance Status</label>
+                    <div class="controls">
+                        <div id="text-toggle-button">
+                            <?php echo $this->formElement($form->get('financeStatus'));  ?>
+                        </div>
+                    </div>
+                </div>
+<?php if ($this->isGranted('client.write')) { ?>                    
+                <div class="form-actions">
+                     <button name="submit" type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+<?php } ?>
+                <!-- END FORM-->
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+<?php echo $this->form()->closeTag($form); ?>
+            

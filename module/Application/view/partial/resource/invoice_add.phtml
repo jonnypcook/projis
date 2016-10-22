@@ -1,0 +1,201 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-add-invoice').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#invoiceAddForm').submit();
+        return false;
+    });
+
+    $("#invoiceAddForm").validate({
+        rules: {
+            invoiceDate: {
+                required : true
+            },
+            invoiceProject: "required",
+            invoiceQuantity: "required",
+            invoiceRate: "required"
+        },
+        messages: {
+            invoiceDate:{
+               required: "Plaease enter date"
+            },
+            invoiceProject: "Please enter valid project id",
+            invoiceQuantity: "Please enter quantity",
+            invoiceRate: "Please enter rate"
+        },
+        submitHandler: function(form){
+             var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#invoiceAddForm').serialize();
+            $('#invoiceLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/resource-activities/addinvoice',
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The invoice resource has been added successfully.', {time: 3000});
+                                //window.location.reload();
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#invoiceLoader').fadeOut(function(){
+                            var d = new Date();
+                            var currDate = d.getDate() + '/' + ( d.getMonth() + 1 ) + '/' + d.getFullYear();
+                            $('#invoiceDate').val(currDate);
+                            $('#invoiceProject').val('');
+                            $('#invoiceReference').val('');
+                            $('#invoiceDetails').val('');
+                            $('#invoiceRate').val('');
+                            $('#invoiceProjectRef').html('');
+                            $('#invoiceDate').focus();
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+    $('#invoiceDate').on('blur', function(){
+        var d = $(this).val();
+        var currDate = new Date();
+        var new_date = '';
+        if ( d.length >= 8 )
+        {
+            return false;
+        }
+        else if ( d.length == 2 && !isNaN(d)  )
+        {
+            currMonth = (currDate.getMonth() + 1 );
+            if ( currMonth < 10 )
+            {
+                currMonth = '0'  + currMonth;
+            }
+
+            new_date = d + '/' + currMonth + '/' + currDate.getFullYear();
+            $('#invoiceDate').val(new_date);
+        }
+        else if( d.length == 4 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + currDate.getFullYear();
+            $('#invoiceDate').val(new_date);
+        }
+        else if( d.length == 6 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + parseInt((2000 + parseInt(d.substring(4,6))));
+            $('#invoiceDate').val(new_date);
+        }
+        else if( d.length == 8 && !isNaN(d) )
+        {
+            new_date = d.substring(0,2) + '/' + d.substring(2,4) + '/' + d.substring(4,8);
+            $('#invoiceDate').val(new_date);
+        }
+        else {
+        }
+    });
+
+    $('#invoiceProject').on('blur', function(){
+        var project_id = $(this).val();
+        $.ajax({
+            type : 'POST',
+            url : '/resource-activities/getclientid',
+            data: {'project_id' : project_id},
+            beforeSend: function(){
+                $('#invoiceProjectRef').css('color', '#000');
+                $('#invoiceProjectRef').html('Loading...');
+            },
+            success: function(res){
+                $('#invoiceProjectRef').html('');
+                if ( res.error )
+                {
+                    $('#invoiceProjectRef').html('Invalid Project');
+                    $('#invoiceProjectRef').css('color', 'red');
+                }
+                else
+                {
+                    //$('#invoiceDetails').val(res.description);
+                    $('#invoiceProjectRef').html(res.project_ref);
+                }
+            }
+        });
+    });
+
+
+    $('#btn-add-invoice-modal').on('click', function(){
+        $('#modalInvoice').modal();
+    });
+
+    $('#modalInvoice').on('shown', function(){
+        $('#invoiceDate').focus();
+    });
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalInvoice" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Invoice - Add</h3>
+    </div>
+    <div class="modal-body">
+        <div id="invoiceLoader" class="loader"></div>
+        <form id="invoiceAddForm" action="/resource-activites/addinvoice" class="form-horizontal form-nomargin">
+            <div class="control-group">
+                <label class="control-label" for="invoiceDate">Date:</label>
+
+                <div class="controls">
+                    <input class="span12" onfocus="this.select()" type="text" name="invoiceDate" id="invoiceDate" value="<?php echo date( 'd/m/Y' ); ?>" tabindex="1"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceProject">Project:</label>
+                <div class="controls">
+                    <input type="text" name="invoiceProject" id="invoiceProject" tabindex="2" value="" class="span12"/>
+                    <div id="invoiceProjectRef"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceReference">Reference:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceReference" id="invoiceReference" tabindex="3" value="" class="span12"/>
+
+                    <div id="invoiceReferenceRef"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceDetails">Details:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceDetails" id="invoiceDetails" tabindex="4" value="" class="span12"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="invoiceRate">Rate:</label>
+
+                <div class="controls">
+                    <input type="text" name="invoiceRate" id="invoiceRate" tabindex="5" value="" class="span12"/>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="6" id="btn-add-invoice" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" id="btn-close-invoice" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

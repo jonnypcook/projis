@@ -1,0 +1,230 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ->appendStylesheet('/assets/bootstrap-timepicker/compiled/timepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/bootstrap-timepicker/js/bootstrap-timepicker.js')
+/**/;
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    var Script = function () {
+
+    //toggle button
+    window.prettyPrint && prettyPrint();
+
+    $('#text-toggle-button').toggleButtons({
+        width: 160,
+        label: {
+            enabled: "Yes",
+            disabled: "No"
+        },
+        style: {
+            // Accepted values ["primary", "danger", "info", "success", "warning"] or nothing
+            enabled: "success",
+            disabled: "info"
+        }
+    });
+
+    $('#notification-toggle-button').toggleButtons({
+        width: 160,
+        label: {
+            enabled: "Yes",
+            disabled: "No"
+        },
+        style: {
+            // Accepted values ["primary", "danger", "info", "success", "warning"] or nothing
+            enabled: "success",
+            disabled: "danger"
+        }
+    });
+
+    //chosen select
+    $(".chzn-select").chosen(); $(".chzn-select-deselect").chosen({allow_single_deselect:true});
+
+    //time picker
+    $('input[name=calStartTm]').timepicker({
+        minuteStep: 1,
+        showSeconds: false,
+        showMeridian: false,
+        defaultTime: false
+    });
+    
+    $('input[name=calEndTm]').timepicker({
+        minuteStep: 1,
+        showSeconds: false,
+        showMeridian: false,
+        defaultTime: false
+    });
+    
+    // date picker setup
+    if (top.location != location) {
+        top.location.href = document.location.href ;
+    }
+    
+    $('input[name=calStartDt]').datepicker({
+        format: 'dd/mm/yyyy'
+    }).on('changeDate', function (e) {
+        $('input[name=calStartDt]').datepicker('hide').blur();
+    });
+        
+    $('input[name=calEndDt]').datepicker({
+        format: 'dd/mm/yyyy'
+    }).on('changeDate', function (e) {
+        $('input[name=calEndDt]').datepicker('hide').blur();
+    });
+
+    $('#addmeeting').on('click', function(e) {
+        e.preventDefault();
+        $('#myModalNewEvent').modal('show');
+        return false;
+    });
+
+    $('input[name=allday]').on('change', function(e) {
+        e.preventDefault();
+
+        $('input[name=calStartTm]').attr('disabled', $(this).is(':checked'));
+        $('input[name=calEndTm]').attr('disabled', $(this).is(':checked'));
+       
+        return false;
+    });
+
+    $('#btn-addevent').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#CalendarEventAdvancedAddForm').submit();
+   });      
+
+    $('#CalendarEventAdvancedAddForm').on('submit', function(e){
+        try {
+            e.preventDefault();
+            
+            resetFormErrors($(this).attr('name'));
+            var url = $(this).attr('action');
+            var params = 'ts='+Math.round(new Date().getTime()/1000)+'&'+$(this).serialize()+'&nogrowl=1';
+
+            $('#calendarEventLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: false, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        //console.log(response); //return;
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+                                if (obj.info != undefined) {
+                                    for(var i in obj.info){
+                                        addFormError(i, obj.info[i]);
+                                    }
+                                }
+                            } else{ // no errors
+                                $('#myModalNewEvent').modal('hide');
+                                $('#CalendarEventAdvancedAddForm input[name=title]').val('');
+                                $('#CalendarEventAdvancedAddForm input[name=location]').val('');
+                                growl('Success!', 'The calendar meeting event has been added successfully.', {time: 3000});
+                            }
+                        }
+                        catch(error){
+                            $('#errors').html($('#errors').html()+error+'<br />');
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#calendarEventLoader').fadeOut(function(){});
+                    }
+                });
+            });
+
+        } catch (ex) {
+
+        }/**/
+       
+        return false;
+    });
+
+}();
+
+JS;
+$this->inlineScript()->captureEnd();
+    
+?>
+<div id="myModalNewEvent" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel2">Add New Event</h3>
+    </div>
+    <div class="modal-body relative">
+        <div id="calendarEventLoader" class="loader"></div>
+        <!-- BEGIN FORM-->
+        <?php echo $this->form()->openTag($formCalendarEvent); ?>
+            <input type="hidden" name="projectId" value="<?php echo $project->getProjectId(); ?>" />
+            <div class="control-group">
+                <label class="control-label">Invited</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('users'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Summary</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('title'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Start Date</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('calStartDt'));  ?>
+                    <?php echo $this->formElement($formCalendarEvent->get('calStartTm'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">End Date</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('calEndDt'));  ?>
+                    <?php echo $this->formElement($formCalendarEvent->get('calEndTm'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">All Day Event</label>
+                <div class="controls">
+                    <div id="text-toggle-button">
+                        <?php echo $this->formElement($formCalendarEvent->get('allday'));  ?>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Location</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('location'));  ?>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Send Event Notification</label>
+                <div class="controls">
+                    <div id="notification-toggle-button">
+                        <?php echo $this->formElement($formCalendarEvent->get('sendNotifications'));  ?>
+                    </div>
+                </div>
+            </div>
+        <?php echo $this->form()->closeTag($formCalendarEvent); ?>
+        <!-- END FORM-->
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" id="btn-addevent" aria-hidden="true">Add To Calendar&nbsp;&nbsp;<i class="icon-calendar"></i></button>
+    </div>
+</div>

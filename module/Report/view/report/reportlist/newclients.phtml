@@ -1,0 +1,33 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Project ID</th>
+        <th>Project Name</th>
+        <th>Client</th>
+        <th>Project Value</th>
+    </tr>
+    <!--
+    <tr>
+        <td colspan="4">
+            <?php echo '<pre>';
+                print_r($data);
+           ?>
+        </td>
+    </tr>
+    -->
+    <?php if ( !empty($data) ): ?>
+        <?php foreach ( $data as $key => $value ): ?>
+            <tr>
+                <td><?php echo $value['project_id']; ?></td>
+                <td><?php echo $value['project_name'] ?></td>
+                <td><?php echo $value['client_name'];?></td>
+                <td></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="4">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

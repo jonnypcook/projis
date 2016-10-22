@@ -1,0 +1,220 @@
+<?php $this->headStyle()->captureStart(); ?>
+.title{
+    font-weight:bold;
+    text-align:right !important;
+}
+.value{
+    text-align:right!important;
+    width:15%;
+}
+
+<?php $this->headStyle()->captureEnd(); ?>
+
+<div class="row-fluid">
+    <div class="span12">
+        <table class="table table-bordered">
+            <tr>
+                <td class="title">
+                    User:
+                </td>
+                <td>
+                    <?php echo $target->getUser()->getForename() . ' ' . $target->getUser()->getSurname(); ?>
+                </td>
+                <td class="title">
+                    Year Ending:
+                </td>
+                <td>
+                    <?php echo $target->getYear(); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 1:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth1(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 1:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth1(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 2:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth2(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 2:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth2(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 3:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth3(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 3:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth3(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 4:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth4(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 4:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth4(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 5:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth5(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 5:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth5(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 6:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth6(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 6:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth6(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 7:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth7(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 7:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth7(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 8:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth8(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 8:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth8(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 9:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth9(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 9:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth9(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 10:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth10(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 10:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth10(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 11:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth11(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 11:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth11(), 2 ); ?>
+                </td>
+            </tr>
+            <tr>
+                <td class="title">
+                    Sales Months 12:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getSalesMonth12(), 2 ); ?>
+                </td>
+                <td class="title">
+                    Margin Month 12:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $target->getMarginMonth12(), 2 ); ?>
+                </td>
+            </tr>
+            <tr style="background-color:#555;color:#fff;">
+                <td class="title">
+                    Grand Total Sales:
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $sales_total, 2 ); ?>
+                </td>
+                <td class="title">
+                    Grand Total Margin
+                </td>
+                <td class="value">
+                    &#163; <?php echo number_format( $margin_total, 2 ); ?>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <a class="btn btn-default" href="<?php echo $this->url( 'targets' ); ?>"><i class="icon icon-arrow-left"></i> Back to list</a>
+    </div>
+</div>

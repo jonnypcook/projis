@@ -1,0 +1,80 @@
+<?php
+$form = $this->form;
+$form->setAttribute('action', '/login'.($boxmode?'?box=1':''));
+$form->prepare();
+echo $this->form()->openTag($form);
+if ($boxmode) {
+    echo '<input name="box" value="1" type="hidden" />';
+}
+?>
+<?php if (empty($boxmode)) { ?>
+<div class="metro single-size red">
+    <div class="locked">
+        <i class="icon-lock"></i>
+        <span>Login</span>
+    </div>
+</div>
+<?php } ?>
+<div class="metro double-size green">
+    <div class="input-append lock-input">
+        <?php echo $this->formElement($form->get('username'));  ?>
+    </div>
+</div>
+<div class="metro double-size yellow">
+    <div class="input-append lock-input">
+        <?php echo $this->formElement($form->get('password'));  ?>
+    </div>
+</div>
+<div class="metro single-size terques login">
+    <script>
+        $(function(){
+            $('#btn-login').on('click', function(e) {
+                e.preventDefault();
+                $('form[name=<?php echo $this->form->getAttribute('name'); ?>]').submit();
+            });
+        })
+    </script>
+    <button type="submit" id="btn-login" class="btn login-btn">
+        Login
+        <i class=" icon-long-arrow-right"></i>
+    </button>
+</div>
+<div class="metro double-size navy-blue ">
+    <a href="/oauth2google" class="social-link">
+        <i class="icon-google-plus-sign"></i>
+        <span>Google Login</span>
+    </a>
+</div>
+<?php if (empty($boxmode)) { ?>
+<div class="metro single-size deep-red">
+    <a href="index.html" class="social-link">
+        <i class="icon-info-sign"></i>
+        <span>About</span>
+    </a>
+</div>
+<div class="metro double-size blue">
+    <a href="index.html" class="social-link">
+        <i class="icon-android"></i>
+        <span>Device Support</span>
+    </a>
+</div>
+<div class="metro single-size purple">
+    <a href="index.html" class="social-link">
+        <i class="icon-book"></i>
+        <span>Register</span>
+    </a>
+</div>
+<?php } ?>
+<div class="login-footer">
+    <div class="remember-hint pull-left">
+        <?php echo $this->formElement($form->get('rememberme'));  ?> 
+        Remember Me
+    </div>
+<?php if (empty($boxmode)) { ?>    <div class="forgot-hint pull-right">
+        <a id="forget-password" class="" href="javascript:;">Forgotten Password?</a>
+    </div>
+<?php } ?></div>
+<?php 
+echo $this->form()->closeTag($form);
+
+?>

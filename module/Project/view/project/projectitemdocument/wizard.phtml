@@ -1,0 +1,79 @@
+<?php
+foreach ( $form->getElements() as $element )
+{
+    ?>
+    <div class="control-group">
+        <?php if ( $element->getLabel() == 'Contact' ): ?>
+            <label class="control-label"><?php echo $element->getLabel(); ?></label>
+            <div class="controls <?php if ( $element->getAttribute( 'type' ) == 'multi_checkbox' )
+                echo 'multicheckbox'; ?>">
+                <?php echo $this->formElement( $element ); ?> <a href="#modalOtherContacts" id="btnOtherContact" data-toggle="modal">More Contacts</a><br/>
+
+                <div id="otherContactText"></div>
+                <input type="hidden" value="" name="otherContact" id="otherContact"/>
+            </div>
+        <?php elseif( $element->getLabel() == 'Delivery Address' ): ?>
+            <label class="control-label"><?php echo $element->getLabel(); ?></label>
+            <div class="controls <?php if ( $element->getAttribute( 'type' ) == 'multi_checkbox' )
+                echo 'multicheckbox'; ?>">
+                <?php echo $this->formElement( $element ); ?> <br/>
+
+                <div id="otherAddressText"></div>
+                <input type="hidden" value="" name="otherAddress" id="otherAddress"/>
+            </div>
+
+        <?php else: ?>
+            <label class="control-label"><?php echo $element->getLabel(); ?></label>
+            <div class="controls <?php if ( $element->getAttribute( 'type' ) == 'multi_checkbox' )
+                echo 'multicheckbox'; ?>">
+                <?php echo $this->formElement( $element ); ?>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+?>
+
+<div id="modalOtherContacts" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalContact1" aria-hidden="true">
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">All Contacts</h3>
+    </div>
+    <div class="modal-body" style="height:250px;">
+        <form action="<?php echo $this->url( 'projectdocument', array('cid' => $project->getClient()->getClientId(), 'pid' => $project->getProjectId() ) ); ?>">
+            <div class="row">
+                <div class="span3 text-right">
+                    Contact Name:
+                </div>
+                <div class="span9">
+                    <select name="sltContact" id="sltContact" class="chosen-select" style="width:400px;">
+                        <option value=""> -- Select Contact --</option>
+                        <?php foreach ( $contacts as $contact ): ?>
+                            <option value="<?php echo $contact->getContactId(); ?>"><?php echo $contact->getForename() . ' ' . $contact->getSurname() . ' | ' . $contact->getClient()->getName(); ?></option>
+                        <?php endforeach; ?>
+                    </select> &nbsp; <span id="loading-data" style="display:none;"><img src="<?php echo $this->basePath( '/img/ajax-loader.gif' ); ?>" width="20" align="middle"/> Loading</span>
+                </div>
+            </div>
+            <div class="row">
+                &nbsp;
+            </div>
+            <div class="row">
+                <div class="span3 text-right">
+                    Delivery Address
+                </div>
+                <div class="span9">
+                    <select name="sltAddress" id="sltAddress" class="form-control" style="width:400px;"></select><br/><br/>
+                    <input type="checkbox" name="use_address" id="use_address" value="1" /> Use this delivery address
+                </div>
+
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-other-contact" aria-hidden="true"><i class="icon-refresh"></i>
+            Select
+        </button>
+    </div>
+</div>

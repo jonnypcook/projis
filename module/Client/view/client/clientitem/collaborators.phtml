@@ -1,0 +1,44 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ;/**/
+
+$this->inlineScript()
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/js/forms/project/collaborators.js')
+/**/;
+
+
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN INTERACTIVE CHART PORTLET-->
+        <div class="widget yellow">
+            <div class="widget-title">
+                <h4><i class="icon-user"></i> Collaborators</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="setupLoader" class="loader"></div>
+                <p>
+                    Select the collaborators that you want to add to the client using the collaborator box below.
+                    <br />Collaborators will have full access to view and edit your client so please ensure that collaboration has been signed off.
+                </p>
+                <br />
+                <?php echo $this->form()->openTag($form); ?>
+                    <div class="control-group">
+                        <label class="control-label">Project Collaborators</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($form->get('collaborators'));  ?>
+                        </div>
+                    </div>
+                <?php echo $this->form()->closeTag($form); ?>
+                <hr >
+                <button class="btn btn-success" id="btnSaveCollaborators">Save Collaborators</button>
+            </div>
+        </div>
+        <!-- END INTERACTIVE CHART PORTLET-->
+    </div>
+</div>

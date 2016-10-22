@@ -1,0 +1,243 @@
+<?php
+    $client = $project->getClient();
+
+    $sent = array();
+    if (!empty($dispatchedItems)) {
+        foreach ($dispatchedItems as $item) {
+            if (empty($sent[$item['productId']])) {
+                $sent[$item['productId']]=0;
+            }
+            $sent[$item['productId']]+=$item['quantity'];
+        }
+    }
+    
+    $prods = array();
+    foreach ($billitems as $item) {
+        if (empty($prods[$item['productId']])) {
+            $prods[$item['productId']]=0;
+        }
+        $prods[$item['productId']]+=$item['quantity'];
+    }
+        
+
+    
+?><html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>8point3 LED document</title>
+        
+        <?php
+            echo $this->partial('partial/project/docs/css.phtml'); 
+        ?>
+        
+    </head>
+    <body>
+        <?php 
+            if (!empty($footer['pages'])) {
+                echo $this->partial('partial/project/docs/pages.phtml'); 
+            }
+            
+        ?>
+        <div>
+            <style>
+                #deliveryhead_logo {
+                    width: 240px;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
+
+                #deliverynotehead_originator {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    font-size: 9pt;
+                    line-height: 10pt;
+                    text-align: right;
+                }
+                
+                #deliverynotehead_recipient {
+                    margin-top: 100px;
+                    margin-bottom: 30px;
+                    height: 150px;
+                }
+                
+                .tbl-deliverynote-info,
+                .tbl-deliverynote-footer,
+                .tbl-deliverynote-items {
+                    font-size: 9pt!important;
+                    border-spacing: 0;
+                }
+                
+                .tbl-deliverynote-info td {
+                    text-align: right;
+                    padding:0;
+                    margin:0;
+                }
+
+                .tbl-deliverynote-info th {
+                    text-align: left;
+                    margin:0;
+                    padding:0;
+                    padding-right: 4px;
+                }
+
+                .tbl-deliverynote-items,
+                .tbl-deliverynote-footer {
+                    width: 100%;
+                }
+                
+                .tbl-deliverynote-items thead th {
+                    text-align: left;
+                    padding: 4px 0;
+                }
+
+                .tbl-deliverynote-items tbody td {
+                    padding: 4px 0;
+                }
+
+                .tbl-deliverynote-items thead {
+                    border-top: 1px #111 solid;
+                    border-bottom: 1px #111 solid;
+                }
+                
+                #deliverynotefoot {
+                    position: absolute;
+                    left: 0;
+                    bottom: 10px;
+                    font-size: 9pt!important;
+                    line-height: 10pt;
+                    border-top: 1px #111 solid;
+                    width: 100%;
+                    padding: 10px 0;
+                }
+                
+                #deliverynotes  {
+                    font-size: 8pt!important;
+                }
+                
+
+            </style>
+            <img id="deliveryhead_logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-1.png" />
+            <div id="deliverynotehead_originator">
+                <strong>DELIVERY NOTE - 8POINT3 LTD</strong><br />
+                SusCon<br />
+                Brunel Way<br />
+                Dartford, Kent<br />
+                DA1 5FW<br />
+                Tel: 01322 270 400<br />
+                Fax: 0844 9934561<br />
+                Email: orders@8point3led.co.uk<br /><br />
+                <table class="tbl-deliverynote-info">
+                    <tbody>
+                        <tr>
+                            <th>Delivery Note Number</th>
+                            <th>:</th>
+                            <td><?php echo str_pad($dispatch->getDispatchId(), 5, "0", STR_PAD_LEFT); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Delivery Date</th>
+                            <th>:</th>
+                            <td><?php echo $dispatch->getSent()->format('d/m/Y'); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Customer Order</th>
+                            <th>:</th>
+                            <td><?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT); ?></td>
+                        </tr>
+                        <tr>
+                            <th>Reference</th>
+                            <th>:</th>
+                            <td><?php echo empty($dispatch->getReference())?'-':$dispatch->getReference(); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="deliverynotehead_recipient">
+                <strong>Delivery Address:-</strong><br />
+                <?php 
+                    echo $project->getClient()->getName(),'<br />';
+                    if ($dispatch->getAddress() instanceof Contact\Entity\Address) {
+                        echo $dispatch->getAddress()->assemble('<br />');
+                    } else {
+                        
+                    }
+                ?>
+                <br /><br />
+                
+            </div>
+            <table class="tbl-deliverynote-items">
+                <thead>
+                    <tr>
+                        <th style="width: 20px">#</th>
+                        <th style="width: 180px">Product Code</th>
+                        <th>Description</th>
+                        <th style="width: 60px">Ordered</th>
+                        <th style="width: 60px">Delivered</th>
+                        <th style="width: 60px">To Follow</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        foreach ($dispatchItems as $dI=>$dispatchItem) {
+                            $toFollow = $prods[$dispatchItem['productId']] - $dispatchItem['quantity'];
+                            if (!empty($sent[$dispatchItem['productId']])) {
+                                $toFollow-=$sent[$dispatchItem['productId']];
+                                if ($toFollow<0) $toFollow=0;
+                            }
+                            echo '<tr>'
+                            . '<td>'.($dI+1).'</td>'
+                            . '<td>'.$dispatchItem['model'].'</td>'
+                            . '<td>'.$dispatchItem['description'].'</td>'
+                            . '<td class="right">'.$prods[$dispatchItem['productId']].'</td>'
+                            . '<td class="right">'.$dispatchItem['quantity'].'</td>'
+                            . '<td class="right">'.$toFollow.'</td>'
+                            . '</tr>';
+                        }
+                    ?>
+                </tbody>
+            </table>
+            <?php
+            $notes = $project->getNotes();
+            if (!empty($notes)) {
+                $notesArr  = json_decode($notes, true);
+                if (!empty($notesArr['delivery'])) {
+                    echo '<div id="deliverynotes">';
+                    $cnt = 0;
+                    foreach ($notesArr['delivery'] as $dnote) {
+                        $cnt++;
+                        echo (($cnt>1)?'<br>':'').'<strong>Delivery Note:</strong> '.trim($dnote).'';
+                    }
+                    echo '</div>';
+                }
+            }
+            ?>
+            <div id="deliverynotefoot">
+                <strong>Invoiced To:</strong>
+                <?php 
+                    echo $project->getClient()->getName();
+                    if ($dispatch->getAddress() instanceof Contact\Entity\Address) {
+                        echo ', ', $dispatch->getAddress()->assemble(', ');
+                    }
+                ?><br />
+                <strong>ALL DAMAGES AND SHORTAGES TO BE NOTIFIED IMMEDIATELY AND CONFIRMED IN WRITING</strong><br /><br />
+                <table class="tbl-deliverynote-footer">
+                    <tr>
+                        <td style="width: 60%">Customer Acceptance:</td>
+                        <td>Delivered By: <?php if(!empty($dispatch->getDeliveredBy())) echo $dispatch->getDeliveredBy(); ?></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>Date: <?php echo $dispatch->getSent()->format('d/m/Y'); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Print Name:</td>
+                        <td>Carrier:</td>
+                    </tr>
+                </table>
+                
+            </div>
+        </div>
+    </body>
+</html>
+

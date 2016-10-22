@@ -1,0 +1,29 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Contact Name</th>
+        <th>Client</th>
+    </tr>
+    <!--
+    <tr>
+        <td colspan="2">
+            <?php echo '<pre>';
+                print_r($data);
+           ?>
+        </td>
+    </tr>
+    -->
+    <?php if ( !empty($data) ): ?>
+        <?php foreach ( $data as $key => $value ): ?>
+            <tr>
+                <td><?php echo $value['forename'] . ' ' . $value['surname']; ?></td>
+                <td><?php echo $value['client_name'];?></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="2">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

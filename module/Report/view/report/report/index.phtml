@@ -1,0 +1,50 @@
+<?php
+if ( !empty($groups) )
+{
+    foreach ( $groups as $groupName => $reports )
+    {
+        ?>
+        <div class="row-fluid relative">
+            <div class="span2">
+                <div class="metro-nav metro-fix-view">
+                    <div class="metro-nav-block nav-block-<?php echo $reports['colour']; ?>">
+                        <a href="javascript:" class="text-center" data-original-title="">
+                            <span class="value">
+                                <i class="icon-<?php echo $reports['icon']; ?>"></i>
+                            </span>
+                            <div class="status"><?php echo $groupName; ?> Reports</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="span10">
+                <div id="profileLoader" class="loader"></div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th style="width: 180px">Name</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    foreach ( $reports['data'] as $rid => $report ): ?>
+                        <tr>
+                            <td><a href="<?php echo $this->url( 'reports', Array( 'action' => 'view', 'group' => strtolower( $groupName ), 'report' => $rid ) ); ?>"><?php echo $report[0] ?></a></td>
+                            <td> <?php echo $report[1] ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class=" row-fluid relative">
+            <div class="span12">
+                <hr/>
+                <div class="space20"></div>
+            </div>
+        </div>
+        <?php
+    }
+}
+

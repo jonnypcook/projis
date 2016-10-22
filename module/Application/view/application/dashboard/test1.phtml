@@ -1,0 +1,96 @@
+<?php
+// additional css
+$this->headLink()
+    //->appendStylesheet('/assets/fullcalendar/fullcalendar/bootstrap-fullcalendar.css')
+    ->appendStylesheet('/assets/fullcalendar/fullcalendar2/fullcalendar.min.css')
+       ;
+
+//additional scripts
+$this->inlineScript()
+    ->appendFile('/assets/fullcalendar/fullcalendar2/lib/moment.min.js')
+    ->appendFile('/assets/fullcalendar/fullcalendar2/fullcalendar.min.js')
+
+//page specific scripts
+;
+    
+$this->inlineScript()->captureStart();
+echo <<<JS
+    var Script = function () {
+
+//    calender
+
+    var date = new Date();
+    var d = date.getDate();
+    var m = date.getMonth();
+    var y = date.getFullYear();
+
+    $('#calendar').fullCalendar({
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+        selectable: true,
+        selectHelper: true,
+        select: function(start, end) {
+            //$('#calendar').fullCalendar('unselect');
+        },
+        editable: false,
+        eventLimit: true, // allow "more" link when too many events
+        loading: function(bool) {
+            if (bool) {
+                $('#loading').fadeIn();
+            } else {
+                $('#loading').fadeOut();
+            }
+        },
+        events: {
+                url: '/calendar/eventlist/',
+				error: function() {
+					$('#script-warning').show();
+				}
+        }
+    });
+
+
+    $(document).on('click','a.fc-event', function(e) {
+        e.preventDefault();
+        if ($(this).attr('href')!=undefined)
+            //console.log('click');
+        return false;
+    });
+
+    $(document).on('dblclick','.fc-day-number', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#calendar').fullCalendar('gotoDate', $(this).attr('data-date'));
+        $('#calendar').fullCalendar('changeView', 'agendaDay');
+
+    });
+
+
+
+}();
+
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span7 responsive" data-tablet="span7 fix-margin" data-desktop="span7">
+        <!-- BEGIN CALENDAR PORTLET-->
+        <div class="widget yellow">
+            <div class="widget-title">
+                <h4><i class="icon-calendar"></i> Calendar</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                    <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div class="loader" id="loading">loading...</div>
+                <div id="calendar" class="has-toolbar"></div>
+            </div>
+        </div>
+        <!-- END CALENDAR PORTLET-->
+    </div>
+</div>

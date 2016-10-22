@@ -1,0 +1,212 @@
+<?php
+$this->headLink()
+    ->appendStylesheet( '/assets/chosen-bootstrap/chosen/chosen.css' )
+    ->appendStylesheet( '/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css' )
+    ->appendStylesheet( '/assets/bootstrap-datepicker/css/datepicker.css' );
+
+$this->inlineScript()
+    ->appendFile( '/assets/bootstrap-datepicker/js/bootstrap-datepicker.js' )
+    ->appendFile( '/assets/chosen-bootstrap/chosen/chosen.jquery.min.js' )
+    ->appendFile( '/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js' )
+    //->appendFile( '/assets/fileajax/jquery.fileajax.js' )
+    ->appendFile( '/js/forms/project/setup.js?20150202' );
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function(){
+
+    $('#expected_date').datepicker({
+        format: 'dd/mm/yyyy',
+    });
+
+    $('#expected_date').on('changeDate', function(ev){
+        $(this).datepicker('hide');
+        $(this).blur();
+    });
+
+    $('#expectedDateIcon').on('click', function(){
+        $('#expected_date').val('');
+    });
+
+    $('#quantity, #rate').on('keyup', function(){
+        var quantity = $('#quantity').val();
+        var rate = $('#rate').val();
+        var total = 0;
+        if ( quantity != '' && rate != '' )
+        {
+            total  = parseFloat(quantity * rate);
+        }
+
+        $('#total_cost').html(total);
+    });
+
+    $('#quantity, #rate').keyup();
+
+    $('#project').on('blur', function(){
+        var project_id = $(this).val();
+        $.ajax({
+            type : 'POST',
+            url : '/resource-activities/getclientid',
+            data: {'project_id' : project_id},
+            beforeSend: function(){
+                $('#project_ref').css('color', '#000');
+                $('#project_ref').html('Loading...');
+            },
+            success: function(res){
+                $('#project_ref').html('');
+                if ( res.error )
+                {
+                    $('#project_ref').html('Invalid Project');
+                    $('#project_ref').css('color', 'red');
+                }
+                else
+                {
+                   $('#project_ref').html(res.project_ref);
+                }
+            }
+        });
+    });
+
+    $('#project').blur();
+
+    $('#resource').on('change', function(){
+        var id = $(this).val();
+        url = '/resource-item/resource-' + id + '/fetchresource';
+        $.ajax({
+            type : 'POST',
+            url : url,
+            data: {'resource_id' : id},
+            beforeSend: function(){
+                $('#resource_ref').css('color', '#000');
+                $('#resource_ref').html('Processing...');
+            },
+            success: function(res){
+                $('#resource_ref').html('');
+                if ( res.error > 0 )
+                {
+                    $('#resource_ref').css('color', '#000');
+                    $('#resource_ref').html('Invalid Resource');
+                   return false;
+                }
+                else
+                {
+                    $('#costCode').val(res.costCode);
+                    $('#rate').val(res.rate);
+                }
+            }
+        });
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+$this->headStyle()->captureStart(); ?>
+.error-msg {
+    color:#D00 !important;
+    list-style:none;
+    margin:0px;
+    padding:0px;
+}
+<?php $this->headStyle()->captureEnd(); ?>
+<?php if ( !empty($form->getMessages()) ): ?>
+    <div class="row-fluid">
+        <div class="alert alert-error">
+            Please correct following errors
+        </div>
+    </div>
+<?php endif; ?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN EXAMPLE TABLE widget-->
+        <td class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Resource Activities - Edit</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <?php echo $this->form()->openTag( $form ); ?>
+                <div class="row-fluid">
+                    <div class="span12">
+                        <table class="table">
+                            <tr>
+                                <td nowrap="nowrap"><strong>Date:</strong></td>
+                                <td nowrap="nowrap">
+                                    <input type="text" autofocus name="expected_date" id="expected_date" data-date-format="dd/mm/yyyy" value="<?php echo $activity->getDate()->format( 'd/m/Y' ); ?>" tabindex="1"/>
+                                    <span class="add-on" id="expectedDateIcon" style="cursor:pointer;" title="Reset date"><i class="icon-calendar"></i></span>
+                                </td>
+                                <td nowrap="nowrap"><strong>Resource:</strong></td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'resource' ) ); ?>
+                                    <div id="resource_ref"></div>
+                                    <?php echo $this->formElementErrors( $form->get( 'resource' ), array( 'class' => 'error-msg' ) ); ?>
+
+                                </td>
+                                <td nowrap="nowrap"><strong>Cost Code:</strong></td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'costCode' ) ); ?>
+                                    <?php echo $this->formElementErrors( $form->get( 'costCode' ), array( 'class' => 'error-msg' ) ); ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td nowrap="nowrap">
+                                    <strong>Project:</strong>
+                                </td>
+                                <td nowrap="nowrap">
+
+                                    <?php echo $this->formElement( $form->get( 'project' ) ); ?>
+                                    <div id="project_ref"></div>
+
+                                    <?php echo $this->formElementErrors( $form->get( 'project' ), array( 'class' => 'error-msg' ) ); ?>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <strong>Reference:</strong>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'reference' ) ); ?>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <strong>Details:</strong>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'details' ) ); ?>
+                                    <?php echo $this->formElementErrors( $form->get( 'details' ), array( 'class' => 'error-msg' ) ); ?>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td nowrap="nowrap">
+                                    <strong>Quantity:</strong>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'quantity' ) ); ?>
+                                    <?php echo $this->formElementErrors( $form->get( 'quantity' ), array( 'class' => 'error-msg' ) ); ?>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <strong>Rate:</strong>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <?php echo $this->formElement( $form->get( 'rate' ) ); ?>
+                                    <?php echo $this->formElementErrors( $form->get( 'rate' ), array( 'class' => 'error-msg' ) ); ?>
+                                </td>
+                                <td nowrap="nowrap">
+                                    <strong>Total Cost:</strong>
+                                </td>
+                                <td>
+                                    &#163; <span id="total_cost"></span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="6">
+                                    <br/>
+                                    <?php echo $this->formElement( $form->get( 'submit' ) ); ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <?php echo $this->form()->closeTag( $form ); ?>
+            </div>
+            <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>

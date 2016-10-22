@@ -1,0 +1,206 @@
+<?php
+$readonly = ((empty($editable) && empty($creatable)) || !empty($cancelled));
+
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/jquery-tags-input/jquery.tagsinput.css')
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ->appendStylesheet('/assets/bootstrap-timepicker/compiled/timepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/jquery-tags-input/jquery.tagsinput.min.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/bootstrap-timepicker/js/bootstrap-timepicker.js')
+    ->appendFile('/js/forms/calendar/advancedadd.js')
+/**/;
+
+
+?>
+<div id="modalDeleteEvent" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Delete Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="systemDeleteLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to delete the selected calendar event?<br /><br />
+            Please note: a deleted event cannot be retrieved.
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-delete" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div class="widget purple">
+    <div class="widget-title">
+        <h4><i class="icon-calendar"></i> Advanced Event</h4>
+        <span class="tools">
+            <a href="javascript:;" class="icon-chevron-down"></a>
+            <a href="javascript:;" class="icon-remove"></a>
+        </span>
+    </div>
+    <div class="widget-body relative">
+        <div class="loader" id="advancedEventLoader"></div>
+
+<?php if ($readonly) { ?>
+        <div class="alert alert-block alert-warning fade in ">
+            <h4 class="alert-heading">Event Is Read Only!</h4>
+            <p>
+                This event is readonly as you are not the originator or owner.  If you require a change then please contact the owner of the event: <a href="mailto: <?php echo $event->getCreator()->getEmail(); ?>"><?php echo ucwords($event->getCreator()->getdisplayName()) ?></a>
+            </p>
+        </div>
+<?php } ?>
+        <?php echo $this->form()->openTag($formCalendarEvent); ?>
+            <div class="control-group">
+                <label class="control-label">Title</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('title'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Start Date</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('calStartDt'));  ?>
+                    <?php echo $this->formElement($formCalendarEvent->get('calStartTm'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">End Date</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('calEndDt'));  ?>
+                    <?php echo $this->formElement($formCalendarEvent->get('calEndTm'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">All Day Event</label>
+                <div class="controls">
+                    <div id="text-toggle-button">
+                        <?php echo $this->formElement($formCalendarEvent->get('allday'));  ?>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="control-group">
+                <label class="control-label">Location</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('location'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Description</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('description'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Invited (Company)</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('users'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Invited (Non-Company)</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formCalendarEvent->get('usersBespoke'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Send Event Notification</label>
+                <div class="controls">
+                    <div id="notification-toggle-button">
+                        <?php echo $this->formElement($formCalendarEvent->get('sendNotifications'));  ?>
+                    </div>
+                </div>
+            </div>
+<?php
+        if (!empty($event)) {
+            echo '<a href="'.$event->gethtmlLink().'" target="_blank">Click here to view event using your Google calendar (opens in new window)</a>';
+        }
+            
+?>
+            
+            
+            <?php echo $this->form()->closeTag($formCalendarEvent); ?>
+<?php if ($readonly) { ?>
+            <a id="btnClose" class="btn " href="/calendar/"><i class="icon-remove"></i> Cancel</a>
+<?php }   else { ?>         
+            <button id="btnAddAdvancedEvent" class="btn btn-success pull-right"><i class="icon-plus-sign"></i> <?php echo $editable?'Update':'Add'; ?> Event</button>
+            <?php
+                if ($editable) { ?>
+            <button id="btnCancelAdvancedEvent" class="btn btn-danger pull-right" style="margin-right: 4px;"><i class="icon-remove-sign"></i> Delete Event</button>
+            <?php
+                }
+            ?>
+            <a id="btnClose" class="btn " href="/calendar/"><i class="icon-remove"></i> Cancel</a>
+           <?php
+                if ($editable) { ?>
+            <form id="CalendarEventAdvancedDeleteForm" action="/calendar/deleteevent/" class="form-nomargin"><input type="hidden" value="<?php echo $eventId; ?>"name="eid" /></form>
+            <?php
+                }
+}
+            ?>
+             
+    </div>
+</div>
+
+<?php if (!empty($event)) { 
+        if (!empty($event->getattendees())) { ?>
+<div class="widget blue">
+    <div class="widget-title">
+        <h4><i class="icon-group"></i> Attendees</h4>
+        <span class="tools">
+            <a href="javascript:;" class="icon-chevron-down"></a>
+            <a href="javascript:;" class="icon-remove"></a>
+        </span>
+    </div>
+    <div class="widget-body relative"><?php            
+            $actionRequired = array();
+            echo '<table class="table table-advance table-bordered table-striped">'
+                    . '<thead>'
+                    . '<tr><th style="width: 30px">&nbsp;</th><th>Name</th><th>Email</th><th>Status</th></tr>'
+                    . '</thead>'
+                    . '<tbody>';
+            foreach ($event->getattendees() as $attendee) {
+                switch ($attendee->getresponseStatus()) {
+                    case 'declined': 
+                        $icon = 'remove-sign';
+                        $text = 'The attendee has declined the invitation.';
+                        $color = 'danger';
+                        break;
+                    case 'tentative': 
+                        $icon = 'ok-sign';
+                        $text = 'The attendee has tentatively accepted the invitation.';
+                        $color = 'info';
+                        break;
+                    case 'accepted': 
+                        $icon = 'ok-sign';
+                        $text = 'The attendee has accepted the invitation.';
+                        $color = 'success';
+                        break;
+                    default:  // or "needsAction"
+                        $icon = 'question-sign';
+                        $text = 'The attendee has not responded to the invitation.';
+                        $color = 'warning';
+                        break;
+                }
+                echo '<tr>'
+                        . '<td><i class="icon-'.$icon.'"></i></td>'
+                        . '<td>'.$attendee->getdisplayName().'</td>'
+                        . '<td><a href="mailto: '.$attendee->getEmail().'">'.$attendee->getEmail().'</a></td>'
+                        . '<td><span class="text text-'.$color.'">'.$text.'</span></td>'
+                        . '</tr>';
+            }
+            echo '</tbody></table>';
+            
+            
+        } ?>
+    </div>
+</div>
+<?php        
+} ?>

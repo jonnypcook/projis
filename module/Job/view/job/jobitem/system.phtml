@@ -1,0 +1,149 @@
+<?php
+
+$this->inlineScript()
+    ->appendFile('/js/forms/job/system.js')
+    ;
+
+
+$this->headStyle()->captureStart() 
+?>
+    .tbl-export-building label {
+        margin:0; 
+        padding:0;
+    }
+<?php 
+$this->headStyle()->captureEnd();
+
+echo $this->partial('partial/system/csvpdfdownload.phtml');
+
+?>
+<div class="row-fluid">
+    <div class="span12" id="right_column">
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-cog"></i> System Setup</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemEditLoader" class="loader"></div>
+                <div>
+                    <div class="clearfix">
+                        <div class="btn-group pull-left">
+                            <button id="btn-select-all" class="btn green" style="margin-right: 4px">
+                                Show All Items <i class="icon-check"></i>
+                            </button>
+                            <button id="btn-deselect-all" class="btn green" style="margin-right: 4px">
+                                Hide All Items <i class="icon-check-empty"></i>
+                            </button>
+                        </div>
+                        <div class="btn-group pull-right">
+                            <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                            </button>
+                            <ul class="dropdown-menu pull-right">
+                                <li><a href="javascript:" class="btn-config-export-csv">Export Full System to CSV</a></li>
+                                <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/export/">Export Wizard</a></li>
+                            </ul><!-- -->
+                        </div>
+                    </div>
+                    <div class="space5"></div>
+                    <form id="exportSystemDetails" class="form-nomargin" >
+                    <?php
+                    if (!empty($breakdown)) {
+                        foreach ($breakdown as $buildingId => $building) {
+                    ?>
+                    <div class="space15"></div>
+                    <table class="table table-striped table-bordered table-advance tbl-export-building" id="tbl-export-building-<?php echo $buildingId; ?>">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <label><i class="icon-chevron-down chbx-building" data-buildingId="<?php echo $buildingId; ?>"></i> Building: <?php echo ($buildingId==0)?'Global':ucwords($building ['name']); ?></label>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                        <?php 
+                            foreach ($building ['spaces'] as $spaceId => $space) {
+                                $root = !empty($space['root']);
+                                
+                        ?>
+                                    <div class="div-export-space"> 
+                                        <div class="alert alert-success no-margin-bot">
+                                            <label><i class="icon-chevron-down chbx-space" data-spaceId="<?php echo $spaceId; ?>"></i> Space: <?php echo ucwords ($space ['name']); ?></label>
+                                        </div>
+                                        <table class="table table-striped table-bordered table-advance table-hover tbl-export-system" id="tbl-export-system-<?php echo $spaceId; ?>">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 200px" class="">Product</th>
+                                                    <th style="width: 60px" class="">Qty</th>
+                                                    <th style="width: 60px" class="">Hrs</th>
+                                                    <th class="">Legacy</th>
+                                                    <th class="">Additional</th>
+                                                    <th style="width: 100px" class="row-right">Total Cost</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+
+                                    foreach ( $space['products'] as $systemId => $system) {
+                                        $disabled = (!$root && ($system[2]==100));
+                                        
+                                        $additional = '';
+                                        if ($system[2]==3) {
+                                            if (!empty($system[16])) {
+                                                
+                                                $attr = json_decode($system[16], true);
+                                                $config = '';
+                                                foreach ($attr['dConf'] as $icnf) {
+                                                    foreach ($icnf as $cnf=>$qtty) {
+                                                        for ($k=0; $k<$qtty; $k++) {
+                                                            $config.='['.$cnf.']';
+                                                        }
+                                                    }
+                                                    $config.='<br>';
+                                                }
+                                                $additional.='Specified: '.$attr['sLen'].'mm, Achievable: '.$attr['dLen'].'mm, Units: '.(empty($attr['dUnits'])?1:$attr['dUnits']).' '
+                                                        . '<i class="icon-cog popovers" data-trigger="hover" data-html="true" data-placement="top" data-content="'.$config.'" data-original-title="'.ucwords ($system [4]).'"></i><div style="display: none">'.$config.'</div>';
+                                            }
+                                            
+                                        }
+                                        
+                                        ?>
+                                                <tr>
+                                                    <td class=""><?php echo ucwords ($system [4]); ?></td>
+                                                    <td class=""><?php echo $system [5]; ?></td>
+                                                    <td class=""><?php echo $system [6]; ?></td>
+                                                    <td class=""><?php echo empty($system [8])?'-':ucwords($system [8]); ?></td>
+                                                    <td><?php echo $additional; ?></td>
+                                                    <td class="row-right"><?php echo number_format($system [1],2); ?></td>
+                                                </tr>
+                                        <?php
+                                    }
+                                        ?>
+                                            </tbody>  
+                                        </table>
+                                        <br class="clearfix" />
+                                    </div>
+                        <?php
+                            }
+                        ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                            <?php
+                        }
+                    }
+
+                    ?>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,139 @@
+<?php 
+
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/forms/product/philips.js?20150322');
+
+$this->headStyle()->captureStart() 
+?>
+    #products_tbl tbody td{
+        vertical-align: middle;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+    <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget red">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Product Catalog</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body">
+                <div class="clearfix">
+                    <div class="btn-group pull-right" style="margin-left:8px">
+                        <select name="fCategory" id="fCategory">
+                            <option value="">Any Category</option>
+                            <?php
+                                if (!empty($categories)) {
+                                    foreach ($categories as $cat) {
+                                        echo '<option value="'.$cat['philipsCategoryId'].'">'.$cat['name'].'</option>';
+                                    }
+                                }
+                            
+                            ?>
+                        </select>
+                    </div>
+                    <div class="btn-group pull-right">
+                        <select name="fBrand" id="fBrand">
+                            <option value="">Any Brand</option>
+                            <?php
+                                if (!empty($brands)) {
+                                    foreach ($brands as $brand) {
+                                        echo '<option value="'.$brand['philipsBrandId'].'">'.$brand['name'].'</option>';
+                                    }
+                                }
+                            
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <table class="table table-striped table-bordered table-hover" id="products_tbl">
+                        <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th style="width: 120px" >12NC</th>
+                            <th style="width: 120px" >EOC</th>
+                            <th style="width: 120px"class="">Brand</th>
+                            <th style="width: 120px">Category</th>
+                            <th style="width: 100px;">PPU</th>
+                            <th style="width: 100px;">Model (8p3)</th>
+                            <th style="width: 40px;" >&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>
+<?php echo $this->partial('partial/product/philipsinfo.phtml'); ?>
+<div id="modalProductAdd" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 class="create-title-service">Add Philips Product&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="productAddLoader" class="loader"></div>
+        <?php echo $this->form()->openTag($form); ?>
+        <input type="hidden" name="ppid" value="" />
+        <p>
+            Please enter the details for the Philips product <span id="add-product-name" class="label label-warning"></span> and click on the &quot;Add Product&quot; button.
+        </p>
+        <div class="control-group">
+            <label class="control-label">Type</label>
+            <div class="controls">
+                <?php echo $this->formElement($form->get('type'));  ?>
+            </div>
+        </div> 
+        <div class="control-group">
+            <label class="control-label">Power</label>
+            <div class="controls">
+                <div class="input-append">
+                    <?php echo $this->formElement($form->get('pwr'));  ?>
+                    <span class="add-on">watts</span>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">ECA Compatible</label>
+            <div class="controls">
+                <div id="eca-toggle-button">
+                    <?php echo $this->formElement($form->get('eca'));  ?>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Description</label>
+            <div class="controls">
+                <div id="eca-toggle-button">
+                    <?php echo $this->formElement($form->get('description'));  ?>
+                </div>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag($form); ?>
+        <div id="productMsgs"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <?php if ($this->isGranted('product.create')) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-product-add"><i class="icon-plus icon-white"></i> Add Product</button>
+        <?php } ?>
+    </div>
+</div>

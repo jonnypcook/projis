@@ -1,0 +1,46 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Document ID</th>
+        <th>Project Name</th>
+        <th>Client</th>
+        <th>Value</th>
+        <th>Margin</th>
+        <th>Owner</th>
+        <th>Date</th>
+    </tr>
+    <?php if ( !empty($data) ): ?>
+        <?php foreach ( $data as $value ): ?>
+
+            <tr>
+                <td><?php echo $value['document_list_id']; ?></td>
+                <td><a href="<?php echo $this->url('project', Array('cid' => $value['client_id'], 'pid' => $value['project_id'] )); ?>"><?php echo $value['project_name'] ?> - (<?php echo $value['project_id']; ?>)</a></td>
+                <td><a href="<?php echo $this->url('client', Array('id' => $value['client_id'])); ?>"><?php echo $value['client_name'];?> - (<?php echo $value['client_id']; ?>)</a></td>
+                <td style="text-align:right!important;" nowrap="nowrap">&#163; <?php echo $value['figures']['cost']; ?></td>
+                <td nowrap="nowrap">
+                    <?php
+                        $tmpPpuTotal = $value['figures']['cost'];
+                        $tmpCpuTotal = $value['cost'];
+                        if ( $tmpPpuTotal )
+                        {
+                            $prjMargin = (($tmpPpuTotal - $tmpCpuTotal) / $tmpPpuTotal) * 100;
+                            echo number_format( $prjMargin, 2 ) . " %";
+                        }
+                        else
+                        {
+                            echo '0 %';
+                        }
+                    ?>
+
+                </td>
+                <td><?php echo $value['user_name'];?></td>
+                <td nowrap="nowrap"><?php echo date('d M, Y', strtotime($value['created']));?></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="6">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

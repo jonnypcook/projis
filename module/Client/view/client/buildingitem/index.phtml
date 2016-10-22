@@ -1,0 +1,140 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/js/forms/building/edit.js');
+
+echo $this->partial('partial/address.phtml', array('formAddr'=>$this->formAddr, 'callback'=>'reloadAddresses'));
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+function reloadAddresses(aid) {
+    try {
+        var url = '/client-{$client->getClientId()}/addressfind/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000);
+        $('#refresh-address').fadeOut();
+        
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params, // Just send the Base64 content in POST body
+            processData: false, // No need to process
+            timeout: 60000, // 1 min timeout
+            dataType: 'text', // Pure Base64 char data
+            beforeSend: function onBeforeSend(xhr, settings) {},
+            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+            success: function onUploadComplete(response) {
+                //console.log(response); return;
+                try{
+                    var obj=jQuery.parseJSON(response);
+                    var k = 0;
+                    // an error has been detected
+                    if (obj.err == true) {
+
+                    } else{ // no errors
+                        var addr = $('select[name=addressId]');
+                        addr.empty();
+                        addr.append($('<option>').text('Please Select'));
+                        for(var i in obj.addr){
+                            var opt = $('<option>').val(obj.addr[i]['addressId']).text(obj.addr[i]['postcode']+' '+obj.addr[i]['line1']);
+                            if (aid!=undefined) {
+                                if(aid==obj.addr[i]['addressId']) {
+                                    opt.attr('selected', true);
+                                }
+                            }
+                            addr.append(opt);
+                        }
+                    }
+                }
+                catch(error){
+                    $('#errors').html($('#errors').html()+error+'<br />');
+                }
+            },
+            complete: function(jqXHR, textStatus){
+                $('#refresh-address').fadeIn();
+            }
+        });
+
+    } catch (ex) {
+
+    }/**/
+
+}
+
+$(function() {
+    $('#refresh-address').on('click', function(e) {
+        reloadAddresses();
+    });
+        
+    $('#cancel-buildingadd').on('click', function(e) {
+        document.location = '/client-{$client->getClientId()}/building/';
+    });
+        
+    $('#btn-edit-address').on('click', function(e) {
+        e.preventDefault();
+        var addressId = $('#BuildingCreateForm select[name=addressId]').val();
+        editAddress(addressId);
+    });
+        
+    $('select[name=addressId]').on('change', function(e) {
+        if($(this).val()=='') {
+            $('#btn-edit-address').hide();
+        } else {
+            $('#btn-edit-address').show();
+        }
+    });
+        
+    $('#btn-new-config').on('click', function(e) {
+        e.preventDefault();
+        newAddress();
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+
+?><div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-building"></i> Building Setup</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+            </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="setupLoader" class="loader"></div>
+                <div id="msgs"></div>
+                <?php echo $this->form()->openTag($form); ?>
+                <div class="control-group">
+                    <label class="control-label">Building Name</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('name'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Additional Notes</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('notes'));  ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Address<span id="refresh-address" class="add-on" style="margin-left: 5px;"><i class="icon-refresh"></i></span></label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('addressId'));  ?><button class="btn" id="btn-edit-address" style="margin: 0 0 8px 8px">edit</button>
+                    </div>
+                </div>
+                <hr>
+                <div id="new-address">
+                    <div class="control-group">
+                        <label class="control-label">If you need to add a new address please click below:</label>
+                    </div>
+                    <a role="button" id="btn-new-config" class="btn btn-primary"><i class="icon-plus"></i> Add New Address</a>
+                </div>
+                <?php echo $this->form()->closeTag($form); ?>
+                <hr>
+                <button class="btn btn-success pull-right" id="btn-save-config">Save Changes <i class="icon-save"></i></button>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>

@@ -1,0 +1,38 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Document ID</th>
+        <th>Project Name</th>
+        <th>Client</th>
+        <th>Value</th>
+        <th>Owner</th>
+        <th>Date</th>
+    </tr>
+    <?php if ( !empty($data) ): ?>
+        <?php $total = 0; ?>
+        <?php foreach ( $data as $key => $value ): ?>
+            <tr>
+                <td><?php echo $value['document_list_id']; ?></td>
+                <td><a href="<?php echo $this->url('project', Array('cid' => $value['client_id'], 'pid' => $value['project_id'] )); ?>"><?php echo $value['project_name'] ?> - (<?php echo $value['project_id']; ?>)</a></td>
+                <td><a href="<?php echo $this->url('client', Array('id' => $value['client_id'])); ?>"><?php echo $value['client_name'];?> - (<?php echo $value['client_id']; ?>)</a></td>
+                <td style="text-align:right!important;">&#163; <?php echo $value['price']; ?></td>
+                <td><?php echo $value['user_name'];?></td>
+                <td><?php echo date('d M, Y', strtotime($value['created']));?></td>
+            </tr>
+            <?php $total += $value['price']; ?>
+        <?php endforeach; ?>
+        <tr>
+            <td></td>
+            <td></td>
+            <td style="text-align:right;"><strong>Total Value</strong></td>
+            <td style="text-align:right;" nowrap="nowrap">&#163; <?php echo number_format( $total, 2 ); ?></td>
+            <td></td>
+            <td></td>
+        </tr>
+    <?php else: ?>
+        <tr>
+            <td colspan="6">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

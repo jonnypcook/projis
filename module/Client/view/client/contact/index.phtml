@@ -1,0 +1,309 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/contacts.js?03022015');
+
+echo $this->partial('partial/address.phtml', array('formAddr'=>$this->formAddr, 'callback'=>'reloadAddresses'));
+
+
+?>
+<?php echo $this->form()->openTag($form); ?>
+<input type="hidden" name="contactId" id="contactId" value="" />
+<div class="row-fluid">
+    <div class="span12">
+    <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-user"></i> Contacts</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <div class="clearfix">
+                        <div class="btn-group pull-left">
+<?php if ($this->isGranted('contact.create')) { ?>
+                            <button class="btn green linkable" href="/client-<?php echo $client->getclientId(); ?>/contact/add/">
+                                Add New <i class="icon-plus"></i>
+                            </button>
+<?php } ?>
+                        </div>
+                        <div class="btn-group pull-right">
+                            <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                            </button>
+                            <ul class="dropdown-menu pull-right">
+                                <li><a href="#">Print</a></li>
+                                <li><a href="#">Save as PDF</a></li>
+                                <li><a href="#">Export to Excel</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="space15"></div>
+                    <table class="table table-striped table-bordered table-hover" id="contacts_tbl">
+                        <thead>
+                        <tr>
+                            <th style="width: 50px">Title</th>
+                            <th>Forename</th>
+                            <th >Surname</th>
+                            <th class="hidden-phone">Position</th>
+                            <th>Telephone (primary)</th>
+                            <th class="hidden-phone">Email</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                                if (!empty($contacts)) {
+                                    $contactToFind = $contactId;
+                                    $contactFound = false;
+                                    foreach ($contacts as $contact) {
+                                        if (empty($contactFound)) {
+                                            $contactFound = $contact->getContactId();
+                                        }
+                                        if ($contactToFind==$contact->getContactId()) {
+                                            $contactFound = $contactToFind;
+                                        }
+                                        $title = $contact->getTitle()?$contact->getTitle()->getName():'';
+                                        $sel = ($contact->getContactId()==1169);
+                                        echo '<tr cid="'.$contact->getContactId().'">';
+                                        echo "<td>{$title}</td>";
+                                        echo "<td>{$contact->getForename()}</td>";
+                                        echo "<td>{$contact->getSurname()}</td>";
+                                        echo "<td class=\"hidden-phone\">{$contact->getPosition()}</td>";
+                                        echo "<td>{$contact->getTelephone1()}</td>";
+                                        echo "<td class=\"hidden-phone\">{$contact->getEmail()}</td>";
+                                        echo "</tr>";
+                                    }
+                                }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <!-- BEGIN TAB PORTLET-->
+        <div class="widget widget-tabs purple relative">
+            <div id="setupLoader" class="loader"></div>
+            <div id="msgLoader" class="message-loader"><p>No Contact Selected</p></div>
+            <div class="widget-title">
+                <h4><i class="icon-info-sign"></i> <span id="contact-name">None Selected</span></h4>
+            </div>
+            <div class="widget-body">
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs">
+                        <li class=""><a href="#widget_tab4" data-toggle="tab">Notes</a></li>
+                        <li class=""><a href="#widget_tab3" data-toggle="tab">Influence</a></li>
+                        <li class=""><a href="#widget_tab2" data-toggle="tab">Contact</a></li>
+                        <li class="active"><a href="#widget_tab1" data-toggle="tab">Personal</a></li>
+                    </ul>
+                    <div class="tab-content" style="min-height: 400px">
+                        <div class="tab-pane active" id="widget_tab1">
+                            <div class="control-group">
+                                <label class="control-label">Title</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('titleId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Forename</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('forename'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Surname</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('surname'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Position</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('position'));  ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="widget_tab2">
+                            <div class="control-group">
+                                <label class="control-label">Telephone (Primary)</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('telephone1'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Telephone (Additional)</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('telephone2'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Email Address</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('email'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Address<span id="refresh-address" class="add-on" style="margin-left: 5px;"><i class="icon-refresh"></i></span></label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('addressId'));  ?><button class="btn" id="btn-edit-address" style="margin: 0 0 8px 8px">edit</button>
+                                </div>
+                            </div>
+                            <div id="new-address">
+                                <!--<a href="#myModal2" role="button" class="btn btn-primary" data-toggle="modal"><i class="icon-plus"></i> Add New Address</a><br /><br /><!-- -->
+                                <a role="button" id="btn-new-config" class="btn btn-primary"><i class="icon-plus"></i> Add New Address</a><br /><br />
+                            </div>
+
+                        </div>
+                        <div class="tab-pane" id="widget_tab3">
+                            <p>
+                                This information will be used on the blue sheet analysis of project
+                            </p>
+                            <div class="control-group">
+                                <label class="control-label">Buying Type</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('buyingtypeId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Influence</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('influenceId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Mode</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('modeId'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Key Win Result</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('keywinresult'));  ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="widget_tab4">
+                            <div id="new-address">
+                                <div class="control-group">
+                                    <label class="control-label">Enter any additional information regarding the contact:</label>
+                                </div>
+                            </div>
+                            <div id="notes">
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #1"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #2"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <input type="text" class="span6 " name="note[]" placeholder="Addtional Note #3"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="new-note">
+                                <a class="btn btn-primary"><i class="icon-plus"></i> Add Note</a><br /><br />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<?php if ($this->isGranted('contact.write')) { ?>
+                <a class="btn disabled" id="btn-update-contact"><i class="icon-edit"></i> Update</a>
+<?php } ?>
+                <a class="btn disabled" id="btn-refresh-contact"><i class="icon-refresh"></i> Refresh</a>
+            </div>
+        </div>
+        <!-- END TAB PORTLET-->
+    </div>
+
+<!-- END PAGE CONTENT-->         
+</div>
+<?php
+$contactFound = empty($contactFound)?':first-child':'[cid='.$contactFound.']';
+$this->inlineScript()->captureStart();
+echo <<<JS
+function reloadAddresses(aid) {
+    try {
+        var url = '/client-{$client->getClientId()}/addressfind/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000);
+        $('#refresh-address').fadeOut();
+        
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params, // Just send the Base64 content in POST body
+            processData: false, // No need to process
+            timeout: 60000, // 1 min timeout
+            dataType: 'text', // Pure Base64 char data
+            beforeSend: function onBeforeSend(xhr, settings) {},
+            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+            success: function onUploadComplete(response) {
+                //console.log(response); return;
+                try{
+                    var obj=jQuery.parseJSON(response);
+                    var k = 0;
+                    // an error has been detected
+                    if (obj.err == true) {
+
+                    } else{ // no errors
+                        var addr = $('select[name=addressId]');
+                        addr.empty();
+                        addr.append($('<option>').text('Please Select'));
+                        for(var i in obj.addr){
+                            var opt = $('<option>').val(obj.addr[i]['addressId']).text(obj.addr[i]['postcode']+' '+obj.addr[i]['line1']);
+                            if (aid!=undefined) {
+                                if(aid==obj.addr[i]['addressId']) {
+                                    opt.attr('selected', true);
+                                }
+                            }
+                            addr.append(opt);
+                        }
+                    }
+                }
+                catch(error){
+                    $('#errors').html($('#errors').html()+error+'<br />');
+                }
+            },
+            complete: function(jqXHR, textStatus){
+                $('#refresh-address').fadeIn();
+            }
+        });
+
+    } catch (ex) {
+
+    }/**/
+
+}
+
+$(function() {
+    $('#refresh-address').on('click', function(e) {
+        reloadAddresses();
+    });
+        
+    $('#cancel-buildingadd').on('click', function(e) {
+        document.location = '/client-{$client->getClientId()}/building/';
+    });
+        
+    $('#contacts_tbl tbody tr{$contactFound}').trigger('click');
+});
+JS;
+$this->inlineScript()->captureEnd();
+
+?>
+<?php echo $this->form()->closeTag($form); ?>

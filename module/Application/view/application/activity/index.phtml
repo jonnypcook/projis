@@ -1,0 +1,43 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/forms/activity/list.js');
+
+?>
+<div class="row-fluid">
+     <div class="span12">
+        <!-- BEGIN NOTIFICATIONS PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-comment-alt"></i> Activity Log </h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                    <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body">
+                <p>Below are displayed the activities that you (<?php echo $this->identity()->getName(); ?>) have added to the system.</p>
+                <hr />
+                <table class="table table-advance table-bordered table-striped" id="activity_tbl">
+                     <thead>
+                         <tr>
+                             <th style="width: 120px">Date</th>
+                             <th style="width: 120px">Duration</th>
+                             <th >Activity</th>
+                             <th class="hidden-phone">Details</th>
+                             <th style="width: 120px">Link</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+         <!-- END NOTIFICATIONS PORTLET-->
+     </div>
+ </div>

@@ -1,0 +1,174 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-wizard/jquery.bootstrap.wizard.min.js')
+    ->appendFile('/js/forms/building/add.js');
+
+echo $this->partial('partial/address.phtml', array('formAddr'=>$this->formAddr, 'callback'=>'reloadAddresses'));
+
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+function reloadAddresses(aid) {
+    try {
+        var url = '/client-{$client->getClientId()}/addressfind/';
+        var params = 'ts='+Math.round(new Date().getTime()/1000);
+        $('#refresh-address').fadeOut();
+        
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params, // Just send the Base64 content in POST body
+            processData: false, // No need to process
+            timeout: 60000, // 1 min timeout
+            dataType: 'text', // Pure Base64 char data
+            beforeSend: function onBeforeSend(xhr, settings) {},
+            error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+            success: function onUploadComplete(response) {
+                //console.log(response); return;
+                try{
+                    var obj=jQuery.parseJSON(response);
+                    var k = 0;
+                    // an error has been detected
+                    if (obj.err == true) {
+
+                    } else{ // no errors
+                        var addr = $('select[name=addressId]');
+                        addr.empty();
+                        addr.append($('<option>').text('Please Select'));
+                        for(var i in obj.addr){
+                            var opt = $('<option>').val(obj.addr[i]['addressId']).text(obj.addr[i]['postcode']+' '+obj.addr[i]['line1']);
+                            if (aid!=undefined) {
+                                if(aid==obj.addr[i]['addressId']) {
+                                    opt.attr('selected', true);
+                                }
+                            }
+                            addr.append(opt);
+                        }
+                    }
+                }
+                catch(error){
+                    $('#errors').html($('#errors').html()+error+'<br />');
+                }
+            },
+            complete: function(jqXHR, textStatus){
+                $('#refresh-address').fadeIn();
+            }
+        });
+
+    } catch (ex) {
+
+    }/**/
+
+}
+
+$(function() {
+    $('#refresh-address').on('click', function(e) {
+        reloadAddresses();
+    });
+        
+    $('#cancel-buildingadd').on('click', function(e) {
+        document.location = '/client-{$client->getClientId()}/building/';
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<?php echo $this->form()->openTag($form); ?>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <div class="widget box green relative">
+            <div id="setupLoader" class="loader"></div>
+            <div class="widget-title">
+                <h4>
+                    <i class="icon-plus-sign-alt"></i> Add Building
+                </h4>
+           <span class="tools">
+              <a href="javascript:;" class="icon-remove" id="cancel-buildingadd"></a>
+           </span>
+            </div>
+            <div class="widget-body">
+                   <div id="pills" >
+                    <ul>
+                        <li><a href="#pills-tab1" data-toggle="tab">Step 1</a></li>
+                        <li><a href="#pills-tab2" data-toggle="tab">Step 2</a></li>
+                        <li><a href="#pills-tab3" data-toggle="tab">Finish</a></li>
+                    </ul>
+                    <div class="progress progress-success progress-striped active">
+                        <div class="bar"></div>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane" id="pills-tab1">
+                            <h3>Step 1 - Building Details</h3>
+                            <div class="control-group">
+                                <label class="control-label">Building Name</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('name'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Additional Notes</label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('notes'));  ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab2">
+                            <h3>Step 2 - Location</h3>
+                            <div class="control-group">
+                                <label class="control-label">Address<span id="refresh-address" class="add-on" style="margin-left: 5px;"><i class="icon-refresh"></i></span></label>
+                                <div class="controls">
+                                    <?php echo $this->formElement($form->get('addressId'));  ?>
+                                </div>
+                            </div>
+                            <hr>
+                            <div id="new-address">
+                                <div class="control-group">
+                                    <label class="control-label">If you need to add a new address please click below:</label>
+                                </div>
+                                <a href="#myModal2" role="button" class="btn btn-primary" data-toggle="modal"><i class="icon-plus"></i> Add New Address</a>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab3">
+                            <h3>Step 3 - Confirmation</h3>
+                            <div class="control-group">
+                                <label class="control-label">Building Name:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-name">none entered</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Additional Notes:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-notes">no notes entered</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Address:</label>
+                                <div class="controls">
+                                    <span class="text" id="confirm-address">no address specified</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="pills-tab4">
+                            <h3>Finish</h3>
+                            <div class="control-group">
+                                <label class="control-label">That's it - finished:</label>
+                            </div>
+                            
+                        </div>
+                        <ul class="pager wizard">
+                            <li class="previous first"><a href="javascript:;">First</a></li>
+                            <li class="previous"><a href="javascript:;">Previous</a></li>
+                            <li class="next last"><a href="javascript:;">Last</a></li>
+                            <li class="next"><a  href="javascript:;">Next</a></li>
+                            <li class="next create" style="display:none;"><a href="javascript:;">Create Building</a></li>
+                            <li class="next finish" style="display:none;"><a href="javascript:;">Finish</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php echo $this->form()->closeTag($form); ?>

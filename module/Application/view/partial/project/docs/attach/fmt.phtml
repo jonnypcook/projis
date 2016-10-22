@@ -1,0 +1,63 @@
+<div>
+    <style>
+        table#tbl_fmt {
+            border-spacing: 0px;
+            border-collapse: separate;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        table#tbl_fmt thead th {
+            border-bottom: 1px #ccc solid;
+        }
+        
+        table#tbl_fmt tbody td,
+        table#tbl_fmt tbody th {
+            border-bottom: 1px #ccc solid;
+            font-weight: normal;
+            font-size: 8pt!important;
+        }
+
+        table#tbl_fmt tbody td {
+            text-align: right;
+        }
+        
+        table#tbl_fmt span {
+            vertical-align: middle;
+        }
+        
+        table#tbl_fmt tbody th {
+            font-weight: normal;
+        }
+        
+        
+       
+        
+    </style>
+    <h2>Finance Model Table</h2>
+    <table id="tbl_fmt">
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th style="text-align: right">Repayment</th>
+                <th style="text-align: right">Net Cash Saving</th>
+                <th style="text-align: right">Net Benefit</th>
+                <th style="text-align: right">Net Benefit (ECA+CA)</th>
+            </tr>
+        </thead>
+        <tbody>
+    <?php
+    foreach($forecast as $year=>$period){
+        echo '<tr>'
+        . '<th>'.$year.'</th>'
+        . '<td>'.number_format($period[11],2).'</td>'
+        . '<td>'.number_format($period[4],2).'</td>'
+        . '<td>'.number_format($period[8],2).'</td>'
+        . '<td>'.number_format($period[9],2).'</td>'
+        . '</tr>';
+    }
+
+    ?>
+        </tbody>
+    </table>
+</div>

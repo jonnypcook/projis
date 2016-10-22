@@ -1,0 +1,631 @@
+<?php
+//$this->headLink()->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->headScript()
+    ->appendFile('http://maps.google.com/maps/api/js?sensor=false')
+    ->appendFile('/assets/google/maps/v3_epoly.js')
+    ->appendFile('https://www.google.com/jsapi')
+    ->appendFile('/assets/google/maps/markerwithlabel.js')
+;
+$this->inlineScript()
+    ->appendFile('/assets/signalr/jquery.signalr-1.1.2.min.js')
+    ->appendFile('https://testing.wattzo.com/api/realtime/hubs')
+;
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+var map;
+var directionDisplay;
+var directionsService;
+var stepDisplay;
+var markerArray = [];
+var position;
+var marker = null;
+var polyline = null;
+var poly2 = null;
+var speed = 0.000005, wait = 1;
+var infowindow = null;
+  
+var myPano;   
+var panoClient;
+var nextPanoId;
+var timerHandle = null;
+
+var ctrlState = 0;
+
+function createMarker(latlng, label, html) {
+    var contentString = '<b>Loading Bay</b><br>'+html;
+    var marker = new MarkerWithLabel({
+        position: latlng,
+        draggable: false,
+        map: map,
+        title: label,
+        zIndex: Math.round(latlng.lat()*-100000)<<5,
+        labelContent: "X90 DML",
+        labelAnchor: new google.maps.Point(26, -5),
+        labelClass: "labels", // the CSS class for the label
+        labelStyle: {opacity: 0.75}
+     });
+    marker.myname = label;
+        // gmarkers.push(marker);
+
+    google.maps.event.addListener(marker, 'click', function() {
+        infowindow.setContent(contentString); 
+        infowindow.open(map,marker);
+    });/**/
+    return marker;
+}
+
+var SecurityLatLng = new google.maps.LatLng(51.505634, -0.022814);
+var LoadingBayLatLng = new google.maps.LatLng(51.50551, -0.021416);
+var CenterLatLng = new google.maps.LatLng(51.505003, -0.019966);
+var StartLatLng = new google.maps.LatLng(51.506131, -0.026995);
+var EndLatLng = new google.maps.LatLng(51.504363, -0.017176);
+
+// Define the LatLng coordinates for the polygon's path.
+var tunnelCoords = [
+      new google.maps.LatLng(51.505597, -0.022218),
+      new google.maps.LatLng(51.505308, -0.019431),
+      new google.maps.LatLng(51.505262, -0.019445),
+      new google.maps.LatLng(51.505557, -0.022229),
+      new google.maps.LatLng(51.505597, -0.022218)
+    ];
+
+    // Construct the polygon.
+var tunnelShape = new google.maps.Polygon({
+      paths: tunnelCoords,
+      strokeColor: '#FF0000',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#FF0000',
+      fillOpacity: 0.35
+    });
+
+function initialize() {
+    infowindow = new google.maps.InfoWindow(
+    { 
+      size: new google.maps.Size(150,50)
+    });
+    // Instantiate a directions service.
+    directionsService = new google.maps.DirectionsService();
+    
+    // Create a map and center it on Manhattan.
+    var myOptions = {
+        zoom: 18,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel: false,
+        mapTypeControl: false
+    }
+    map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+    address = 'Canary Wharf, London'
+    geocoder = new google.maps.Geocoder();
+	geocoder.geocode( { 'address': address}, function(results, status) {
+       map.setCenter(CenterLatLng);
+	});
+    
+    // Create a renderer for directions and bind it to the map.
+    var rendererOptions = {
+      map: map
+    }
+
+    directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+    
+    // Instantiate an info window to hold step text.
+    stepDisplay = new google.maps.InfoWindow();
+
+    polyline = new google.maps.Polyline({
+	path: [],
+	strokeColor: '#FF0000',
+	strokeWeight: 3
+    });
+    poly2 = new google.maps.Polyline({
+    	path: [],
+        strokeColor: '#FF0000',
+        strokeWeight: 3
+    });
+
+    tunnelShape.setMap(map);
+
+    var markerLbl1 = new MarkerWithLabel({
+       position: SecurityLatLng,
+       draggable: false,
+       map: map,
+       labelContent: "Security Gate",
+       labelAnchor: new google.maps.Point(38, 0),
+       labelClass: "labels", // the CSS class for the label
+       labelStyle: {opacity: 0.75},
+       icon: "http://maps.google.com/mapfiles/ms/icons/green.png"
+     });
+
+     var markerLbl2 = new MarkerWithLabel({
+       position: LoadingBayLatLng,
+       draggable: false,
+       map: map,
+       labelContent: "Loading Bay",
+       labelAnchor: new google.maps.Point(36, 0),
+       labelClass: "labels", // the CSS class for the label
+       labelStyle: {opacity: 0.75},
+       icon: "http://maps.google.com/mapfiles/ms/icons/yellow.png"
+     });
+
+
+
+  }
+
+  
+  
+	var steps = []
+
+function calcRoute(){
+    if (timerHandle) { clearTimeout(timerHandle); }
+    if (marker) { marker.setMap(null);}
+    polyline.setMap(null);
+    poly2.setMap(null);
+
+    directionsDisplay.setMap(null);
+    polyline = new google.maps.Polyline({
+        path: [],
+        strokeColor: '#FF0000',
+        strokeWeight: 1
+    });
+    poly2 = new google.maps.Polyline({
+        path: [],
+        strokeColor: '#FF0000',
+        strokeWeight: 2
+    });
+
+    // Create a renderer for directions and bind it to the map.
+    var rendererOptions = {
+        map: map
+    }
+
+    directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+
+    var travelMode = google.maps.DirectionsTravelMode.DRIVING
+
+    var request = {
+        origin: StartLatLng,
+        destination: EndLatLng,
+        travelMode: travelMode
+    };
+
+    // Route the directions and pass the response to a
+    // function to create markers for each step.
+    directionsService.route(request, function(response, status) {
+        if (status == google.maps.DirectionsStatus.OK){
+            directionsDisplay.setDirections(response);
+            var bounds = new google.maps.LatLngBounds();
+            var route = response.routes[0];
+            startLocation = new Object();
+            endLocation = new Object();
+
+            // For each route, display summary information.
+        	var path = response.routes[0].overview_path;
+            var legs = response.routes[0].legs;
+            for (i=0;i<legs.length;i++) {
+                if (i == 0) { 
+                    startLocation.latlng = legs[i].start_location;
+                    startLocation.address = legs[i].start_address;
+                    // marker = google.maps.Marker({map:map,position: startLocation.latlng});
+                    marker = createMarker(legs[i].start_location,"X90 DML","The vehicle has arrived at the loading bay (which is now lit).<br />Once the vehicle leaves the loading bay the LEDs will deactivate.");
+                }
+                endLocation.latlng = legs[i].end_location;
+                endLocation.address = legs[i].end_address;
+                var steps = legs[i].steps;
+                for (j=0;j<steps.length;j++) {
+                    var nextSegment = steps[j].path;
+                    for (k=0;k<nextSegment.length;k++) {
+                        polyline.getPath().push(nextSegment[k]);
+                        bounds.extend(nextSegment[k]);
+                    }
+                }
+            }
+
+            polyline.setMap(map);
+            map.fitBounds(bounds);
+            map.setZoom(18);
+            startAnimation();
+        }                                                    
+    });
+}
+  
+
+  
+var step = 1; // 5; // metres
+var tick = 50; // milliseconds
+var eol;
+var k=0;
+var stepnum=0;
+var speed = "";
+var lastVertex = 1;
+var kwhleg = 0;
+var kwh = 0;
+
+
+
+//=============== animation functions ======================
+      function updatePoly(d) {
+        // Spawn a new polyline every 20 vertices, because updating a 100-vertex poly is too slow
+        if (poly2.getPath().getLength() > 20) {
+          poly2=new google.maps.Polyline([polyline.getPath().getAt(lastVertex-1)]);
+          // map.addOverlay(poly2)
+        }
+
+        if (polyline.GetIndexAtDistance(d) < lastVertex+2) {
+           if (poly2.getPath().getLength()>1) {
+             poly2.getPath().removeAt(poly2.getPath().getLength()-1)
+           }
+           poly2.getPath().insertAt(poly2.getPath().getLength(),polyline.GetPointAtDistance(d));
+        } else {
+          poly2.getPath().insertAt(poly2.getPath().getLength(),endLocation.latlng);
+        }
+      }
+
+      function loadingbayexit(d) {
+        setMsg('Loading bay exited', 3);
+        switchDevicesLB('OFF');
+
+        infowindow.close();
+        timerHandle = setTimeout("animate("+(d)+")", tick);
+      }
+
+      function securitygateexit(d) {
+        switchDevicesLB('ON');
+        setMsg('Proceeded from security gate towards tunnel loading bay', 3);
+        $('#loadingbay').fadeOut();
+        timerHandle = setTimeout("animate("+(d)+")", tick);
+      }
+
+      function animate(d) {
+        if (ctrlState==0) {
+            return false;
+        } 
+
+        if (ctrlState==2) {
+            timerHandle = setTimeout("animate("+(d)+")", tick);
+            return false;
+        }
+
+        if ((d%50)==0) {
+            kwhleg+=0.08;
+
+            $('#kwhleg_div').text(number_format(kwhleg,4)+' kWh');
+            if (currentTotalWatts>0) {
+                kwh+=(currentTotalWatts/(1000*10));
+                $('#kwh_div').text(number_format(kwh,4)+' kWh');
+            }
+        }
+        //console.log("animate("+d+")");
+        if (d>eol) {
+          map.panTo(endLocation.latlng);
+          marker.setPosition(endLocation.latlng);
+          ctrlState = 0;
+          setMsg('Demo Completed', 1);
+          return;
+        } else if (d==50) {
+          map.setZoom(18);  
+        } else if (d==330) { // this is the security gate
+            setMsg('Security gate reached', 3);
+            $('#loadingbay').fadeIn();
+            switchDevicesLB('ON');
+            switchDevicesLB('OFF');
+            timerHandle = setTimeout("securitygateexit("+(d+step)+")", 6000);
+            return;
+        } else if (d==355) { // this is a latency issue workaround ON
+            switchDevices('ON');
+        } else if (d==430) { // this is the loading bay
+            setMsg('Loading bay reached', 3);
+            google.maps.event.trigger(marker, 'click');
+            timerHandle = setTimeout("loadingbayexit("+(d+step)+")", 10000);
+            return;
+        } else if (d==545) { // this is a latency issue workaround OFF
+            switchDevices('OFF');
+        } else if (d==375) { 
+            tunnelShape.setOptions({strokeColor: '#009900', fillColor: '#009900'});
+            setMsg('Tunnel Lighting Activated', 3);
+        } else if (d==575) {
+            tunnelShape.setOptions({strokeColor: '#FF0000', fillColor: '#FF0000'});
+            setMsg('Tunnel Lighting Deactivated', 2);
+        }
+
+        var p = polyline.GetPointAtDistance(d);
+        map.panTo(p);
+        marker.setPosition(p);
+        updatePoly(d);
+        timerHandle = setTimeout("animate("+(d+step)+")", tick);
+      }
+
+
+function startAnimation() {
+    eol=polyline.Distance();
+    map.setCenter(polyline.getPath().getAt(0));
+    // map.addOverlay(new google.maps.Marker(polyline.getAt(0),G_START_ICON));
+    // map.addOverlay(new GMarker(polyline.getVertex(polyline.getVertexCount()-1),G_END_ICON));
+    // marker = new google.maps.Marker({location:polyline.getPath().getAt(0)} /* ,{icon:car} */);
+    // map.addOverlay(marker);
+    poly2 = new google.maps.Polyline({path: [polyline.getPath().getAt(0)], strokeColor:"#0000FF", strokeWeight:10});
+    // map.addOverlay(poly2);
+    setTimeout("animate(50)",2000);  // Allow time for the initial map display
+}
+
+
+//=============== ~animation funcitons =====================
+
+    var logme = 1;
+
+    var serialNumber = "01-001-ABC123";
+    var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dhdHR6by5hY2Nlc3Njb250cm9sLndpbmRvd3MubmV0LyIsImF1ZCI6Imh0dHBzOi8vdGVzdGluZy53YXR0em8uY29tLyIsIm5iZiI6MTQxNTg5MTMyMiwiZXhwIjoyNTM0MDIzMDA3OTksImVtYWlsIjoiam9ubnkucC5jb29rQDhwb2ludDNsZWQuY28udWsiLCJ1bmlxdWVfbmFtZSI6Ikpvbm55IENvb2siLCJuYW1laWQiOiIxZGNiYzE4YjczNTU0OWE1ODdhMjRjNzNiZjYwNjFkMSIsImlkZW50aXR5cHJvdmlkZXIiOiJXYXR0em8ifQ.RKkiJ-xIdrUbbN382iIaXn8BiK14x3XA9XDAYk0i3lo';
+    var serviceUri = 'https://testing.wattzo.com/api/realtime';
+
+    // we use an inline data source in the example, usually data would
+    // be fetched from a server
+    
+    function CallRestAPI(method, endPoint, param, token)
+    {
+        var weblink = "https://testing.wattzo.com/api/"+endPoint;
+        
+        $.ajax(
+        {
+            url : weblink,
+            type : method,
+            data: param,
+            dataType: 'json',
+            beforeSend: function (request)
+            {
+                if ((token!=undefined) && (token!=null)) {
+                    request.setRequestHeader("Authorization", "Bearer "+token);
+                }
+            },
+            crossDomain: true,
+            success : function(result, textStatus, request)
+            {
+                //process the result
+                //console.log(result);
+                //console.log(textStatus);
+                //console.log(request.status);
+                /*for (i in result.data) {
+                    //console.log(result.data[i].id);
+                }/**/
+            },
+            error : function(jqXHR, textStatus, errorThrown) {
+                alert('Error: '+jqXHR.status);
+                alert('ErrorThrown: '+errorThrown)
+            }
+        });
+    }
+
+    var devices = [
+        '01-166-56bc89',
+        '01-166-0b9275',
+        '01-166-258ce3'
+    ];
+
+    var devicesLB = [
+        '01-166-542f85'
+    ];
+
+    function switchDevices(state) {
+        for (var i in devices) {
+            CallRestAPI(
+                'PUT',
+                'hubs/'+serialNumber+'/devices/'+devices[i]+'/status',
+                'status='+state,
+                token
+            );/**/
+        }
+    }
+
+    function switchDevicesLB(state) {
+        for (var i in devicesLB) {
+            CallRestAPI(
+                'PUT',
+                'hubs/'+serialNumber+'/devices/'+devicesLB[i]+'/status',
+                'status='+state,
+                token
+            );/**/
+        }
+    }
+
+    // chart (gauge) setup 
+
+    google.load("visualization", "1", {packages:["gauge"]});
+    google.setOnLoadCallback(drawChart);
+    var currentTotalWatts = 0;
+    var currentTotalWattsLeg = 800;
+    
+    function drawChart() {
+
+      var dataGG = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['LED', currentTotalWatts]
+      ]);
+
+      var dataGGLeg = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Legacy', currentTotalWattsLeg]
+      ]);
+
+      var options = {
+        width: 140, height: 140,
+        redFrom: 900, redTo: 1000,
+        yellowFrom:750, yellowTo: 900,
+        minorTicks: 10,
+        min:0, max:1000
+      };
+
+      var chart = new google.visualization.Gauge(document.getElementById('chart_div'));
+      var chartleg = new google.visualization.Gauge(document.getElementById('chartleg_div'));
+
+      chart.draw(dataGG, options);
+      chartleg.draw(dataGGLeg, options);
+
+      setInterval(function() {
+        dataGG.setValue(0, 1, currentTotalWatts);
+        chart.draw(dataGG, options);
+        dataGGLeg.setValue(0, 1, currentTotalWattsLeg);
+        chartleg.draw(dataGGLeg, options);
+      }, 1000);
+    }
+
+    function setMsg(msg, state) {
+        $('#statusMsg')
+            .removeClass('text-error')
+            .removeClass('text-warning')
+            .removeClass('text-info')
+            .removeClass('text-success')
+            .addClass('text-'+((state==1)?'error':((state==2)?'warning':((state==3)?'success':'info'))))
+            .text(msg);
+    }
+
+    $(function() {
+        $('#btnPlay').on('click', function(e) {
+            e.preventDefault();
+            if (ctrlState==1) return; // already running
+            if (ctrlState==2) { // we are paused
+                setMsg('Demo Resumed',0);
+                ctrlState = 1;
+                return;
+            }
+            tick = 50;
+            ctrlState = 1;
+            setMsg('Demo Started', 3);
+            calcRoute();
+        });
+
+        $('#btnStop').on('click', function(e) {
+            e.preventDefault();
+            if (ctrlState==0) return;
+            ctrlState = 0;
+            setMsg('Demo Stopped', 1);
+        });
+
+        $('#btnPause').on('click', function(e) {
+            e.preventDefault();
+            if (ctrlState==0) return;
+            ctrlState = (ctrlState==1)?2:1;
+            setMsg((ctrlState==1)?'Demo Resumed':'Demo Paused', (ctrlState==1)?0:2);
+        });
+
+        $('#btnFaster').on('click', function(e) {
+            e.preventDefault();
+            if (tick<=5) return;
+            tick-=5;
+        });
+
+        $('#btnSlower').on('click', function(e) {
+            e.preventDefault();
+            if (tick>=100) return;
+            tick+=5;
+        });
+
+        switchDevices('OFF');
+        switchDevicesLB('OFF');
+        initialize();
+
+
+        $.signalR.hub.url = serviceUri;
+        $.connection.hub.qs = "id=" + serialNumber;
+        $.ajaxSetup({ beforeSend: function (request)
+        {
+            request.setRequestHeader("Authorization", "Bearer "+token);
+        }});
+
+        $.connection.realtime.client.onUsageReceived = function (usage) {
+            //console.info("Usage received for hub.", usage.devices);
+            var watts = 0;
+            for(var i in usage.devices){
+                var connected = (usage.devices[i].connectionStatus=='Connected');
+                if (connected) {
+                    watts+=usage.devices[i].watts;
+                }
+                
+            }/**/
+            
+            
+            if (watts>1000) {
+                watts = 1000;
+            }
+            
+            currentTotalWatts = watts;
+        };  
+
+        $.connection.hub
+        .start({ transport: 'longPolling' })
+        //.start()
+        .done(function() {
+                //console.info("Subscribed to realtime feed.", serialNumber);
+        })
+        .fail(function(ex) {
+                //console.error("Error occurred while subscribing to realtime feed.", ex);
+        });
+
+    });
+JS;
+$this->inlineScript()->captureEnd();
+
+?>
+<style type="text/css">
+   .labels {
+     color: black;
+     background-color: white;
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 10px;
+     font-weight: bold;
+     text-align: center;
+     border: 1px solid #666;
+     white-space: nowrap;
+     padding: 0 4px;
+     -webkit-box-shadow: 10px 10px 38px -12px rgba(102,102,102,1); 
+     -moz-box-shadow: 10px 10px 38px -12px rgba(102,102,102,1); 
+     box-shadow: 10px 10px 38px -12px rgba(102,102,102,1);
+   }
+   
+   .counter {
+     color: black;
+     background-color: white;
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 10px;
+     font-weight: bold;
+     text-align: center;
+     border: 1px #666 solid;
+     white-space: nowrap;
+     padding: 0 4px;
+     border-radius: 6px!important;
+   }
+ </style>
+<div class="row-fluid">
+    <div class="span12">
+         <!-- BEGIN NOTIFICATIONS PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-map-marker"></i> Route Mapping Demo</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                    <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <img src="/img/demo/routemap/loadingbay.jpg" id="loadingbay" alt="" style="display: none; border: 1px #ccc solid; z-index: 998; position: absolute; bottom: 30px; left: 30px; -webkit-box-shadow: 10px 10px 38px -12px rgba(102,102,102,1); -moz-box-shadow: 10px 10px 38px -12px rgba(102,102,102,1); box-shadow: 10px 10px 38px -12px rgba(102,102,102,1);" />
+                <div id="chartleg_div" style="position: absolute; z-index: 999; right: 170px; top: 70px; height:140px; width: 150px"></div>
+                <div id="chart_div" style="position: absolute; z-index: 999; right: 30px; top: 70px; height:140px; width: 150px"></div>
+                <div id="kwhleg_div" class="counter" style="position: absolute; z-index: 999; right: 205px; top: 205px; height:20px; width: 80px; opacity: 0.8;">0.0000 kWh</div>
+                <div id="kwh_div" class="counter" style="position: absolute; z-index: 999; right: 65px; top: 205px; height:20px; width: 80px; opacity: 0.8;">0.0000 kWh</div>
+                <div id="tools">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="btnPlay"><i class="icon-play"></i></button>
+                        <button class="btn btn-primary" id="btnPause"><i class="icon-pause"></i></button>
+                        <button class="btn btn-primary" id="btnStop"><i class="icon-stop"></i></button>
+                        <button class="btn hidden-phone btn-primary" id="btnSlower"><i class="icon-backward"></i></button>
+                        <button class="btn hidden-phone btn-primary" id="btnFaster"><i class="icon-forward"></i></button>
+                    </div>
+                    <div class="pull-right text-error" id="statusMsg">Demo Stopped</div>
+                </div>
+                <div class="space10"></div>
+                <div id="map_canvas" style="width:100%;height:800px; border: 1px #f00 solid"></div>
+            </div>
+        </div>
+         <!-- END NOTIFICATIONS PORTLET-->
+    </div>
+</div>
+

@@ -1,0 +1,59 @@
+<?php
+    
+?>
+<html>
+    <head>
+        <style>
+            * {
+                font-family: helvetica;
+            }
+            
+            .flyleaf {
+              page-break-after: always;
+            }
+
+            .header, .footer {
+              position: fixed;
+            }
+
+            .header {
+              top: 0;
+            }
+
+            .footer  {
+              bottom: 0;
+              text-align: center;
+              width: 100%;
+            }
+            
+            .footer .page:after { 
+                content: "-" counter(page) "-"; 
+            }
+            
+            
+        </style>
+    </head>
+    <body>
+<!-- <script type="text/php">
+if ( isset($pdf) ) {
+  $font = Font_Metrics::get_font("helvetica", "bold");
+  $pdf->page_text(72, 18, "Header: {PAGE_NUM} of {PAGE_COUNT}", $font, 6, array(0,0,0));
+}
+</script><!-- -->
+        <div class="flyleaf">
+        Header Page
+        </div>
+        <div class="flyleaf">
+            <p>Page 2: </p>
+        </div>
+        <div class="flyleaf">
+            <p>Page 3: </p>
+        </div>
+        <div>
+            <p>Page 4:</p>
+        </div>
+        <div class="footer">
+            <p class="page"><?php $PAGE_NUM ?></p>
+        </div>
+    </body>
+</html>

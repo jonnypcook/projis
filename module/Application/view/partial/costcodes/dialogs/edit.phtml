@@ -1,0 +1,95 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-edit-costcode').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#CostCodeEditForm').submit();
+        return false;
+    });
+
+    $("#CostCodeEditForm").validate({
+        rules: {
+            name: "required",
+        },
+        messages: {
+            name: "Please enter cost code name",
+        },
+        submitHandler: function(form){
+            $('#btn-edit-costcode').attr('disabled', 'disabled');
+            var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#CostCodeEditForm').serialize();
+            $('#costCodeEditLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: $('#CostCodeEditForm').attr('action'),
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The cost code has been updated successfully.', {time: 3000});
+                                window.location.reload();
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#costCodeEditLoader').fadeOut(function(){
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+    $('.btn-edit-cost-code').on('click', function(){
+        var ccid = $(this).attr('data-id');
+        var name = $(this).attr('data-name' );
+        var url = '/cost-code/item-' + ccid + '/edit';
+        $('#CostCodeEditForm').attr('action', url );
+        $('#CostCodeEditForm #name').val(name);
+        $('#modalEditCostCode').modal();
+    });
+
+    $('#modalEditCostCode').on('shown', function(){
+        $('#CostCodeEditForm #name').focus();
+    });
+
+
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalEditCostCode" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3" class="purple"><strong>Cost Code - Edit</strong></h3>
+    </div>
+    <div class="modal-body">
+        <div id="costCodeEditLoader" class="loader"></div>
+        <?php echo $this->form()->openTag( $formEdit ); ?>
+        <div class="control-group">
+            <label class="control-label" for="name"><?php echo $formEdit->get( 'name' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $formEdit->get( 'name' ) ); ?>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag( $formEdit ); ?>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="6" id="btn-edit-costcode" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" id="btn-close-editcostcode" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+<?php echo $this->doctype(); ?>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+   <meta charset="utf-8" />
+   <title>403 Unauthorized</title>
+    <?php 
+    echo $this->headTitle();
+            
+    $this->headLink()
+        ->appendStylesheet('/assets/bootstrap/css/bootstrap.min.css')
+        ->appendStylesheet('/assets/bootstrap/css/bootstrap-responsive.min.css')
+        ->appendStylesheet('/assets/font-awesome/css/font-awesome.css')
+        ->appendStylesheet('/css/style.css')
+        ->appendStylesheet('/css/style-responsive.css')
+        ->appendStylesheet('/css/style-default.css', 'screen', false, array('id'=>'style_color'));
+
+    $this->headMeta()->appendName('description', '8point3 CRM');
+    $this->headMeta()->appendName('author', '8point3 Limited');
+    $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1.0');
+    
+    echo $this->headLink(), chr(13).chr(10);
+    echo $this->headScript(), chr(13).chr(10);
+    echo $this->headMeta(), chr(13).chr(10);
+    echo $this->headStyle(), chr(13).chr(10);
+    ?>
+</head>
+<!-- END HEAD -->
+<!-- BEGIN BODY -->
+<body class="error-500">
+    <div class="error-wrap">
+        <h1>Ouch!</h1>
+        <h2>Looks like you are not authorized to view this page</h2>
+        <div class="metro green">
+           <span> 4 </span>
+        </div>
+        <div class="metro yellow">
+            <span> 0 </span>
+        </div>
+        <div class="metro purple">
+            <span> 3 </span>
+        </div>
+        <p>Please contact an administrator if you require access to this page.</p>
+        <p>To return to the previous page please click <a href="javascript: parent.history.back();">here</a> , or alternatively you can <a href="<?php echo $this->url('home'); ?>"> Return to the Dashboard</a></p>
+    </div>
+</body>
+<!-- END BODY -->
+</html>

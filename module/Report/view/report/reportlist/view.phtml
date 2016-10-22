@@ -1,0 +1,23 @@
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-eye-open"></i> <?php echo $title; ?> Report</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="reportLoader" class="loader"></div>
+                <h4><?php echo $title; ?> Report for <strong></strong><?php echo date('M', mktime(0, 0, 0, $month, 1, $year)) . ', ' . $year;  ?></strong></h4>
+                <!-- BEGIN REPORT PARTIAL-->
+                <?php echo $this->partial('partial/report/list/'.$partialScript.'.phtml'); ?>
+                <!-- END  REPORT PARTIAL-->
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>

@@ -1,0 +1,256 @@
+<?php 
+
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/products.js?20022015');
+
+$this->headStyle()->captureStart() 
+?>
+    #products_tbl tbody td:nth-child(5){
+        text-align: right;
+    }
+    
+    #products_tbl tbody td:nth-child(6){
+        text-align: center;
+    }
+    
+    #products_tbl tbody td{
+        vertical-align: middle;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+    <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget red">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Product Catalog</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <div class="clearfix">
+                        <div class="btn-group pull-left">
+                        <?php if ($this->isGranted('product.create')) { ?>
+                            <button id="product-add-btn" class="btn green">
+                                Add New <i class="icon-plus"></i>
+                            </button>
+                        <?php } ?>    
+                        </div>
+                        <div class="btn-group pull-right">
+                            <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                            </button>
+                            <ul class="dropdown-menu pull-right">
+                                <li><a href="#">Print</a></li>
+                                <li><a href="#">Save as PDF</a></li>
+                                <li><a href="#">Export to Excel</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="space15"></div>
+                    <table class="table table-striped table-bordered table-hover" id="products_tbl">
+                        <thead>
+                        <tr>
+                            <th>Model</th>
+                            <!--<th>Description</th> <!-- -->
+                            <th style="width: 120px" >Brand</th>
+                            <th style="width: 120px">Type</th>
+                            <th style="width: 70px">Price</th>
+                            <th style="width: 40px">ECA</th>
+                            <th style="width: 80px;">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    <!-- END EXAMPLE TABLE widget-->
+    </div>
+</div>
+<div id="modalProductAdd" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 class="create-title-service">Add Product&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div class="widget widget-tabs green" id="service-widget-color">
+            <div class="widget-title">
+                <h4 class="create-title-service"><i class="icon-plus-sign-alt"></i> Add Product</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="productAddLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsAddProduct">
+                        <li class=""><a data-number="3" href="#widget_tab3" data-toggle="tab">Other</a></li>
+                        <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Pricing</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Details</a></li>
+                    </ul>
+                    <?php echo $this->form()->openTag($form); ?>
+                        <div class="tab-content" style="min-height: 250px">
+                            <div class="tab-pane active" id="widget_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Brand</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('brand'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Build</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('build'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Type</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('type'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Model</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('model'));  ?>
+                                    </div>
+                                </div> 
+                                <div class="control-group">
+                                    <label class="control-label">Description</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('description'));  ?>
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="tab-pane" id="widget_tab2">
+                                <div class="control-group">
+                                    <label class="control-label">Cost</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($form->get('cpu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Price</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($form->get('ppu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">IBP</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($form->get('ibppu'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Trial Price</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">&#163;</span>
+                                            <?php echo $this->formElement($form->get('ppuTrial'));  ?>
+                                            <span class="add-on">per unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="widget_tab3">
+                                <div class="control-group">
+                                    <label class="control-label">Power</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($form->get('pwr'));  ?>
+                                            <span class="add-on">watts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Active</label>
+                                    <div class="controls">
+                                        <div id="active-toggle-button">
+                                            <?php echo $this->formElement($form->get('active'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">ECA Compatible</label>
+                                    <div class="controls">
+                                        <div id="eca-toggle-button">
+                                            <?php echo $this->formElement($form->get('eca'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">MCD Compatible</label>
+                                    <div class="controls">
+                                        <div id="mcd-toggle-button">
+                                            <?php echo $this->formElement($form->get('mcd'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php echo $this->form()->closeTag($form); ?>
+                </div>
+                <div id="productMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next">Next <i class="icon-arrow-right icon-white"></i></button>
+                <?php if ($this->isGranted('product.create')) { ?>
+                <button class="btn btn-success" style="float: right" id="btn-product-add"><i class="icon-plus icon-white"></i> Add Product</button>
+                <?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+    </div>
+</div>
+<div id="modalCopyProduct" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Duplicate Product Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="productCopyLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to duplicate the selected product?<br />
+            Please note: the item will be an exact copy and will require editing.<br /><br />
+        </p>
+        <form id="frmCopyProduct" class="form-horizontal" action="<?php echo '/product/copyproduct/'; ?>">
+            <input type="hidden" name="productId" value="" />
+            <div class="control-group">
+                <label class="control-label">New Product Model</label>
+                <div class="controls">
+                    <input type="text" class="span12" name="newProductModel" value="" />
+                </div>
+            </div>
+        </form>
+        <div id="productCopyMsgs"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-copy-product" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>

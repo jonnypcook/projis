@@ -1,0 +1,93 @@
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(function() {
+     $('#btn-save-costcode').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#CostCodeForm').submit();
+        return false;
+    });
+
+    $("#CostCodeForm").validate({
+        rules: {
+            name: "required",
+        },
+        messages: {
+            name: "Please enter cost code name",
+        },
+        submitHandler: function(form){
+            $('#btn-save-cost-code').attr('disabled', 'disabled');
+             var params = 'ts='+Math.round(new Date().getTime()/1000) + '&' + $('#CostCodeForm').serialize();
+            $('#costCodeLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '/cost-codes/add',
+                    data: params, // Just send the Base64 content in POST body
+                    processData: true, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                        try{
+                            var obj=jQuery.parseJSON(response);
+                            var k = 0;
+                            // an error has been detected
+                            if (obj.err == true) {
+
+                            } else{ // no errors
+                                growl('Success!', 'The cost code has been added successfully.', {time: 3000});
+                            }
+                        }
+                        catch(error){
+                        }
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#costCodeLoader').fadeOut(function(){
+                            $('#btn-save-cost-code').removeAttrs('disabled');
+                            $('#name').val('');
+                            $('#name').focus();
+                        });
+                    }
+
+                });
+            });
+        }
+    });
+
+    $('#btn-add-costcode-modal').on('click', function(){
+        $('#modalCostCode').modal();
+    });
+
+    $('#modalCostCode').on('shown', function(){
+        $('#name').focus();
+    });
+    $('#btn-close-costcode').on('click', function(e){
+        window.location.reload();
+    });
+});
+JS;
+$this->inlineScript()->captureEnd(); ?>
+<div id="modalCostCode" class="hide fade modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3" class="purple"><strong>Cost Code - Add</strong></h3>
+    </div>
+    <div class="modal-body">
+        <div id="costCodeLoader" class="loader"></div>
+        <?php echo $this->form()->openTag( $form ); ?>
+        <div class="control-group">
+            <label class="control-label" for="name"><?php echo $form->get( 'name' )->getLabel(); ?></label>
+
+            <div class="controls">
+                <?php echo $this->formElement( $form->get( 'name' ) ); ?>
+            </div>
+        </div>
+        <?php echo $this->form()->closeTag( $form ); ?>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" tabindex="6" id="btn-save-costcode" aria-hidden="true"><i class="icon-save"></i> Save</button>
+        <button class="btn" data-dismiss="modal" id="btn-close-costcode" aria-hidden="true"><i class="icon-remove"></i> Close</button>
+    </div>
+</div>

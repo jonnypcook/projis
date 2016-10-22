@@ -1,0 +1,186 @@
+<?php
+
+$selectable = empty($this->calendarSelectable)?'':'selectable: true,
+        selectHelper: true,
+        select: function(start, end) {
+            $(\'input[name=calStartDt]\').val(start.format(\'DD/MM/YYYY\'));
+            $(\'input[name=calStartTm]\').val(start.format(\'HH:mm\'));
+            $(\'input[name=calEndDt]\').val(end.format(\'DD/MM/YYYY\'));
+            $(\'input[name=calEndTm]\').val(end.format(\'HH:mm\'));
+            $(\'#myModalNewEvent\').modal(\'show\');
+        },';
+
+// additional css
+$this->headLink()
+    //->appendStylesheet('/assets/fullcalendar/fullcalendar2/fullcalendar.min.css')
+    ->appendStylesheet('/assets/fullcalendar/fullcalendar2/fullcalendar.min.css')
+       ;
+
+//additional scripts
+$this->inlineScript()
+    ->appendFile('/assets/fullcalendar/fullcalendar2/lib/moment.min.js')
+    //->appendFile('/assets/fullcalendar/fullcalendar2/fullcalendar.min.js')
+    ->appendFile('/assets/fullcalendar/fullcalendar2/fullcalendar.js')
+
+//page specific scripts
+;
+    
+$this->inlineScript()->captureStart();
+echo <<<JS
+    var Script = function () {
+
+//    calender
+
+    var date = new Date();
+    var d = date.getDate();
+    var m = date.getMonth();
+    var y = date.getFullYear();
+
+    $('#calendar').fullCalendar({
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+        {$selectable}
+        editable: false,
+        eventLimit: true, // allow "more" link when too many events
+        loading: function(bool) {
+            if (bool) {
+                $('#loading').fadeIn();
+            } else {
+                $('#loading').fadeOut();
+            }
+        }/*,
+        events: {
+                url: '/calendar/eventlist/',
+				error: function() {
+					$('#script-warning').show();
+				}
+        }/**/
+    });
+
+
+    $(document).on('click','a.fc-event', function(e) {
+        e.preventDefault();
+        //console.log('click');
+        return false;
+    });
+
+    $(document).on('click','.fc-day-number-sel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#calendar').fullCalendar('gotoDate', $(this).parent().attr('data-date'));
+        $('#calendar').fullCalendar('changeView', 'agendaDay');
+        return false;
+    });
+
+
+
+}();
+
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<!-- BEGIN CALENDAR PORTLET-->
+<div class="widget yellow">
+    <div class="widget-title">
+        <h4><i class="icon-calendar"></i> Calendar</h4>
+        <span class="tools">
+            <a href="javascript:;" class="icon-chevron-down"></a>
+            <a href="javascript:;" class="icon-remove"></a>
+        </span>
+    </div>
+    <div class="widget-body relative">
+        <div class="loader" id="loading"></div>
+        <div id="calendar" class="has-toolbar"></div>
+    </div>
+</div>
+<!-- END CALENDAR PORTLET-->
+<?php if (!empty($this->calendarSelectable)) { 
+    $this->headLink()
+            ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+            ->appendStylesheet('/assets/bootstrap-timepicker/compiled/timepicker.css');
+    $this->inlineScript()
+            ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+            ->appendFile('/assets/bootstrap-timepicker/js/bootstrap-timepicker.js');
+    
+$this->inlineScript()->captureStart();
+echo <<<JS
+var ScriptActivityTools = function () {
+    //time picker
+    $('input[name=startTm]').timepicker({
+        minuteStep: 1,
+        showSeconds: false,
+        showMeridian: false
+    });
+    
+    // date picker setup
+    if (top.location != location) {
+        top.location.href = document.location.href ;
+    }
+    
+   $(function(){
+        window.prettyPrint && prettyPrint();
+        $('input[name=startDt]').datepicker({
+            format: 'dd/mm/yyyy'
+        }).on('changeDate', function (e) {
+            $('input[name=startDt]').datepicker('hide').blur();
+        });
+        
+        $('#startDtIcon').on('click', function(e) {
+            $('input[name=startDt]').datepicker('show');
+        });
+        
+    });
+
+}();    
+JS;
+$this->inlineScript()->captureEnd();
+?>
+
+<div id="myModalNewEvent" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel2">Add New Event</h3>
+    </div>
+    <div class="modal-body relative">
+        <div id="calendarEventLoader" class="loader"></div>
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-plus"></i> Address Details</h4>
+            </div>
+            <div class="widget-body">
+                <!-- BEGIN FORM-->
+                <?php echo $this->form()->openTag($formCalendarEvent); ?>
+                    <div class="control-group">
+                        <label class="control-label">Title</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formCalendarEvent->get('title'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Start Date</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formCalendarEvent->get('calStartDt'));  ?>
+                            <?php echo $this->formElement($formCalendarEvent->get('calStartTm'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">End Date</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formCalendarEvent->get('calEndDt'));  ?>
+                            <?php echo $this->formElement($formCalendarEvent->get('calEndTm'));  ?>
+                        </div>
+                    </div>
+                <?php echo $this->form()->closeTag($formCalendarEvent); ?>
+                <!-- END FORM-->
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-success" data-dismiss="modal" aria-hidden="true">Add Event <i class="icon-plus"></i></button>
+        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Advanced <i class="icon-forward"></i></button>
+    </div>
+</div>
+<?php } ?>

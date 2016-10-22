@@ -1,0 +1,64 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+$this->inlineScript()
+    ->appendFile('/js/forms/tools/remotephosphor.js');
+
+?>
+<div class="widget blue" >
+    <div class="widget-title">
+        <h4><i class="icon-bar-chart"></i> Remote Phosphor Calculator</h4>
+       <span class="tools">
+           <a href="javascript:;" class="icon-chevron-down"></a>
+           <a href="javascript:;" class="icon-remove"></a>
+       </span>
+    </div>
+    <div class="widget-body relative" style="min-height: 400px;">
+        <div id="remotePhosphorLoader" class="loader"></div>
+        <?php echo $this->form()->openTag($formRemotePhosphor); ?>
+        <div class="alert">
+            Enter the required length and product type of the architectural LED and click on the calculate button to get a quick overview of achievable configurations.
+        </div>
+        <div class="control-group">
+            <label class="control-label">Required Length</label>
+            <div class="controls">
+                <div class="input-append">
+                    <?php echo $this->formElement($formRemotePhosphor->get('length'));  ?>
+                    <span class="add-on">mm</span>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Product</label>
+            <div class="controls">
+                <?php echo $this->formElement($formRemotePhosphor->get('productId'));  ?>
+            </div>
+        </div>
+        <button class="btn btn-success pull-right" id="btn-remotephosphor-calculate"><i class="icon-bar-chart"></i> Calculate</button>
+        <div class="clearfix"></div>
+        <hr />
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="width: 150px">Achievable Length</th>
+                    <td id="info-rp-deliverable">-</td>
+                </tr>
+                <tr>
+                    <th>Billable Units</th>
+                    <td id="info-rp-billable">-</td>
+                </tr>
+                <tr>
+                    <th>Configuration</th>
+                    <td id="info-rp-config">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <?php echo $this->form()->closeTag($formRemotePhosphor); ?>
+        <span id="info-rp-error" class="label label-important" style="position: absolute; left: 10px; bottom: 10px; display: none">Error: Please check the details</span>
+        <a href="/tools/rpcalculator/" class="pull-right" style="position: absolute; right: 10px; bottom: 10px">View Advanced Tool <i class="icon-double-angle-right"></i></a>
+    </div>
+</div>

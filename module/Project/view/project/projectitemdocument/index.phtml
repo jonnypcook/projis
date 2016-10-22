@@ -1,0 +1,197 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ;
+
+
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/js/forms/project/document.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+;
+        
+
+
+$this->headStyle()->captureStart() 
+?>
+    .multicheckbox label {
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 16px;
+        margin-top:4px;
+    }
+    
+    .multicheckbox input[type=checkbox] {
+        vertical-align: top;
+        margin-right: 4px;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<div id="modalEmailSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Email Information&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="systemEmailLoader" class="loader"></div>
+        <div >
+            <?php echo $this->form()->openTag($formEmail); ?>
+            <div class="control-group">
+                <label class="control-label ">Recipient:</label>
+                <div class="controls ">
+                    <?php echo $this->formElement($formEmail->get('emailRecipient'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Subject:</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formEmail->get('emailSubject'));  ?>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Message:</label>
+                <div class="controls">
+                    <?php echo $this->formElement($formEmail->get('emailMessage'));  ?>
+                </div>
+            </div>
+            <?php echo $this->form()->closeTag($formEmail); ?>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-sendemail" aria-hidden="true"><i class="icon-envelope"></i> Send</button>
+    </div>
+</div>
+<div class="row-fluid">
+    <!--BEGIN METRO STATES-->
+    <div class="metro-nav metro-fix-view">
+
+        <div class="metro-nav-block  nav-block-grey">
+            <a href="javascript:" data-original-title="" id="btn-document-preview">
+                <div class="text-center">
+                    <i class="icon-eye-open"></i>
+                </div>
+                <div class="status">Preview</div>
+            </a>
+        </div>
+        <div class="metro-nav-block nav-block-blue ">
+            <a href="javascript:" data-original-title="" id="btn-document-download">
+                <div class="text-center">
+                    <i class="icon-edit"></i>
+                </div>
+                <div class="status">Download</div>
+            </a>
+        </div>
+        <div class="metro-nav-block nav-block-purple">
+            <a href="javascript:" data-original-title="" class="btn-document-newtab">
+                <div class="text-center">
+                    <i class="icon-mail-reply-all"></i>
+                </div>
+                <div class="status">New Tab</div>
+            </a>
+        </div>
+        <div class="metro-nav-block  nav-block-red">
+            <a href="javascript:" data-original-title="" class="btn-document-email">
+                <div class="text-center">
+                    <i class="icon-envelope"></i>
+                </div>
+                <div class="status">Email</div>
+            </a>
+        </div>
+    </div>
+    <div class="space10"></div>
+    <!--END METRO STATES-->
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-cog"></i> ]</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="wizardLoader" class="loader"></div>
+                <div class="clearfix">
+                    <div class="btn-group pull-left">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Select Document <i class="icon-angle-down"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-left" id="documentOption" >
+                            <?php
+                                if (!empty($documents)) {
+                                    $group = 0;
+                                    foreach ($documents as $document) {
+                                        if ($document['grouping']!=$group) {
+                                            if (!empty($group)) {
+                                                echo '<li class="divider" role="presentation"></li>';
+                                            }
+                                            $group = $document['grouping'];
+                                        }
+                                        echo '<li '
+                                        . 'data-id="'.$document['documentCategoryId'].'" '
+                                        . 'data-name="'.$document['name'].'" '
+                                        . 'data-desc="'.$document['description'].'" '
+                                        . '><a>'.$document['name'].'</a></li>';
+                                    }
+                                }
+                            ?>
+                        </ul>
+                    </div>
+                </div>
+                <hr >
+                <h3 id="document-name">No Document Selected</h3>
+                <p id="document-desc">
+                    Please select a document from the drop-down list above, fill in configuration details and then click on preview, download or email.
+                </p>
+                <hr >
+                <form method="GET" action="/client-<?php echo $project->getClient()->getClientId();?>/project-<?php echo $project->getProjectId(); ?>/document/generate" class="form-horizontal" id="formWizard">
+                    <input name="documentId" id="documentId" type="hidden" />
+                    <input name="documentInline" id="documentInline" value="0" type="hidden" />
+                    <div id="documentFormContent" style="min-height: 200px">
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- END BLANK PAGE PORTLET-->
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget">
+            <div class="widget-title">
+                <h4><i class="icon-cog"></i> Preview</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative" id="preview-frame-container">
+                <div class="clearfix">
+                    <div class="btn-group" id="preview-opts" style="display: none">
+                        <button id="btn-document-print" class="btn btn-success">
+                            Print Document <i class="icon-print"></i>
+                        </button>
+                        <button class="btn btn-primary btn-document-newtab" style="margin-left: 4px">
+                            Open In New Tab <i class="icon-mail-reply-all"></i>
+                        </button>
+                        <button class="btn btn-danger btn-document-email" style="margin-left: 4px">
+                            Email Document <i class="icon-envelope"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="space15"></div>
+                <div id="previewLoader" class="loader"></div>
+                <iframe id="preview-frame" name="preview-frame" style="height: 400px; width: 100%; display: none; border-top: 1px #eee solid;"></iframe>
+            </div>
+        </div>
+        <!-- END BLANK PAGE PORTLET-->
+    </div>
+</div>
+<iframe id="download-frame" name="download-frame" style="width:1px; height: 1px; visibility: hidden"></iframe>

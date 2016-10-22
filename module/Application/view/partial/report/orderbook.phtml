@@ -1,0 +1,275 @@
+<?php
+echo $this->partial( 'partial/report/jobs/orderbookchart.phtml' );
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <h3>Order Book by Value</h3>
+        <table class="table table-bordered table-responsive">
+            <?php foreach ( $data['value'] as $key => $value ): ?>
+                <tr>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $key != 'Year' ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key ) ) ?>">
+                                <?php echo $key . ' - ' . ($key + 1); ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $key; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 4 ) ) ?>">
+                                <?php echo $value[0]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[0]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 5 ) ) ?>">
+                                <?php echo $value[1]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[1]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 6 ) ) ?>">
+                                <?php echo $value[2]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[2]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 7 ) ) ?>">
+                                <?php echo $value[3]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[3]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 8 ) ) ?>">
+                                <?php echo $value[4]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[4]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 9 ) ) ?>">
+                                <?php echo $value[5]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[5]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 10 ) ) ?>">
+                                <?php echo $value[6]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[6]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 11 ) ) ?>">
+                                <?php echo $value[7]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[7]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 12 ) ) ?>">
+                                <?php echo $value[8]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[8]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 1 ) ) ?>">
+                                <?php echo $value[9]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[9]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 2 ) ) ?>">
+                                <?php echo $value[10]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[10]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 3 ) ) ?>">
+                                <?php echo $value[11]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[11]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $value[12] != 'Total' ): ?>
+                            &#163;<?php echo number_format( $value[12], 0 ); ?>
+                        <?php else: ?>
+                            <?php echo $value[12]; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+</div>
+<br/>
+<br/>
+<div class="row-fluid">
+    <div class="span12">
+        <h3>Order Book by Value</h3>
+        <table class="table table-bordered table-responsive">
+            <?php foreach ( $data['count'] as $key => $value ): ?>
+                <tr>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $key != 'Year' ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key ) ) ?>">
+                                <?php echo $key . ' - ' . ($key + 1); ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $key; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 4 ) ) ?>">
+                                <?php echo $value[0]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[0]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 5 ) ) ?>">
+                                <?php echo $value[1]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[1]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 6 ) ) ?>">
+                                <?php echo $value[2]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[2]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 7 ) ) ?>">
+                                <?php echo $value[3]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[3]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 8 ) ) ?>">
+                                <?php echo $value[4]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[4]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 9 ) ) ?>">
+                                <?php echo $value[5]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[5]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 10 ) ) ?>">
+                                <?php echo $value[6]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[6]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 11 ) ) ?>">
+                                <?php echo $value[7]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[7]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => $key, 'month' => 12 ) ) ?>">
+                                <?php echo $value[8]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[8]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 1 ) ) ?>">
+                                <?php echo $value[9]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[9]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 2 ) ) ?>">
+                                <?php echo $value[10]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[10]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( is_numeric( $key ) ): ?>
+                            <a href="<?php echo $this->url( 'reportorderbook', array( 'action' => 'list', 'year' => ($key + 1), 'month' => 3 ) ) ?>">
+                                <?php echo $value[11]; ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo $value[11]; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td nowrap="nowrap" style="text-align:right;">
+                        <?php if ( $value[12] != 'Total' ): ?>
+                            <?php echo number_format( $value[12], 0 ); ?>
+                        <?php else: ?>
+                            <?php echo $value[12]; ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    </div>
+</div>

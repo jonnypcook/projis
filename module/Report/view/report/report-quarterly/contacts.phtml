@@ -1,0 +1,33 @@
+<div class="row-fluid">
+    <div class="span12">
+        <a class="btn btn-success pull-right" href="<?php echo $this->url( 'reportquarterly', array( 'action' => 'contacts', 'quarter' => $quarter, 'year' => $year, 'export' => 'csv' ) ); ?>">Download CSV</a>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <table class="table table-bordered">
+            <tr>
+                <th>Contact Name</th>
+                <th>Client Name</th>
+                <th>Owner</th>
+                <th>Date</th>
+            </tr>
+            <?php if ( !empty($contacts) ): ?>
+                <?php foreach ( $contacts as $contact ): ?>
+                    <tr>
+                        <td><a href=""><?php echo $conact['forename'] . ' ' . $contact['surname']; ?> - (<?php echo $contact['contact_id']; ?>)</a></td>
+                        <td><a href=""><?php echo $contact['client_name']; ?> - (<?php echo $contact['client_id']; ?>)</a></td>
+                        <td><?php echo $contact['user_name']; ?></td>
+                        <td><?php echo date( 'd M, Y', strtotime( $contact['created'] ) ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="3">
+                        No record found
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </table>
+    </div>
+</div>

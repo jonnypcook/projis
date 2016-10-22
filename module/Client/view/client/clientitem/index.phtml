@@ -1,0 +1,554 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/dynamic-table/client.js');
+
+
+$this->inlineScript()->captureStart();
+$txt = $client->getName();
+echo <<<JS
+
+    $(function(){
+        $('#projects_tbl').dataTable({
+            sDom: "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>",
+            sPaginationType: "bootstrap",
+            oLanguage: {
+                sLengthMenu: "_MENU_ records per page",
+                oPaginate: {
+                    sPrevious: "Prev",
+                    sNext: "Next"
+                }
+            },
+            bProcessing: true,
+            bServerSide: true,
+            iDisplayLength:5,
+            aLengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            aoColumns: [
+                null,
+                null,
+                { 'bSortable': false, "sClass": "hidden-phone" },
+                { "sClass": "hidden-phone" },
+                { 'bSortable': false, "sClass": "hidden-phone" },
+            ],
+            sAjaxSource: "/client-{$client->getClientId()}/projects/"
+        });    
+
+        jQuery('#projects_tbl_wrapper .dataTables_filter input').addClass("input-medium"); // modify table search input
+        jQuery('#projects_tbl_wrapper .dataTables_length select').addClass("input-mini"); // modify table per page dropdown
+            
+        
+            
+            
+        $(document).on('click', '.action-project-edit', function(e) {
+            e.preventDefault();
+            var pid = $(this).attr('pid');
+            if (pid == undefined) {
+                return false;
+            }
+            
+            document.location = '/client-{$client->getClientId()}/project-'+pid+'/';
+        });
+            
+        $('#trials_tbl').dataTable({
+            sDom: "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>",
+            sPaginationType: "bootstrap",
+            iDisplayLength:5,
+            aLengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            oLanguage: {
+                sLengthMenu: "_MENU_ records per page",
+                oPaginate: {
+                    sPrevious: "Prev",
+                    sNext: "Next"
+                }
+            },
+            bProcessing: true,
+            bServerSide: true,
+            aoColumns: [
+                null,
+                null,
+                { 'bSortable': false, "sClass": "hidden-phone" },
+                { "sClass": "hidden-phone" },
+                { 'bSortable': false, "sClass": "hidden-phone" },
+            ],
+            sAjaxSource: "/client-{$client->getClientId()}/trials/"
+        });
+
+        jQuery('#trials_tbl_wrapper .dataTables_filter input').addClass("input-medium"); // modify table search input
+        jQuery('#trials_tbl_wrapper .dataTables_length select').addClass("input-mini"); // modify table per page dropdown
+
+        $(document).on('click', '.action-job-edit', function(e) {
+            e.preventDefault();
+            var pid = $(this).attr('pid');
+            if (pid == undefined) {
+                return false;
+            }
+
+            document.location = '/client-{$client->getClientId()}/trial-'+pid+'/';
+        });  
+            
+        
+    });
+
+JS;
+$this->inlineScript()->captureEnd();
+$this->headStyle()->captureStart() 
+?>
+    #projects_tbl tbody td,
+    #jobs_tbl tbody td{
+        vertical-align: middle;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+?>
+<?php 
+$notes = $client->getNotes();
+if (!empty($notes)) {
+    $notesArr  = json_decode($notes);
+    if (!empty($notesArr)) {
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="alert alert-info relative" id="project-notes">
+            <div id="noteDeleteLoader" class="loader"></div>
+            <button class="close btn-add-note">+</button>
+<?php
+        $cnt = 0;
+        foreach ($notesArr as $idx=>$note) {
+            $cnt++;
+            echo "<div class=\"note\"><strong>Note:</strong> {$note} <a data-index=\"{$idx}\" href=\"javascript:\" class=\"delete-note\"><i class=\"icon-remove\"></i></a></div>";
+            
+        }
+?>
+        </div>
+    </div>
+</div>
+<?php
+    }
+}
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="row-fluid">
+            <a class="icon-btn span2" href="/client-<?php echo $client->getClientId(); ?>/setup/">
+                <i class="icon-gears"></i>
+                <div>Configuration  </div>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $client->getClientId(); ?>/building/">
+                <i class="icon-building"></i>
+                <div>Buildings</div><?php
+                    $buildingCount = count($buildings);
+                ?><span class="badge badge-<?php echo ($buildingCount>0)?'success':'important'; ?>"><?php echo $buildingCount; ?></span>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $client->getClientId(); ?>/contact/">
+                <i class="icon-user"></i>
+                <div>Contacts</div><?php
+                    $contactCount = count($contacts);
+                ?><span class="badge badge-<?php echo ($contactCount>0)?'warning':'important'; ?>"><?php echo $contactCount; ?></span>
+            </a>
+            <a class="icon-btn span2" href="/client-<?php echo $client->getClientId(); ?>/collaborators/">
+                <i class="icon-group"></i>
+                <div>Collaborators  </div><?php
+                    $collaboratorCount = count($client->getCollaborators());
+                ?><span class="badge badge-<?php echo ($collaboratorCount>0)?'info':'important'; ?>"><?php echo $collaboratorCount; ?></span>
+            </a>
+            <a class="icon-btn span2" href="#">
+                <i class="icon-reorder"></i>
+                <div>Reports</div>
+            </a>
+            <a class="icon-btn span2 btn-add-note" href="#">
+                <i class="icon-calendar"></i>
+                <div>Notes</div>
+                <span class="badge badge-success">+</span>
+            </a>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-reorder"></i> Projects</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <div class="clearfix">
+<?php if ($this->isGranted('project.create')) { ?>                    
+                    <div class="btn-group pull-left">
+                        <button class="btn green linkable" href="/client-<?php echo $client->getclientId(); ?>/newproject/">
+                            Add New Project <i class="icon-plus"></i>
+                        </button>
+                    </div>
+<?php } ?>                    
+                    <div class="btn-group pull-right">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li><a href="#">Print</a></li>
+                            <li><a href="#">Save as PDF</a></li>
+                            <li><a href="#">Export to Excel</a></li>
+                            <li><a href="/client-<?php echo $client->getClientId(); ?>/cancelled/">View Cancelled Projects</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="space15"></div>
+                <table class="table table-striped table-bordered table-hover" id="projects_tbl">
+                    <thead>
+                    <tr>
+                        <th style="width: 90px"><i class="icon-tags"></i> ID</th>
+                        <th class="hidden-phone"><i class="icon-question-sign"></i> Name</th>
+                        <th style="width: 110px"><i class="icon-gbp"></i> Value</th>
+                        <th style="width: 150px"><i class=" icon-edit"></i> Status</th>
+                        <th style="width: 130px;"> Operations</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-dropbox"></i> Trials</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-<?php echo empty($trialCount)?'up':'down'; ?>"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+            </span>
+            </div>
+            <div class="widget-body" <?php if (empty($trialCount)) { ?>style="display:none"<?php } ?>>
+                <div class="clearfix">
+<?php if ($this->isGranted('project.create')) { ?>                    
+                    <div class="btn-group pull-left">
+                        <button class="btn green linkable" href="/client-<?php echo $client->getclientId(); ?>/newtrial/">
+                            Add New Trial <i class="icon-plus"></i>
+                        </button>
+                    </div>
+<?php } ?>                    
+                    <div class="btn-group pull-right">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li><a href="#">Print</a></li>
+                            <li><a href="#">Save as PDF</a></li>
+                            <li><a href="#">Export to Excel</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="space15"></div>
+                <table class="table table-striped table-bordered table-hover" id="trials_tbl">
+                    <thead>
+                    <tr>
+                        <th style="width: 90px"><i class="icon-tags"></i> ID</th>
+                        <th class="hidden-phone"><i class="icon-question-sign"></i> Name</th>
+                        <th style="width: 110px"><i class="icon-gbp"></i> Value</th>
+                        <th style="width: 150px"><i class=" icon-edit"></i> Status</th>
+                        <th style="width: 130px;"> Operations</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<?php if (!empty($jobCount)) { 
+    
+$this->inlineScript()->captureStart();
+$txt = $client->getName();
+echo <<<JS
+    $('#jobs_tbl').dataTable({
+        sDom: "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>",
+        sPaginationType: "bootstrap",
+        iDisplayLength:5,
+        aLengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+        oLanguage: {
+            sLengthMenu: "_MENU_ records per page",
+            oPaginate: {
+                sPrevious: "Prev",
+                sNext: "Next"
+            }
+        },
+        bProcessing: true,
+        bServerSide: true,
+        aoColumns: [
+            null,
+            null,
+            { 'bSortable': false, "sClass": "hidden-phone" },
+            { "sClass": "hidden-phone" },
+            { 'bSortable': false, "sClass": "hidden-phone" },
+        ],
+        sAjaxSource: "/client-{$client->getClientId()}/jobs/"
+    });
+
+    jQuery('#jobs_tbl_wrapper .dataTables_filter input').addClass("input-medium"); // modify table search input
+    jQuery('#jobs_tbl_wrapper .dataTables_length select').addClass("input-mini"); // modify table per page dropdown
+
+    $(document).on('click', '.action-job-edit', function(e) {
+        e.preventDefault();
+        var pid = $(this).attr('pid');
+        if (pid == undefined) {
+            return false;
+        }
+
+        document.location = '/client-{$client->getClientId()}/job-'+pid+'/';
+    });    
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget red">
+            <div class="widget-title">
+                <h4><i class="icon-truck"></i> Jobs</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+            </span>
+            </div>
+            <div class="widget-body" >
+                <table class="table table-striped table-bordered table-hover" id="jobs_tbl">
+                    <thead>
+                    <tr>
+                        <th style="width: 90px"><i class="icon-tags"></i> ID</th>
+                        <th class="hidden-phone"><i class="icon-question-sign"></i> Name</th>
+                        <th style="width: 110px"><i class="icon-gbp"></i> Value</th>
+                        <th style="width: 150px"><i class=" icon-edit"></i> Status</th>
+                        <th style="width: 130px;"> Operations</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<?php } ?>
+<div class="row-fluid">
+    <div class="span6">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-user"></i> Contacts</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <table class="table table-striped table-hover" id="contacts_tbl">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Position</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+<?php
+    if (!empty($contacts)) {
+        $i=0;
+        foreach ($contacts as $contact) {
+            $i++;
+            echo '<tr>
+                    <td>'.$i.'</td>
+                    <td>'.ucwords($contact->getForename()).'</td>
+                    <td>'.ucwords($contact->getSurname()).'</td>
+                    <td>'.ucwords($contact->getPosition()).'</td>
+                </tr>';
+        }
+    }
+?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+    <div class="span6">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget purple">
+            <div class="widget-title">
+                <h4><i class="icon-building"></i> Buildings</h4>
+            <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+            </span>
+            </div>
+            <div class="widget-body">
+                <table class="table table-striped table-hover" id="buildings_tbl">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Postcode</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+<?php
+    if (!empty($buildings)) {
+        $i=0;
+        foreach ($buildings as $building) {
+            $i++;
+            echo '<tr>
+                    <td>'.$i.'</td>
+                    <td>'.ucwords($building->getName()).'</td>
+                    <td><span class="popovers" data-trigger="hover" data-placement="top" data-original-title="Full Address" data-content="'.ucwords($building->getAddress()->assemble(', ')).'">'.ucwords($building->getAddress()->getPostcode()).'</span></td>
+                </tr>';
+        }
+    }
+?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span6">
+         <!-- BEGIN NOTIFICATIONS PORTLET-->
+         <div class="widget blue">
+             <div class="widget-title">
+                 <h4><i class="icon-comment-alt"></i> Client Activity </h4>
+               <span class="tools">
+                   <a href="javascript:;" class="icon-chevron-down"></a>
+                   <a href="javascript:;" class="icon-remove"></a>
+               </span>
+             </div>
+             <div class="widget-body"><?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function(){
+        $('.audit[data-link=true]').css({cursor: 'pointer'});
+        $('.audit[data-link=true]').on('click', function(e) {
+            e.preventDefault();
+            if ($(this).attr('data-url')==undefined) {
+                return false;
+            }
+
+            document.location = $(this).attr('data-url');
+        });
+   
+    });
+JS;
+$this->inlineScript()->captureEnd();
+                 ?><ul class="item-list scroller padding"  style="overflow: hidden; width: auto; height: 320px;" data-always-visible="1">
+                    <?php
+                        if (!empty($audit)) {
+                            $i=0;
+                            foreach ($audit as $aItem) {
+                                $tm = (time()-$aItem['created']->getTimestamp());
+                                $when= (($tm/60)<2)
+                                        ?'Just now'
+                                        :(
+                                            (($tm/60)<60)
+                                            ?ceil($tm/60).' mins ago'
+                                            :(
+                                                (($tm/(60*60))<24)
+                                                ?ceil(($tm/(60*60))).' hours ago'
+                                                :ceil(($tm/(60*60*24))).' days ago'    
+                                            )
+                                        );
+                                
+                                $tooltip_data = '';
+                                $tooltip = '';
+                                $url = '';
+                                
+                                $aData = json_decode($aItem['data'], true);
+                                
+                                if (!empty($aItem['dName'])) {
+                                    $tooltip_data.=$aItem['dName'];
+                                    if (!empty($aItem['projectId'])) {
+                                        $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/document/index/';
+                                    }
+                                } elseif (!empty($aItem['model'])) {
+                                    $tooltip_data.=trim($aItem['model']);
+                                    $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/space-'.$aItem['spaceId'].'/';
+                                } elseif (!empty($aItem['sName'])) {
+                                    $tooltip_data.=$aItem['sName'];
+                                    $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/space-'.$aItem['spaceId'].'/';
+                                } elseif (!empty($aItem['pName'])) {
+                                    $tooltip_data.=$aItem['pName'];
+                                    $url = '/client-'.$aItem['clientId'].'/project-'.$aItem['projectId'].'/';
+                                } elseif (($aItem['auditTypeId']==103) || ($aItem['auditTypeId']==105)) {
+                                    if (!empty($aData['name'])) {
+                                        $tooltip_data = $aData['name'];
+                                    }
+                                    if (!empty($aData['cid'])) {
+                                        $url = '/client-'.$aItem['clientId'].'/contact/?contact='.$aData['cid'];
+                                    }
+                                } elseif (($aItem['auditTypeId']==106) || ($aItem['auditTypeId']==108)) {
+                                    if (!empty($aData['lbl'])) {
+                                        $tooltip_data = $aData['lbl'];
+                                    }
+                                    if (!empty($aData['bid'])) {
+                                        $url = '/client-'.$aItem['clientId'].'/building-'.$aData['bid'].'/';
+                                    }
+                                }
+                                
+                                if (!empty($tooltip_data)) {
+                                    $tooltip = 'data-trigger="hover" data-placement="right" data-original-title="'.$tooltip_data.'"';
+                                }
+                                
+                                
+                                
+                                //break;
+                                echo '<li>
+                                    <span '.$tooltip.' class="audit '.(empty($tooltip)?'':'tooltips ').'label label-'.(empty($aItem['box'])?'success':$aItem['box']).'" '
+                                        . (!empty($url)?'data-url="'.$url.'" data-link="true"':'')
+                                    . '><i '
+                                        . 'class="icon-'.(empty($aItem['icon'])?'bell':$aItem['icon']).'"></i></span>
+                                    <span class="link">'.
+                                        $aItem['atName'].
+                                    '</span>
+                                    <div class="pull-right">
+                                        <span class="small italic ">'.$when.'</span>
+                                    </div>
+                                </li>';
+                            }
+                        } else {
+                             echo '<li>
+                                    <span class="label label-default"><i class="icon-bell"></i></span>
+                                    <span class="link">No Activity Information Found</span>
+                                    <div class="pull-right">
+                                        <span class="small italic ">&nbsp;</span>
+                                    </div>
+                                </li>';
+                        }
+                    ?>                     
+                 </ul>
+                 <div class="space10"></div>
+                 <a href="/client-<?php echo $client->getClientId(); ?>/audit/" class="pull-right">View detailed client audit log</a>
+                 <div class="clearfix no-top-space no-bottom-space"></div>
+             </div>
+         </div>
+         <!-- END NOTIFICATIONS PORTLET-->
+     </div>
+     <div class="span6">
+         <!-- BEGIN CHAT PORTLET-->
+         <?php echo $this->partial('partial/panels/activity.phtml'); ?>
+         <!-- END CHAT PORTLET-->
+     </div>
+</div>
+<?php echo $this->partial('partial/client/notes.phtml'); ?>

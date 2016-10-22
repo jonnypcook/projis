@@ -1,0 +1,244 @@
+<?php
+$this->inlineScript()->appendFile('http://maps.googleapis.com/maps/api/js?v=3.7&key=AIzaSyA4Spe8FXyD4dgvEf0fwBI26mnfrO21T4o&sensor=false&region=GB');
+
+
+
+$active = (!empty($formAddr));
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+if ($active) {
+$callback = empty($callback)?'_callback':$callback;    
+$this->inlineScript()->captureStart();
+echo <<<JS
+var geocoder = null;
+
+function _callback() {}
+
+function saveAddress(params) {
+    try {
+        resetFormErrors('{$formAddr->getName()}');
+        var url = $('#{$formAddr->getName()}').attr('action');
+
+        $('#addressLoader').fadeIn(function(){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: params, // Just send the Base64 content in POST body
+                processData: false, // No need to process
+                timeout: 60000, // 1 min timeout
+                dataType: 'text', // Pure Base64 char data
+                beforeSend: function onBeforeSend(xhr, settings) {},
+                error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                success: function onUploadComplete(response) {
+                    //console.log(response); //return;
+                    try{
+                        var obj=jQuery.parseJSON(response);
+                        var k = 0;
+                        // an error has been detected
+                        if (obj.err == true) {
+                            if (obj.info != undefined) {
+                                for(var i in obj.info){
+                                    addFormError(i, obj.info[i]);
+                                }
+                            }
+                        } else{ // no errors
+                            $('#myModal2').modal('hide');
+                            growl('Success!', 'The address has been '+(obj.update?'updated':'added')+' successfully.', {time: 3000});
+                            {$callback}(obj.aid);
+                        }
+                    }
+                    catch(error){
+                        $('#errors').html($('#errors').html()+error+'<br />');
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    $('#addressLoader').fadeOut(function(){});
+                }
+            });
+        });
+
+    } catch (ex) {
+
+    }/**/
+}
+                            
+function newAddress() {
+    $('#myModalLabel2').text('Add New Address');
+    $('#AddressForm input[name=addressId]').val('');
+    $('#AddressForm input[type=text]').val('');
+    $('#AddressForm select[name=country]').val(183);
+                            
+    $('#myModal2').modal();
+}
+
+function editAddress(addressId) {
+    var url = '/contact/getaddress/';
+    var params = 'ts='+Math.round(new Date().getTime()/1000)+'&addressId='+addressId;
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: params, // Just send the Base64 content in POST body
+        processData: false, // No need to process
+        timeout: 60000, // 1 min timeout
+        dataType: 'text', // Pure Base64 char data
+        beforeSend: function onBeforeSend(xhr, settings) {},
+        error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+        success: function onUploadComplete(response) {
+            //console.log(response); //return;
+            try{
+                var obj=jQuery.parseJSON(response);
+                var k = 0;
+                // an error has been detected
+                if (obj.err == true) {
+                    growl('Error!', 'The address could not be retrieved from the system.', {time: 3000});
+                } else{ // no errors
+                    $('#myModalLabel2').text('Modify Address');
+                    $('#AddressForm input[name=addressId]').val(obj.address.addressId);
+                    $('#AddressForm input[name=postcode]').val(obj.address.postcode);
+                    $('#AddressForm input[name=line1]').val(obj.address.line1);
+                    $('#AddressForm input[name=line2]').val(obj.address.line2);
+                    $('#AddressForm input[name=line3]').val(obj.address.line3);
+                    $('#AddressForm input[name=line4]').val(obj.address.line4);
+                    $('#AddressForm input[name=line5]').val(obj.address.line5);
+                    $('#AddressForm select[name=country]').val(obj.address.countryId);
+                    $('#myModal2').modal();
+                }
+            }
+            catch(error){
+                $('#errors').html($('#errors').html()+error+'<br />');
+            }
+        },
+        complete: function(jqXHR, textStatus){
+            $('#addressLoader').fadeOut(function(){});
+        }
+    });
+       
+   
+    
+    
+                            
+}
+
+$(function(){
+    geocoder = new google.maps.Geocoder();
+
+    $('#btn-addr-save').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            var params = 'ts='+Math.round(new Date().getTime()/1000)+'&'+$('#{$formAddr->getName()}').serialize();
+            
+            var address = $('input[name=postcode]').val();
+            if (geocoder && address) {
+                geocoder.geocode({ 'address': address}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    lng = results[0].geometry.location.lng();
+                    lat = results[0].geometry.location.lat();
+                    params+='&lat='+lat.toFixed(8)+'&lng='+lng.toFixed(8);
+                    saveAddress(params);
+                } else {
+                    saveAddress(params);
+                }
+                });
+            } else {
+                saveAddress(params);
+            }
+        } catch (ex) {
+
+        }/**/
+        return false;
+    });
+});
+JS;
+$this->inlineScript()->captureEnd();
+
+?>
+<div id="myModal2" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel2">Add New Address</h3>
+    </div>
+    <div class="modal-body relative">
+        <div id="addressLoader" class="loader"></div>
+        <div class="widget green">
+            <!--<div class="widget-title">
+                <h4><i class="icon-plus"></i> Address Details</h4>
+            </div><!-- -->
+            <div class="widget-body">
+                <!-- BEGIN FORM-->
+                <?php echo $this->form()->openTag($formAddr); ?>
+                <input name="addressId" value="" type="hidden" />
+                    <div class="control-group">
+                        <label class="control-label">Post Code</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('postcode'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Address Line 1:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('line1'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Address Line 2:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('line2'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Address Line 3:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('line3'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Town/City:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('line4'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Region/County:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('line5'));  ?>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Country:</label>
+                        <div class="controls">
+                            <?php echo $this->formElement($formAddr->get('country'));  ?>
+                        </div>
+                    </div>
+                <?php echo $this->form()->closeTag($formAddr); ?>
+                <!-- END FORM-->
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button id="btn-addr-save" class="btn btn-success">Save</button>
+    </div>
+</div>
+<?php } else {
+    ?>
+<div id="myModal2" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel2">Add New Address</h3>
+    </div>
+    <div class="modal-body">
+         <p>The add new address dialog was unable to initialise. </p>
+         <p>Please contact an administrator if this error persists</p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-danger" data-dismiss="modal" aria-hidden="true">Close</button>
+    </div>
+</div>
+<?php
+}

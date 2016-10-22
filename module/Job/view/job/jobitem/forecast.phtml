@@ -1,0 +1,290 @@
+<?php
+$this->inlineScript()
+    ->appendFile('https://www.google.com/jsapi')
+;
+
+echo $this->partial('partial/system/modelnav.phtml', array('navRoute'=>'forecast', 'project'=>$project));
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN TAB PORTLET-->
+        <div class="widget widget-tabs orange">
+            <div class="widget-title">
+                <h4><i class="icon-bar-chart"></i> Payback Model - <?php echo count($forecast); ?> Year Forecast</h4>
+            </div>
+            <div class="widget-body">
+                <?php if (empty($forecast)) { ?>
+                    No forecast Data Found
+                <?php } else { ?>
+                <div class="tabbable ">
+                    <?php
+                        $html_tabs = '';
+                        $html_content = '';
+                        $html_tbl_head = array();
+                        $html_tbl_body = array();
+                        
+                        
+                        $year = 0;
+                        $data_head = array();
+                        $data_body_config = array (
+                            0=>array('Carbon Savings', 0 /* line spaces after */, 0 /* data mode */),
+                            1=>array('Carbon Allowance', 0, 0),
+                            2=>array('Current Spend', 0, 0),
+                            3=>array('System Spend', 0, 0),
+                            4=>array('Electricity Savings Achievable', 0, 0),
+                            5=>array('Maintenance Savings', 0, 0),
+                            6=>array('LED Maintenance Costs', 0, 0),
+                            7=>array('Monthly Cost Without LED', 1, 0),
+                            8=>array('Net Cash Saving', 0, 0),
+                            9=>array('Cumulative Savings', 1, 0),
+                            10=>array('Repayments', 1, 0),
+                            11=>array('Net Benefit', 0, 1),
+                            12=>array('Net Benefit (With ECA + CA)', 0, 1),
+                        );
+                        
+                        $data_body = array();
+                        
+                        foreach ($data_body_config as $idx=>$val) {
+                            $data_body[$idx] = array();
+                        }
+                        
+                        $duration = count($forecast);
+                        
+                        foreach($forecast as $period){
+                            $year++;
+                            $tab = ceil($year / 4);
+                            
+                            $html_tbl_head[$tab][] = 'Year '.$year;
+                            
+                            $html_tbl_body[$tab][0][] = number_format($period[7], 2);
+                            $html_tbl_body[$tab][1][] = number_format($period[10],2);
+                            $html_tbl_body[$tab][2][] = number_format($period[0],2);
+                            $html_tbl_body[$tab][3][] = number_format($period[1],2);
+                            $html_tbl_body[$tab][4][] = number_format($period[2],2);
+                            $html_tbl_body[$tab][5][] = number_format($period[3],2);
+                            $html_tbl_body[$tab][6][] = number_format($period[6],2);
+                            $html_tbl_body[$tab][7][] = number_format($period[6],2);
+
+                            $html_tbl_body[$tab][8][] = number_format($period[4],2);
+                            $html_tbl_body[$tab][9][] = number_format($period[5],2);
+                            
+                            if (!empty($figures['finance_amount'])) {
+                                $html_tbl_body[$tab][10][] = number_format($period[11],2);
+                            }
+                            
+                            $html_tbl_body[$tab][11][] = number_format($period[8],2);
+                            $html_tbl_body[$tab][12][] = number_format($period[9],2);
+                            
+                            
+                        } 
+                        
+                        
+                    ?>
+                    <ul class="nav nav-tabs" id="tabsForecast">
+                        <?php 
+                        if (!empty($tab)) {
+                            for ($i=$tab; $i>0; $i--) {
+                                $start = (($i - 1) * 4)+1;
+                                $end = (($period>=$start)&&($period<=($i * 4)))?$period:($i * 4);
+                                
+                                echo '<li '.(($i==1)?'class="active"':'').'>'
+                                        . '<a href="#widget_tab'.$i.'" data-toggle="tab" data-number="'.$i.'">'
+                                        . 'Year '.$start.(($end!=$start)?' - '.$end:'')
+                                        . '</a>'
+                                        . '</li>';
+                                
+                            }
+                        }                        
+                        
+                        ?>
+                    </ul>
+                    <div class="tab-content">
+                        <?php 
+                        if (!empty($tab)) {
+                            for ($i=$tab; $i>0; $i--) {
+                                $start = (($i - 1) * 4)+1;
+                                $end = (($period>=$start)&&($period<=($i * 4)))?$period:($i * 4);
+                                
+                                echo '<div class="tab-pane'.(($i==1)?' active':'').'" id="widget_tab'.$i.'">';
+                                
+                                echo  '<table class="table table-striped table-bordered table-advance" id="products_tbl">'
+                                        . '<thead>'
+                                        . '<tr>'
+                                        . '<th style="width: 200px"><i class="icon-info"></i></th>'
+                                        . '<th class="row-right">'.implode('</th><th class="row-right">',$html_tbl_head[$i]).'</th>'
+                                        . '</tr>'
+                                        . '</thead>'
+                                        . '<tbody>';
+                                
+                                foreach ($html_tbl_body[$i] as $idx=>$body) {
+                                    if (empty($body)) {
+                                        continue;
+                                    }
+                                    $redGreenMode = ($data_body_config[$idx][2]==1);
+                                    
+                                    $records = count($body);
+                                    
+                                    echo '<tr>';
+                                    echo '<th>'.$data_body_config[$idx][0].'</th>';
+                                    for ($j=0; $j<4; $j++) {
+                                        echo '<td class="row-right" '.($redGreenMode?'style="color:#'.(($body[$j]>0)?'090':'d00').'"':'').'>'.$body[$j].'</td>';
+                                    }
+                                    echo '</tr>';
+                                    
+                                    if ($data_body_config[$idx][1]>0) {
+                                        echo '<tr>';
+                                        echo '<td colspan="'.($records+1).'">&nbsp;</td>';
+                                        echo '</tr>';
+                                    }/**/
+                                }
+                                /**/
+                                echo '</tbody></table>';
+                                
+                                echo '</div>';
+                                //
+                            }
+                        }                        
+                        
+                        ?>
+                    </div>
+                </div>
+                <div class="space15"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-system"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next-system">Next <i class="icon-arrow-right icon-white"></i></button>
+                <div>&nbsp;</div>
+                <?php }  ?>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+$this->inlineScript()->captureStart();
+echo <<<JS
+
+function setTabButtons (tab) {
+    if (tab > 1) {
+        $('#btn-last-system').removeAttr('disabled');
+    } else if (tab == 1) {
+        $('#btn-last-system').attr('disabled','disabled');
+    } 
+    
+    if (tab == {$tab}) {
+        $('#btn-next-system').attr('disabled','disabled');
+    } else if (tab < {$tab}) {
+        $('#btn-next-system').removeAttr('disabled');
+    }
+}
+
+
+var Script = function () {
+    // next button press
+    $('#btn-next-system').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsForecast li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab<{$tab})?activeTab+1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab);
+            $('a[href=#widget_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+    
+    // last button press
+    $('#btn-last-system').on('click', function(e) {
+        e.preventDefault();
+        var activeTab = $("ul#tabsForecast li.active a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        var nextTab = (activeTab>1)?activeTab-1:activeTab;
+        
+        if (activeTab != nextTab) {
+            setTabButtons (nextTab);
+            $('a[href=#widget_tab'+nextTab+']').tab('show');
+        }
+        
+    });
+    
+    // tab click
+    $("ul#tabsForecast li").on('click', function (e) {
+        e.preventDefault();
+        var activeTab = $(this).find("a").attr('data-number');
+        if (activeTab == undefined) {
+            return false;
+        }
+        
+        activeTab = parseInt(activeTab);
+        setTabButtons (activeTab);
+    });
+    
+}();
+
+        
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN TAB PORTLET-->
+        <div class="widget widget-tabs green">
+            <div class="widget-title">
+                <h4><i class="icon-signal"></i> Payback Graph</h4>
+            </div>
+            <div class="widget-body">
+                <div id="chart_div" style="width: 100%; height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+$googleArrData = "[['Year', 'Payback', 'Payback ECA', 'System Cost'],";
+$graphData = array();
+$base = date('Y');
+$fits=0;
+$energysaving=0;
+$exportrate=0;
+
+foreach($forecast AS $year=>$row) {
+    $graphData[] = '[\''.
+            ($year).'\','.
+            round($row[5],2).','.
+            round($row[5]+$figures['eca'],2).','.
+            $figures['cost'].']';
+
+}/**/
+
+$googleArrData.=implode(',', $graphData).']';
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+$(document).ready(function () {
+    $(window).resize(function(){
+    drawChart();
+    });
+});
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+  var data = google.visualization.arrayToDataTable({$googleArrData});
+
+  var options = {
+    vAxis: {title: "Revenue"},
+    hAxis: {title: "Year"},
+  };
+
+  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+  chart.draw(data, options);
+
+}
+        
+JS;
+$this->inlineScript()->captureEnd();
+?>

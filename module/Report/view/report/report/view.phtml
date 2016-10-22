@@ -1,0 +1,30 @@
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-<?php echo $report->getGroup()->getIcon(); ?>"></i> <?php echo $report->getName(); ?> Report</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="reportLoader" class="loader"></div>
+                <a href="<?php echo $this->url('reports', array('action' => 'download', 'group' => strtolower($report->getGroup()->getName()), 'report' => $report->getReportId()  )); ?>" class="btn
+                btn-success
+                pull-right"><i
+                        class="icon-download-alt"></i>
+                    Download
+                    CSV</a>
+                <h4><?php echo $report->getName(); ?> Report</h4>
+                <h5><?php echo $report->getDescription(); ?></h5>
+                <!-- BEGIN REPORT PARTIAL-->
+                <?php echo $this->partial('partial/report/'.$partialScript.'.phtml'); ?>
+                <!-- END  REPORT PARTIAL-->
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>

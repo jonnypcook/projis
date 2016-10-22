@@ -1,0 +1,41 @@
+<table class="table table-bordered">
+    <tr>
+        <th colspan="6" style="text-align: right;"><a href="<?php echo $this->url( 'totalreport', array( 'action' => 'exporttotal', 'type' => 'openprojects', 'user' => !empty( $user_id ) ? $user_id : 0 ) ); ?>">Download CSV</a></th>
+    </tr>
+    <tr>
+        <th>Reference</th>
+        <th>Project</th>
+        <th>Client</th>
+        <th>Project Value</th>
+        <th>Owner</th>
+        <th>date</th>
+    </tr>
+    <?php if ( !empty($data) ): ?>
+        <?php $total = 0; ?>
+        <?php foreach ( $data as $key => $value ): ?>
+            <tr>
+                <td nowrap="nowrap"><?php echo str_pad( $value['client_id'], 5, "0", STR_PAD_LEFT ) . '-' . str_pad( $value['project_id'], 5, "0", STR_PAD_LEFT ) ?></td>
+                <td><a href="<?php echo $this->url( 'project', Array( 'cid' => $value['client_id'], 'pid' => $value['project_id'] ) ); ?>"> <?php echo $value['project_name'] ?></a></td>
+                <td><a href="<?php echo $this->url( 'client', Array( 'id' => $value['client_id'] ) ); ?>"><?php echo $value['client_name']; ?></a></td>
+                <td style="text-align:right !important;">&#163; <?php echo number_format( $value['price'], 2 ); ?></td>
+                <td><?php echo $value['user_name']; ?></td>
+                <td nowrap="nowrap"><?php echo date( 'd M, Y', strtotime( $value['created'] ) ); ?></td>
+            </tr>
+            <?php $total += $value['price']; ?>
+        <?php endforeach; ?>
+        <tr>
+            <td></td>
+            <td></td>
+            <td style="text-align:right;"><strong>Total Value</strong></td>
+            <td style="text-align:right;" nowrap="nowrap">&#163; <?php echo number_format( $total, 2 ); ?></td>
+            <td></td>
+            <td></td>
+        </tr>
+    <?php else: ?>
+        <tr>
+            <td colspan="5">
+                No record found
+            </td>
+        </tr>
+    <?php endif; ?>
+</table>

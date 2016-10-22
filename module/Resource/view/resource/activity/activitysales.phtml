@@ -1,0 +1,409 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/uniform/css/uniform.default.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css')
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/js/jquery.validate.min.js')
+    ->appendFile('/js/jquery.blockui.js')
+    ->appendFile('/assets/uniform/jquery.uniform.min.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/forms/resources/activity_list.js');
+
+
+$this->headStyle()->captureStart(); ?>
+#clients_tbl tbody td:nth-child(6){
+text-align: center;
+}
+
+#clients_tbl tbody td{
+vertical-align: middle;
+}
+
+.paging a, .paging span
+{
+display:inline-block;
+padding:5px 10px;
+border:1px solid #cccccc;
+border-radius: 3px;
+margin-right:5px;
+}
+.paging span{
+background-color:#ccc;
+}
+.paging a:hover
+{
+background-color:#428bca;
+color:#ffffff;
+text-decoration: none;
+}
+
+.paging
+{
+text-align:left;
+}
+
+.tbody_hover tr:hover{
+background-color:#f1f1f1;
+}
+
+<?php $this->headStyle()->captureEnd(); ?>
+
+<?php
+
+$this->inlineScript()->captureStart();
+
+echo <<<JS
+$(function() {
+    $('#btn-close-invoice, #btn-close-product, #btn-close-resource').on('click', function(){
+        window.location.reload();
+    });
+
+    $('.show-rows').on('click', function(){
+        var id = $(this).attr('id');
+        //console.log(id);
+        $('.' + id).fadeToggle();
+    });
+    $('.show-all').on('click', function(){
+        $('.activity-rows').fadeIn();
+    });
+
+    $('.hide-all').on('click', function(){
+        $('.activity-rows').fadeOut();
+    });
+
+    if ( '{$filter_type}' != '' )
+    {
+        $('#filter_types').val('{$filter_type}');
+        $('#filter_types').trigger('change');
+    }
+
+    if ( '{$filter_type}' === 'cos' )
+    {
+        $('#wip_end_date').val('');
+    }
+
+    if ( '{$filter_type}' === 'wip' )
+    {
+        $('#cos_start_date, #cos_end_date').val('');
+    }
+});
+JS;
+
+$this->inlineScript()->captureEnd(); ?>
+<?php if ( $this->flashMessenger()->render('success') ): ?>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="alert alert-success">
+                <?php echo $this->flashMessenger()->render('success'); ?>
+            </div>
+        </div>
+    </div>yes
+<?php endif; ?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN EXAMPLE TABLE widget-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-2x"></i>Activity With Sales, Costs and Profit</h4>
+                    <span class="tools">
+                        <a href="javascript:;" class="icon-chevron-down"></a>
+                    </span>
+            </div>
+            <div class="widget-body">
+                <form method="post" action="<?php echo $this->url('resource_activities', Array('action' => 'activitysales')); ?>" class="form-search">
+                    <div class="row-fluid">
+                        <div class="span3">
+                            <label for="filter_types">Filter Type:</label>
+                            <select name="filter_types" id="filter_types" class="form-control">
+                                <option value="">--Filter Activities--</option>
+                                <option value="wip">WIP (Work in progress)</option>
+                                <option value="cos">COS (Cost of sale)</option>
+                            </select>
+                        </div>
+                        <div class="span7">
+                            <div style="display:none" id="cos_block">
+                                <div class="input-prepend">
+                                    <span class="add-on">COS Start Date: <i class="icon-calendar"></i></span>
+                                    <input type="text" class="form-control" name="cos_start_date" id="cos_start_date" value="<?php echo $start_date; ?>">
+                                </div>
+                                &nbsp;&nbsp;&nbsp;
+                                <div class="input-prepend">
+                                    <span class="add-on">COS End Date: <i class="icon-calendar"></i></span>
+                                    <input type="text" class="form-control" name="cos_end_date" id="cos_end_date" value="<?php echo $end_date; ?>">
+                                </div>
+                                <input type="submit" class="btn btn-primary" value="Filter"/>
+                            </div>
+                            <div style="display:none" id="wip_block">
+                                <div class="input-prepend">
+                                    <span class="add-on">WIP Completed Date: <i class="icon-calendar"></i></span>
+                                    <input type="text" class="form-control" id="wip_end_date" name="wip_end_date" value="<?php echo !empty($end_date) ?  $end_date : date('d-m-Y'); ?>">
+                                </div>
+                                <input type="submit" class="btn btn-primary" value="Filter"/>
+                            </div>
+                        </div>
+                        <div class="span2" style="text-align:right;">
+                            <a class="show-all" href="javascript:;">Show All</a> | <a class="hide-all" href="javascript:;">Hide All</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <?php if ( !empty($resources) ): ?>
+                <table class="table table-bordered">
+                    <?php $row_id = 0; ?>
+                    <tr class="alert-info">
+                        <td>
+                            <h3>Grand Totals (<?php echo $grand_totals['grand_counts']; ?> <?php echo $grand_totals['grand_counts'] > 1 ? 'Jobs' : 'Job' ?>)</h3>
+                            <?php
+                            $actual_rate   = 0;
+                            $expected_rate = 0;
+
+                            $actual_margin = $grand_totals['grand_invoices'] - $grand_totals['grand_others'];
+                            if ( $actual_margin > 0 )
+                            {
+                                $actual_rate = ($actual_margin / $grand_totals['grand_invoices']) * 100;
+                            }
+
+                            if ( $grand_totals['grand_margin'] > 0 )
+                            {
+                                $expected_rate = ($grand_totals['grand_margin'] / $grand_totals['grand_billed']) * 100;
+                            }
+                            ?>
+                            <p>
+                                <strong>BILLED:</strong> &#163; <?php echo number_format($grand_totals['grand_invoices'], 2); ?> (&#163; <?php echo number_format($grand_totals['grand_billed'], 2); ?>)
+                                | <strong>COSTS:</strong> &#163; <?php echo number_format($grand_totals['grand_others'], 2); ?> (&#163; <?php echo number_format($grand_totals['grand_costs'], 2); ?>)
+                                | <strong>MARGIN:</strong> &#163; <?php echo number_format($actual_margin, 2); ?> (&#163;<?php echo number_format($grand_totals['grand_margin'], 2); ?>)
+                                | <strong>RATE:</strong> <?php echo round($actual_rate, 2); ?>% ( <?php echo round($expected_rate, 2); ?>% )
+                            </p>
+                        </td>
+                    </tr>
+                    <?php if ( $posted ): ?>
+                        <tr>
+                            <td>
+                                <form method="post" action="<?php echo $this->url('resource_activities', Array('action' => 'activitysales')); ?>" class="form-search">
+                                    <input type="hidden" value="<?php echo $filter_type; ?>" name="filter_types" id="filter_types"/>
+                                    <input type="hidden" value="<?php echo $start_date ?>" name="start_date" id="start_date"/>
+                                    <input type="hidden" value="<?php echo $end_date ?>" name="end_date" id="end_date"/>
+                                    <input type="hidden" value="sub_filters" name="form_name"/>
+                                    Clients :
+                                    <select name="client" id="client">
+                                        <option value="">--Select Client--</option>
+                                        <?php if ( !empty($users['client']) ): ?>
+                                            <?php foreach ( $users['client'] as $key => $val ): ?>
+                                                <option value="<?php echo $key; ?>"><?php echo $val; ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    &nbsp; &nbsp;
+                                    Owner:
+                                    <select name="owner" class="form-control">
+                                        <option value="">--Select Owner--</option>
+                                        <?php if ( !empty($users['owner']) ): ?>
+                                            <?php foreach ( $users['owner'] as $key => $val ): ?>
+                                                <option value="<?php echo $key; ?>"><?php echo $val; ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+
+                                    <input type="submit" class="btn btn-primary form-control" value="Filter">
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php foreach ( $resources as $resource ): ?>
+                        <tr class="success">
+                            <td>
+                                <strong>PROJECT:</strong>
+                                <a target="_blank" href="<?php echo $this->url('job', array('jid' => $resource['project']->getProjectId(), 'cid' => $resource['project']->getClient()->getClientId())) ?>">
+                                    <?php echo str_pad($resource['project']->getClient()->getClientId(), 5, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($resource['project']->getProjectId(), 5, '0', STR_PAD_LEFT); ?>
+                                    <?php echo $resource['project']->getName(); ?></a>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>CLIENT:</strong> <?php echo $resource['project']->getClient()->getName(); ?>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>OWNER:</strong> <?php echo $resource['project']->getClient()->getUser()->getName(); ?>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>EXPECTED/COMPLETED:</strong> <?php echo empty($resource['project']->getCompleted()) ? 'Date not set' : $resource['project']->getCompleted()->format('d/m/Y'); ?>
+                                <?php
+                                $margin = $resource['totals']['invoices'] - $resource['totals']['others'];
+                                if ( $resource['totals']['invoices'] > 0 )
+                                {
+                                    $percentAge = ($margin / $resource['totals']['invoices']) * 100;
+                                }
+                                else
+                                {
+                                    $percentAge = 0;
+                                }
+
+                                $expected_margin = 0;
+                                if ( $resource['totals']['expected_margin_value'] > 0 )
+                                {
+                                    $expected_margin = ($resource['totals']['expected_margin_value'] / $resource['totals']['expected_price']) * 100;
+                                }
+                                ?>
+                                <br/>
+                                <strong>BILLED:</strong> <span style="color:#e82013">£ <?php echo number_format($resource['totals']['invoices'], 2); ?> <span>(&#163;<?php echo number_format($resource['totals']['expected_price'], 2); ?>
+                                        )</span></span>
+                                | <strong>COSTS:</strong> <span style="color:#e82013">£ <?php echo number_format($resource['totals']['others'], 2); ?> <span>(&#163;<?php echo number_format($resource['totals']['expected_cost'], 2); ?>
+                                        )</span></span>
+                                | <strong>MARGIN:</strong> <span style="color:#e82013">£ <?php echo number_format($margin, 2); ?> <span>(&#163;<?php echo number_format($resource['totals']['expected_margin_value'], 2); ?>)</span></span>
+                                | <strong>RATE:</strong><span style="color:#e82013"> <?php echo number_format($percentAge, 2); ?>% <span>(&#163;<?php echo number_format(($expected_margin), 2); ?>%)</span></span>
+                            </td>
+                        </tr>
+                        <?php if ( !empty($resource['resources']) ): ?>
+                            <tr>
+                                <td>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr style="background-color:#555; color:#fff;">
+                                            <th>Date</th>
+                                            <th>Reference</th>
+                                            <th>Details</th>
+                                            <!--
+                                            <th>Resource Type</th>
+                                            -->
+                                            <th>Resource</th>
+                                            <th>Cost Code</th>
+                                            <th style="
+                                            text-align:right;">Quantity
+                                            </th>
+                                            <th style="text-align:right;">Rate</th>
+                                            <th style="text-align:right;">Total Cost</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <?php
+                                        $total = 0;
+                                        ?>
+                                        <tbody class="tbody_hover">
+                                        <?php $gTotal = 0; ?>
+                                        <?php foreach ( $resource['resources'] as $key => $value ): ?>
+                                            <?php $sub_total = 0; ?>
+                                            <?php $cost_code_label = ''; ?>
+                                            <?php $row_id++; ?>
+                                            <?php foreach ( $value as $k => $r ): ?>
+                                                <tr style="display:none; background-color:<?php echo $r->getStatus()->getColor(); ?>" class="rows-<?php echo $row_id; ?> activity-rows">
+                                                    <td><?php echo $r->getDate()->format('d/m/Y'); ?></td>
+                                                    <td><?php echo $r->getReference(); ?></td>
+                                                    <td><?php echo $r->getDetails(); ?></td>
+                                                    <!--
+                                                    <td><?php echo $r->getReferenceType(); ?></td>
+                                                    -->
+                                                    <td><?php echo $r->getResource()->getName(); ?></td>
+                                                    <td><?php echo $r->getCostCode()->getName(); ?></td>
+                                                    <td style="text-align:right;"><?php echo number_format($r->getQuantity(), 2); ?></td>
+                                                    <td style="text-align:right;">&#163;<?php echo number_format($r->getRate(), 2); ?></td>
+                                                    <td style="text-align:right;">&#163;<?php echo number_format($r->getRate() * $r->getQuantity(), 2); ?></td>
+                                                    <td width="130">
+
+                                                        <?php if ( $r->getReferenceType() == 'product' ): ?>
+                                                            <a href="javascript:;" data-value="<?php echo $r->getResourceActivityId(); ?>" class="btn btn-success btn-edit-product"><i class="icon-pencil"></i></a>
+                                                        <?php else: ?>
+                                                            <a href="javascript:;" data-value="<?php echo $r->getResourceActivityId(); ?>" class="btn btn-success btn-edit-activity"><i class="icon-pencil"></i></a>
+                                                        <?php endif; ?>
+                                                        <?php /*
+                                                        <a class="btn btn-success btn-edit-activity" href="javascript:;" data-value="<?php echo $r->getResourceActivityId(); ?>">
+                                                            <i class="icon-pencil"></i>
+                                                        </a>
+                                                        */ ?>
+                                                        <a class="btn btn-danger btn-delete-activity" href="javascript:;" data-value="<?php echo $r->getResourceActivityId(); ?>">
+                                                            <i class="icon-remove"></i>
+                                                        </a>
+                                                    </td>
+                                                    <?php
+                                                    $sub_total += $r->getRate() * $r->getQuantity();
+                                                    $cost_code_label = $r->getCostCode()->getName();
+                                                    ?>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            <tr style="background-color:lightgoldenrodyellow;cursor:pointer;" id="rows-<?php echo $row_id; ?>" class="show-rows">
+                                                <td colspan="5" style="text-align:right;">Total <?php echo $cost_code_label; ?></td>
+                                                <td colspan="2"></td>
+                                                <td style="text-align:right;">&#163;<?php echo number_format($sub_total, 2); ?></td>
+                                                <td></td>
+                                            </tr>
+                                            <?php $gTotal += $sub_total; ?>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                        <tfoot>
+                                        <tr style="background-color:#ccc;">
+                                            <td colspan="7" style="text-align:right;"><strong>Grand Total</strong></td>
+                                            <td style="text-align:right;">
+                                                <strong>
+                                                    <?php
+                                                    echo number_format($gTotal, 2);
+                                                    unset($gTotal);
+                                                    ?></strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </table>
+
+            <?php endif; ?>
+
+            <?php if ( !empty($other_projects) ): ?>
+                <table class="table table-bordered">
+                    <tr>
+                        <td><h3>Other Jobs</h3></td>
+                    </tr>
+                    <?php foreach ( $other_projects['projects'] as $project ): ?>
+                        <tr class="alert-info">
+                            <td>
+                                <strong>PROJECT:</strong>
+                                <a target="_blank" href="<?php echo $this->url('job', array('jid' => $project['project']->getProjectId(), 'cid' => $project['project']->getClient()->getClientId())) ?>">
+                                <?php echo str_pad($project['project']->getClient()->getClientId(), 5, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($project['project']->getProjectId(), 5, '0', STR_PAD_LEFT); ?>
+                                <?php echo $project['project']->getName(); ?></a>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>CLIENT:</strong> <?php echo $project['project']->getClient()->getName(); ?>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>OWNER:</strong> <?php echo $project['project']->getClient()->getUser()->getName(); ?>
+                                &nbsp;&nbsp;&nbsp;&nbsp; <strong>EXPECTED/COMPLETED:</strong> <?php echo empty($project['project']->getCompleted()) ? 'Date not set' : $project['project']->getCompleted()->format('d/m/Y'); ?>
+                                <?php
+                                /*
+                                $margin = $resource['totals']['invoices'] - $resource['totals']['others'];
+                                if ( $resource['totals']['invoices'] > 0 )
+                                {
+                                    $percentAge = ($margin / $resource['totals']['invoices']) * 100;
+                                }
+                                else
+                                {
+                                    $percentAge = 0;
+                                }
+
+                                */
+                                $expected_margin = 0;
+
+                                if ( $resource['totals']['expected_margin_value'] > 0 )
+                                {
+                                    $expected_margin = ($project['totals']['expected_margin_value'] / $project['totals']['expected_price']) * 100;
+                                }
+                                ?>
+                                <br/>
+                                <strong>BILLED:</strong> <span style="color:#e82013">£ 0.00 <span>(&#163;<?php echo number_format($project['totals']['expected_price'], 2); ?>
+                                        )</span></span>
+                                | <strong>COSTS:</strong> <span style="color:#e82013">£ 0.00 <span>(&#163;<?php echo number_format($project['totals']['expected_cost'], 2); ?>
+                                        )</span></span>
+                                | <strong>MARGIN:</strong> <span style="color:#e82013">£ 0.00 <span>(&#163;<?php echo number_format($project['totals']['expected_margin_value'], 2); ?>)</span></span>
+                                | <strong>RATE:</strong><span style="color:#e82013"> 0.00% <span>(&#163;<?php echo number_format(($expected_margin), 2); ?>%)</span></span>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+</div>
+<!-- END EXAMPLE TABLE widget-->
+</div>
+</div>
+<?php echo $this->partial('partial/resource/activity/resource_edit.phtml'); ?>
+<?php echo $this->partial('partial/resource/activity/product_edit.phtml'); ?>

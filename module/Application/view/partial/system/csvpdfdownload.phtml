@@ -1,0 +1,104 @@
+<?php
+$this->inlineScript()->captureStart();
+$baseUrl = '/client-'.$project->getClient()->getClientId().'/project-'.$project->getProjectId().'/document/';
+echo <<<JS
+function csvPdfDownload(type, args) {
+    $('#documentCsvPdfDownloadFrm select[name=type]').val(type);
+    $('#documentCsvPdfDownloadFrm input[name=spaceId]').val((args.spaceId==false)?0:args.spaceId);
+    $('#spaceSpecificInfo').text((args.spaceId==false)?'':' for the space "'+args.spaceName+'"');
+    $('#modalCsvPdfDownload').modal();
+}
+
+$('.btn-config-export-csv').on('click', function(e) {
+    e.preventDefault();
+    args = {
+        spaceId: false,
+        spaceName: false
+    };
+    
+    if ($(this).attr('data-spaceId')!=undefined) {
+        args.spaceId = $(this).attr('data-spaceId');
+        args.spaceName = $(this).attr('data-spaceName');
+    }
+
+    csvPdfDownload('csv', args);
+    return false;
+});
+
+$('.btn-config-export-pdf').on('click', function(e) {
+    e.preventDefault();
+    args = {
+        spaceId: false,
+        spaceName: false
+    };
+    
+    if ($(this).attr('data-spaceId')!=undefined) {
+        args.spaceId = $(this).attr('data-spaceId');
+        args.spaceName = $(this).attr('data-spaceName');
+    }
+    csvPdfDownload('pdf', args);
+    return false;
+});
+
+$('#btn-confirm-csvpdfdownload').on('click', function(e) {
+    e.preventDefault();
+    var url = (($('#documentCsvPdfDownloadFrm select[name=type]').val()=='pdf')?'generate':'exportsystem');
+    $('#documentCsvPdfDownloadFrm').attr('action', '{$baseUrl}'+url);
+    $('#documentCsvPdfDownloadFrm').submit();
+    $('#modalCsvPdfDownload').modal('hide');
+    return false;
+});
+JS;
+$this->inlineScript()->captureEnd();
+
+?><div id="modalCsvPdfDownload" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Download System Model&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <div id="csvPdfDownloadLoader" class="loader"></div>
+        <form id="documentCsvPdfDownloadFrm" method="GET" class="form-horizontal" action="#" target="download-csvpdf-frame">
+            <input name="documentId" value="4" type="hidden" />
+            <input name="spaceId" value="0" type="hidden" />
+            <input name="documentInline" id="documentInline" value="0" type="hidden" />
+        <p>
+            Please select the document type that you would like to download and the period for 
+            which you would like to run the model <span id="spaceSpecificInfo" class="text-error"></span>
+        </p>
+        <div class="control-group">
+            <label class="control-label">Document Type:</label>
+            <div class="controls">
+                <select name="type">
+                    <option value="csv">CSV</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Model Period:</label>
+            <div class="controls">
+                <select name="modelyears">
+                    <option value="1">1 Year</option>
+                    <option value="2">2 Years</option>
+                    <option value="3">3 Years</option>
+                    <option value="4">4 Years</option>
+                    <option value="5" selected="1">5 Years</option>
+                    <option value="6">6 Years</option>
+                    <option value="7">7 Years</option>
+                    <option value="8">8 Years</option>
+                    <option value="9">9 Years</option>
+                    <option value="10">10 Years</option>
+                    <option value="11">11 Years</option>
+                    <option value="12">12 Years</option>
+                </select>
+            </div>
+        </div>
+        </form>
+        <iframe id="download-csvpdf-frame" name="download-csvpdf-frame" style="width:1px; height: 1px; visibility: hidden"></iframe>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-csvpdfdownload" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>

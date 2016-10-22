@@ -1,0 +1,45 @@
+<?php
+foreach ( $form->getElements() as $element )
+{
+    ?>
+    <div class="control-group">
+        <?php if ( $element->getLabel() == 'Contact' ): ?>
+            <label class="control-label"><?php echo $element->getLabel(); ?></label>
+            <div class="controls <?php if ( $element->getAttribute( 'type' ) == 'multi_checkbox' )
+                echo 'multicheckbox'; ?>">
+                <?php echo $this->formElement( $element ); ?> <a href="#modalOtherContacts" id="btnOtherContact" data-toggle="modal">More Contacts</a><br/>
+
+                <div id="otherContactText"></div>
+                <input type="hidden" value="" name="otherContact" id="otherContact"/>
+            </div>
+        <?php else: ?>
+            <label class="control-label"><?php echo $element->getLabel(); ?></label>
+            <div class="controls <?php if ( $element->getAttribute( 'type' ) == 'multi_checkbox' )
+                echo 'multicheckbox'; ?>">
+                <?php echo $this->formElement( $element ); ?>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+?>
+
+<div id="modalOtherContacts" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalContact1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">All Contacts</h3>
+    </div>
+    <div class="modal-body">
+        <select name="sltContact" id="sltContact">
+            <?php foreach ( $contacts as $contact ): ?>
+                <option value="<?php echo $contact->getContactId(); ?>"><?php echo $contact->getForename() . ' ' . $contact->getSurname() . ' | ' . $contact->getClient()->getName(); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-other-contact" aria-hidden="true"><i class="icon-refresh"></i>
+            Select
+        </button>
+    </div>
+</div>

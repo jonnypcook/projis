@@ -1,0 +1,210 @@
+<div class="row-fluid">
+    <div class="span12">
+        <?php if (!empty($data)): ?>
+        <div class="row-fluid">
+            <div class="span2">
+                All
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 green">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'active', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo number_format( $data['all'][7]['value'], 0 ); ?></p>
+
+                                <p class="month">(<?php echo $data['all'][7]['cnt']; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = $data['all'][7]['cnt'];
+                                    $amt = $data['all'][7]['value'];
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 orange">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'suspended', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo number_format( $data['all'][8]['value'], 0 ); ?></p>
+
+                                <p class="month">(<?php echo $data['all'][8]['cnt']; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = $data['all'][8]['cnt'];
+                                    $amt = $data['all'][8]['value'];
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 red">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'completed', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo number_format( $data['all'][9]['value'], 0 ); ?></p>
+
+                                <p class="month">(<?php echo $data['all'][9]['cnt']; ?>)</p>
+                                <h4>
+                                    Avg. &#163;<?php
+                                    $cnt = $data['all'][9]['cnt'];
+                                    $amt = $data['all'][9]['value'];
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span2">
+                <div class="row-fluid">
+                    <div class="blog span12">
+                        <div class="span12 black">
+                            <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'jobs', 'user' => 0 ) ); ?>" class="blog-features date active project-status">
+                                <p class="month">&#163;<?php echo number_format( $data['all']['value'], 0 ); ?></p>
+
+                                <p class="month">(<?php echo $data['all']['cnt']; ?>)</p>
+                                <h4>
+
+                                    Avg. &#163;<?php
+                                    $cnt = $data['all']['cnt'];
+                                    $amt = $data['all']['value'];
+                                    if ( $cnt > 0 )
+                                        echo number_format( $amt / $cnt, 0 );
+                                    else
+                                        echo '0';
+                                    ?>
+
+                                </h4>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php foreach ( $data['user'] as $key => $value ): ?>
+    <div class="row-fluid">
+        <div class="span2">
+            <strong><?php echo $value['user_name']; ?></strong>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 green">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'active', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo isset($value[7]) ? number_format( $value[7]['value'], 0 ) : 0; ?></p>
+
+                            <p class="month">(<?php echo isset($value[7]) ? $value[7]['cnt'] : 0; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = isset($value[7]) ? $value[7]['cnt'] : 0;
+                                $amt = isset($value[7]) ? $value[7]['value'] : 0;
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 orange">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'suspended', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo isset($value[8]) ? number_format( $value[8]['value'], 0 ) : 0; ?></p>
+
+                            <p class="month">(<?php echo isset($value[8]) ? $value[8]['cnt'] : 0; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = isset($value[8]) ? $value[8]['cnt'] : 0;
+                                $amt = isset($value[8]) ? $value[8]['value'] : 0;
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 red">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'completed', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo isset($value[9]) ? number_format( $value[9]['value'], 0 ) : 0; ?></p>
+
+                            <p class="month">(<?php echo isset($value[9]) ? $value[9]['cnt'] : 0; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = isset($value[9]) ? $value[9]['cnt'] : 0;
+                                $amt = isset($value[9]) ? $value[9]['value'] : 0;
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="span2">
+            <div class="row-fluid">
+                <div class="blog span12">
+                    <div class="span12 black">
+                        <a href="<?php echo $this->url( 'ratingreport', array( 'action' => 'view', 'rating' => 'jobs', 'user' => $key ) ); ?>" class="blog-features date active project-status">
+                            <p class="month">&#163;<?php echo isset($value['total_value']) ? number_format( $value['total_value'], 0 ) : 0; ?></p>
+
+                            <p class="month">(<?php echo isset($value['total_cnt']) ? $value['total_cnt'] : 0; ?>)</p>
+                            <h4>
+                                Avg. &#163;<?php
+                                $cnt = isset($value['total_cnt']) ? $value['total_cnt'] : 0;
+                                $amt = isset($value['total_value']) ? $value['total_value'] : 0;
+                                if ( $cnt > 0 )
+                                    echo number_format( $amt / $cnt, 0 );
+                                else
+                                    echo '0';
+                                ?>
+
+
+                            </h4>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<?php endforeach; ?>
+<?php endif; ?>

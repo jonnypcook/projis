@@ -1,0 +1,310 @@
+<?php 
+$this->headLink()
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/bootstrap-datepicker/css/datepicker.css')
+    ;
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-datepicker/js/bootstrap-datepicker.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/js/forms/trial/setup.js')
+/**/;
+
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    $(function(){
+        $("#slider-range-min").slider({
+            range: "min",
+            value: {$project->getWeighting()},
+            min: 0,
+            max: 100,
+            slide: function (event, ui) {
+                $("#slider-range-min-amount").text('Current Weighting: ' + ui.value + "%");
+            },
+            change: function (event, ui) {
+                $('input[name=weighting]').val(ui.value);
+            }
+        });
+
+        $("#slider-range-min-amount").text('Current Weighting: '+$("#slider-range-min").slider("value")+'%');
+        
+            /**/
+    });
+
+JS;
+$this->inlineScript()->captureEnd();
+
+
+$this->headStyle()->captureStart() 
+?>
+    #tbl-competitors tr:hover {
+        cursor: pointer;
+    } 
+    #tbl-competitors tr.active {
+        color: white;
+        background-color: #4A8BC2;
+    }
+    
+    #tbl-competitors tr.active:hover {
+        color: black;
+    }
+    
+<?php 
+$this->headStyle()->captureEnd();
+
+
+$form = $this->form;
+$form->setAttribute('class', 'form-horizontal');
+$form->prepare();
+
+
+?>
+<div id="modalProjectLostActivate" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Project <?php echo ($project->getCancelled()?'Re-Activate':'Lost'); ?> Confirmation&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <form id="FormProjectLostActivate" class="form-nomargin" action="/client-<?php echo $project->getClient()->getClientId();?>/trial-<?php echo $project->getProjectId(); ?>/<?php echo $project->getCancelled()?'activate':'close'; ?>/"></form>
+        <div id="projectLostActivateLoader" class="loader"></div>
+        <p>
+            <?php 
+                if ($project->getCancelled()) {
+                    echo 'Are you sure that you would like to re-activate this trial?<br /><br />
+                        Please note: you will need to review the trial configuration once re-activated.';
+                } else {
+                    echo 'Are you sure that you would like to cancel this trial?<br /><br />
+                        Please note: you can re-activate this trial at a later stage if required.';
+                }
+            ?>
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-<?php echo $project->getCancelled()?'success':'danger'; ?>" id="btn-confirm-project-lostactivate" aria-hidden="true"><i class="icon-<?php echo $project->getCancelled()?'refresh':'warning-sign'; ?>"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalProjectSigned" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Confirm Trial Start&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <form id="FormProjectSigned" class="form-horizontal" action="/client-<?php echo $project->getClient()->getClientId();?>/trial-<?php echo $project->getProjectId(); ?>/start/">
+        <div id="projectSignedLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to start this trial?<br /><br />
+            Please note: this will activate the trial with the first date from which the trial will be billed obtained from the start date.
+        </p>
+        <div class="control-group">
+            <label class="control-label">Trial Start Date</label>
+            <div class="controls">
+                <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                    <?php echo $this->formElement($form->get('installed'));  ?>
+                    <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-project-signed" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div id="modalProjectCompleted" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel3">Confirm Trial Completion&nbsp;</h3>
+    </div>
+    <div class="modal-body">
+        <form id="FormProjectCompleted" class="form-horizontal" action="/client-<?php echo $project->getClient()->getClientId();?>/trial-<?php echo $project->getProjectId(); ?>/completed/">
+        <div id="projectCompletedLoader" class="loader"></div>
+        <p>
+            Are you sure that you would like to finish this trial?<br /><br />
+            Please note: this will de-activate the trial with the last date for which the trial will be billed obtained from the end date.
+        </p>
+        <div class="control-group">
+            <label class="control-label">Trial End Date</label>
+            <div class="controls">
+                <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                    <?php echo $this->formElement($form->get('completed'));  ?>
+                    <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+        <button class="btn btn-success" id="btn-confirm-project-completed" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+    </div>
+</div>
+<div class="row-fluid">
+    <!--BEGIN METRO STATES-->
+    <div class="metro-nav metro-fix-view">
+<?php if ($project->getCancelled()) { ?>  
+        <div class="metro-nav-block  nav-block-green">
+            <a href="#modalProjectSigned" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-refresh"></i>
+                </div>
+                <div class="status">Re-Activate</div>
+            </a>
+        </div>
+<?php } elseif (($project->getStatus()->getJob()==1) && ($project->getStatus()->getHalt()!=1)) { ?>    
+        <div class="metro-nav-block nav-block-red ">
+            <a href="#modalProjectCompleted" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-off"></i>
+                </div>
+                <div class="status">Finish Trial</div>
+            </a>
+        </div>
+<?php } elseif (($project->getStatus()->getJob()==0)) { ?>    
+        <div class="metro-nav-block nav-block-green ">
+            <a href="#modalProjectSigned" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-dropbox"></i>
+                </div>
+                <div class="status">Start Trial</div>
+            </a>
+        </div>
+        <div class="metro-nav-block  nav-block-red">
+            <a href="#modalProjectLostActivate" data-original-title="" role="button" data-toggle="modal">
+                <div class="text-center">
+                    <i class="icon-remove-sign"></i>
+                </div>
+                <div class="status">Cancel Trial</div>
+            </a>
+        </div>
+<?php } ?>    
+    </div>
+    <div class="space10"></div>
+    <!--END METRO STATES-->
+</div>
+<?php echo $this->form()->openTag($form); ?>
+<div class="row-fluid">
+    <div class="span12">
+        <div id="msgs"></div>
+        <div class="widget widget-tabs blue" id="product-widget-color">
+            <div class="widget-title">
+                <h4 class="modify-title-product"><i class="icon-cog"></i> Settings</h4>
+            </div>
+            <div class="widget-body relative">
+                <div id="setupLoader" class="loader"></div>
+                <div class="tabbable ">
+                    <ul class="nav nav-tabs" id="tabsProjectSettings">
+                        <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Environment</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Configuration</a></li>
+                    </ul>
+                    <input type="hidden" name="systemId" value="" style="display: none" />
+                        <div class="tab-content" style="min-height: 420px">
+                            <div class="tab-pane active" id="widget_tab1">
+                                <div class="control-group">
+                                    <label class="control-label">Name</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('name'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Mode</label>
+                                    <div class="controls">
+                                        <div id="text-toggle-button">
+                                            <?php echo $this->formElement($form->get('test'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Contacts</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('contacts'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Sector</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('sector'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Build</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('retrofit'));  ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="control-group">
+                                    <label class="control-label">Trial Start Date</label>
+                                    <div class="controls">
+                                        <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                                            <?php echo $this->formElement($form->get('installed'));  ?>
+                                            <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+<?php if (($project->getStatus()->getJob()==1) && ($project->getStatus()->getHalt()>=1)) { ?>
+                                <div class="control-group">
+                                    <label class="control-label">Trial End Date</label>
+                                    <div class="controls">
+                                        <div class="input-append " id="dpYears" data-date="12-02-2012" data-date-format="dd-mm-yyyy" >
+                                            <?php echo $this->formElement($form->get('completed'));  ?>
+                                            <span class="add-on" id="startDtIcon"><i class="icon-calendar"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+<?php } ?>
+                            </div>
+                            <div class="tab-pane" id="widget_tab2">
+                                <div class="control-group">
+                                    <label class="control-label">Fuel Tariff</label>
+                                    <div class="controls">
+                                        <div class="input-prepend input-append">
+                                        <?php echo $this->formElement($form->get('fuelTariff'));  ?><span class="add-on">pence per unit</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Maintenance</label>
+                                    <div class="controls">
+                                        <div class="input-prepend">
+                                        <span class="add-on">&#163;</span><?php echo $this->formElement($form->get('maintenance'));  ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Carbon Factor</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('co2'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">RPI</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('rpi'));  ?>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">EPI</label>
+                                    <div class="controls">
+                                        <?php echo $this->formElement($form->get('epi'));  ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <div id="productMsgs"></div>
+                <button class="btn btn-default" disabled="disabled" id="btn-last"><i class="icon-arrow-left icon-white"></i> Last</button>
+                <button class="btn btn-default" id="btn-next">Next <i class="icon-arrow-right icon-white"></i></button>
+<?php if ($this->isGranted('project.write')) { ?>
+                <button class="btn btn-success pull-right" id="btn-modify-system-entry"><i class="icon-ok icon-white"></i> Save Changes</button>
+<?php } ?>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php echo $this->form()->closeTag($form); ?>

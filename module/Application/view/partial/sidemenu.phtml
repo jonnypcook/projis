@@ -1,0 +1,99 @@
+<ul class="sidebar-menu">
+<?php
+    function finderRenderablePages($page, &$pages) {
+        if (!empty($page->skip)) {
+            foreach($page->getPages() as $pg) {
+                finderRenderablePages($pg,$pages);
+            }
+        } else {
+            $pages[] = $page;
+        }
+    }
+    
+     // iterate through the pages
+    foreach ($this->container as $page) {
+        if (!empty($page->permissions)) {
+            // check permissions
+            $granted = false;
+            if (!is_array($page->permissions)) {
+                $page->permissions = array($page->permissions);
+            }
+            foreach ($page->permissions as $perm) {
+                if ($this->isGranted($perm)) {
+                    $granted = true;
+                    break;
+                }
+            }
+            if (!$granted) {
+                continue;
+            }
+        }
+        
+        $pages = array();
+        finderRenderablePages($page, $pages);
+        if (empty($pages)) {
+            continue;
+        }
+        
+        foreach ($pages as $page) {
+            $hasChildren = $page->hasPages();
+            $subMenu = '';
+
+            $active = false;
+            if ($page->hasPages()) {
+                $subMenu='<ul class="sub">';
+                $childCount = 0;
+                foreach($page->getPages() as $child) {
+                    if ($child->skip) {
+                        continue;
+                    }
+                    $childCount++;
+                    if (!empty($child->permissions)) {
+                        // check permissions
+                        $granted = false;
+                        if (!is_array($child->permissions)) {
+                            $child->permissions = array($child->permissions);
+                        }
+                        foreach ($child->permissions as $perm) {
+                            if ($this->isGranted($perm)) {
+                                $granted = true;
+                                break;
+                            }
+                        }
+                        if (!$granted) {
+                            continue;
+                        }
+                    }                    
+                    $subactive = false;
+                    if ($child->isActive()) $active=true;
+                    elseif ($child->hasPages() ) {
+                        foreach($child->getPages() as $childSub) {
+                            if ($childSub->isActive()) {
+                                $subactive=true;
+                                break;
+                            }
+                        }
+                    }
+                    $subMenu.='<li class="'.(($child->isActive()||$subactive)?'active':'').'"><a class="" href="'.$child->getHref().'">'.(!empty($child->mlabel)?$child->mlabel:$child->getLabel()).'</a></li>';
+                }
+                $subMenu.='</ul>';
+            }
+            
+            if ($childCount==0) {
+                $hasChildren=false;
+                $subMenu='';
+            }
+
+
+            echo '<li class="sub-menu'.(($page->isActive()||$subActive||$active)?' active':'').'">';
+            echo '<a class="" '.(!$hasChildren?'href="'.$page->getHref():'').'">'.
+                (!empty($page->ico)?'<i class="'.$page->ico.'"></i>':'').'
+                      <span>'.(!empty($page->mlabel)?$page->mlabel:$page->getLabel()).'</span>
+                  </a>';
+            echo $subMenu;
+            echo '</li>';
+        }
+        //addMenu ($page);
+    }     
+?>
+</ul>

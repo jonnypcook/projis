@@ -1,0 +1,354 @@
+<?php 
+    $client = $project->getClient();
+    $includeVAT = !empty($form['vat']);
+    echo $this->partial('partial/project/docs/headers/quotehead.phtml'); 
+?>
+<div>
+    <style>
+        table.quote_details {
+            width: 100%;
+        }
+
+        table.quote_details {
+            border-spacing: 0;
+        }
+
+        table.quote_details thead {
+            border-bottom: 1px #ccc solid;
+<?php if (($billstyle==4) || ($billstyle==5)) { ?>
+            font-size: 9pt!important;
+<?php } ?>            
+        }
+
+        table.quote_details tbody tr td {
+            border-bottom: 1px #ccc solid;
+<?php if (($billstyle==4) || ($billstyle==5)) { ?>
+            font-size: 9pt!important;
+<?php } ?>            
+        }
+
+        table.quote_details tfoot tr td {
+            border-bottom: 1px #ccc solid;
+        }
+
+        table.quote_details tfoot tr th {
+            border-bottom: 1px #ccc solid;
+        }
+
+    </style>
+    <?php
+        switch ($billstyle) {
+            case 2: // Standard Layout (Without descriptions)
+                $tblHdr = 
+                //'<th class="left" style="width: 40px">Id</th>
+                '<th class="left" >Product</th>
+                <th class="right" style="width: 100px">Quantity</th>
+                <th class="right" style="width: 100px">Unit Price (&#163;)</th>
+                <th class="right" style="width: 120px">Total Price (&#163;)</th>';
+                $cols = 4;
+                break;
+            case 3: 
+                $tblHdr = 
+                    //'<th class="left" style="width: 40px">Id</th>
+                '<th class="left" style="width: 240px">Product</th>
+                <th class="left">Description</th>
+                <th class="right" style="width: 100px">Quantity</th>';
+                $cols = 3;
+                break;
+            case 4: case 5: // architectural
+                $tblHdr = '<th class="left" >Product Description</th>
+                <th class="right" style="width: 80px">Specified</th>
+                <th class="right" style="width: 80px">Achievable</th>
+                <th class="right" style="width: 60px">Quantity</th>
+                <th class="right" style="width: 90px">Price (&#163;)</th>';
+                $cols = 5;
+                break;
+            default: // Standard Layout (With Descriptions)
+                $tblHdr = 
+                //'<th class="left" style="width: 40px">Id</th>
+                '<th class="left" style="width: 230px">Product</th>
+                <th class="left">Description</th>
+                <th class="right" style="width: 100px">Quantity</th>
+                <th class="right" style="width: 100px">Unit Price (&#163;)</th>
+                <th class="right" style="width: 120px">Total Price (&#163;)</th>';
+                $cols = 5;
+                break;
+        }
+    ?>
+    <table class="quote_details">
+        <thead>
+            <tr>
+                <?php echo $tblHdr; ?>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+                if (!empty($breakdown)) {
+                    $first = true;
+                    foreach ($breakdown as $buildingId=>$building) {
+                        foreach ($building['spaces'] as $spaceId=>$space) {
+                            $itemsTop = array();
+                            $itemsArch = array();
+                            $itemsProd = array();
+                            if ($billstyle==5) {
+                                if (!$first) {
+                                    $itemsTop[]='<tr><td style="font-weight: bold" colspan="'.$cols.'">&nbsp;</td></tr>'; 
+                                } 
+                                if ($space['root']) {
+                                    $itemsTop[]='<tr><td style="font-weight: bold" colspan="'.$cols.'">Common Space</td></tr>';
+                                } else {
+                                    $itemsTop[]='<tr><td style="font-weight: bold" colspan="'.$cols.'">'.$building['name'].' | '.$space['name'].'</td></tr>';
+                                }
+                            }
+                            foreach ($space['products'] as $systemId=>$system) {
+                                if ($system[2]==3) {
+                                    $attributes = json_decode($system[16]);
+                                    $itemsArch[]='<tr>'
+                                            //. '<td class="left">'.$system[3].'</td>'
+                                            . '<td class="left">'.(!empty($system[17])?$system[17].' - ':'').$system[8].' '.$system[4].'<span style="font-size:10px;"> ['.$system[3].']</span></td>'
+                                            . '<td class="right">'.number_format(($attributes->sLen/1000), 2).'m</td>'
+                                            . '<td class="right">'.number_format(($attributes->dLen/1000), 2).'m</td>'
+                                            . '<td class="right">'.(empty($attributes->dUnits)?1:$attributes->dUnits).'</td>'
+                                            . '<td class="right">'.number_format($system[1], 2).'</td></tr>';
+                                } elseif (($billstyle==5) && (($system[2]==1) || ($system[2]==2) || ($system[2]==500))) {
+                                    $itemsProd[] = '<tr>'
+                                            //. '<td class="left">'.$item['productId'].'</td>'
+                                            . '<td class="left">'.$system[8].' '.$system[4].' <span style="font-size:10px;">['.$system[3].']</span></td>'
+                                            . '<td class="right">&nbsp;</td>'
+                                            . '<td class="right">&nbsp;</td>'
+                                            . '<td class="right">'.$system[5].'</td>'
+                                            . '<td class="right">'.number_format($system[1], 2).'</td></tr>';
+                                }
+                            }
+                            
+                            if ($billstyle==5) {
+                                if (!empty($itemsArch) || (!empty($itemsProd))) {
+                                    $first = false;
+                                    echo implode(chr(13).chr(10), $itemsTop);
+                                }
+                            } 
+                            
+                            if (!empty($itemsArch)) {
+                                echo implode(chr(13).chr(10), $itemsArch);
+                            }
+                            if (!empty($itemsProd)) {
+                                echo implode(chr(13).chr(10), $itemsProd);
+                            }
+                        }
+                    }
+                }
+            
+                $installation = 0;
+                $delivery = 0;
+                $access = 0;
+                $other = 0;
+                $ibptotal = 0;
+                $total = 0;
+                $totalProduct = 0;
+                    
+                $additionalServices = array();
+                if (!empty($billitems)) {
+                    
+                    if (($billstyle==3)) {
+                        $billitems2 = array();
+                        foreach ($billitems as $item) {
+                            if (empty($billitems2[$item['productId']])) {
+                                $billitems2[$item['productId']] = $item;
+                            } else {
+                                $billitems2[$item['productId']]['quantity']+=$item['quantity'];
+                            }
+                        }
+                        $billitems = $billitems2;
+                    }
+                    foreach ($billitems as $item) {
+                        $ibp = 0;
+                        if (!$item['service']) { // echo products
+                            $ppu = round($item['ppu'] * (1-$project->getMcd()),2);
+                            $price = $item['priceMCD'];// round($item['price']* (1-$project->getMcd()),2);
+                            if ($project->getIbp()) {
+                                $ibp=round($price * 0.018, 2); 
+                                $ibptotal+=$ibp;
+                            }
+
+                            switch ($billstyle) {
+                                case 2:
+                                    echo '<tr>'
+                                        //. '<td class="left">'.$item['productId'].'</td>'
+                                        . '<td class="left">'.$item['model'].' <span style="font-size:10px;">['.$item['productId'].']</span></td>'
+                                        . '<td class="right">'.$item['quantity'].'</td>'
+                                        . '<td class="right">'.number_format($ppu, 2).'</td>'
+                                        . '<td class="right">'.number_format($price, 2).'</td></tr>';
+                                    break;
+                                case 3: 
+                                    echo '<tr>'
+                                        //. '<td class="left">'.$item['productId'].'</td>'
+                                        . '<td class="left">'.$item['model'].' <span style="font-size:10px;">['.$item['productId'].']</span></td>'
+                                        . '<td class="left">'.$item['description'].'</td>'
+                                        . '<td class="right">'.$item['quantity'].'</td></tr>';
+                                    break;
+                                case 4: 
+                                    if ($item['typeId']!=3) { // ignore architectural
+                                        echo '<tr>'
+                                            //. '<td class="left">'.$item['productId'].'</td>'
+                                            . '<td class="left">'.$item['description'].' <span style="font-size:10px;">['.$item['productId'].']</span></td>'
+                                            . '<td class="right">&nbsp;</td>'
+                                            . '<td class="right">&nbsp;</td>'
+                                            . '<td class="right">'.$item['quantity'].'</td>'
+                                            . '<td class="right">'.number_format($price, 2).'</td></tr>';
+                                    }
+                                break;
+                                case 5:
+                                    break;
+                                default:
+                                    echo '<tr>'
+                                        //. '<td class="left">'.$item['productId'].'</td>'
+                                        . '<td class="left">'.$item['model'].' <span style="font-size:10px;">['.$item['productId'].']</span></td>'
+                                        . '<td class="left">'.$item['description'].'</td>'
+                                        . '<td class="right">'.$item['quantity'].'</td>'
+                                        . '<td class="right">'.number_format($ppu, 2).'</td>'
+                                        . '<td class="right">'.number_format($price, 2).'</td></tr>';
+                                break;
+                            }
+                            
+                            
+                            $totalProduct+=$price;
+                            
+                        } else {
+                            $ppu = $item['ppu'];
+                            $price = $item['price'];
+                            if($item['typeId'] == 100) {
+                                $installation+=$price; // type 100 is an installation product
+                            } elseif($item['typeId'] == 101) {
+                                $delivery+=$price; // type 100 is an installation product
+                            } elseif($item['typeId'] == 102) {
+                                $access+=$price; // type 100 is an additioanl service product
+                                $additionalServices[] = 
+                                    '<th colspan="'.($cols-1).'" class="left">Additional Services'.(!empty($item['label'])?': '.$item['label']:'').'</th>'
+                                    . '<td class="right">'.number_format($price, 2).'</td>';
+                            } else {
+                                $other+=$price; // type 100 is an installation product
+                            }
+                        }
+                        $total+=($price+$ibp);
+                    }
+                    
+                }
+
+            ?>
+        </tbody>
+        <tfoot>
+            <?php if ($totalProduct>0) { ?>
+            <tr>
+                <td colspan="<?php echo $cols; ?>" >&nbsp;</td>
+            </tr>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Total Product Cost</th>
+                <td class="right"><?php echo number_format($figures['cost_led'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($figures['cost_install']) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Installation Cost</th>
+                <td class="right"><?php echo number_format($figures['cost_install'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($figures['cost_delivery']) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Delivery Cost</th>
+                <td class="right"><?php echo number_format($figures['cost_delivery'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($figures['cost_ibp']) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Insurance Backed Premium Cost</th>
+                <td class="right"><?php echo number_format($figures['cost_ibp'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($figures['cost_access']) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Delivery Cost</th>
+                <td class="right"><?php echo number_format($figures['cost_access'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            <?php if ($figures['cost_service']) { 
+                if (($billstyle == 3)) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Additional Services</th>
+                <td class="right"><?php echo number_format($figures['cost_service'], 2); ?></td>
+            </tr>                    
+                <?php } elseif (!empty($additionalServices)) {
+                    echo '<tr>'.implode('</tr><tr>', $additionalServices).'</tr>';
+                }
+                /*
+                 * 
+                 */
+            } ?>
+            
+            <?php if (!empty($figures['cost_prelim'])) { ?>
+            <tr>
+                <td colspan="<?php echo $cols; ?>" >&nbsp;</td>
+            </tr>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Prelim Fee</th>
+                <td class="right"><?php echo number_format($figures['cost_prelim'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            
+            <?php if (!empty($figures['cost_overheads'])) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Overheads Fee</th>
+                <td class="right"><?php echo number_format($figures['cost_overheads'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            
+            <?php if (!empty($figures['cost_management'])) { ?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Management Fee</th>
+                <td class="right"><?php echo number_format($figures['cost_management'], 2); ?></td>
+            </tr>
+            <?php } ?>
+            
+            
+            <tr>
+                <td colspan="<?php echo $cols; ?>" >&nbsp;</td>
+            </tr>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Total Cost <?php if (!empty($includeVAT)) echo 'Excluding VAT'; ?></th>
+                <td class="right"><?php echo number_format($figures['cost'], 2); ?></td>
+            </tr>
+<?php 
+if (!empty($includeVAT)){ 
+$vat = round($total*0.2,2);
+?>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">VAT @ 20%</th>
+                <td class="right"><?php echo number_format($figures['vat'],2); ?></td>
+            </tr>
+            <tr>
+                <th colspan="<?php echo ($cols-1); ?>" class="left">Total Cost (Including VAT)</th>
+                <td class="right"><?php echo number_format($figures['costvat'],2); ?></td>
+            </tr>
+<?php 
+}
+?>                    
+        </tfoot>
+    </table>
+    <p>
+        This is a quotation on the goods named, subject to 8point3 Ltd's standard terms & conditions. Costs are exclusive of
+        setup and commissioning of sensor and lighting controls unless itemised above.
+    </p>
+    <p>
+        To accept this quotation, please sign and date below and return by email to: orders@8point3led.co.uk or by post
+        to: Sales Department, 8point3 Limited, Suscon, Brunel Way, The Bridge, Dartford, Kent, DA1 5FW
+    </p>
+    <p>
+        Should you have any queries regarding this quotation then please contact <?php echo $user->getName(); ?> on 01322 270 400 quoting reference <strong><?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT);
+            if (isset ($invoiceNo)) {
+                echo ' / '.$invoiceNo;
+            }
+        ?></strong>.
+    </p>
+    <?php 
+        echo $this->partial('partial/project/docs/footers/quotefoot.phtml'); 
+    ?>
+</div>

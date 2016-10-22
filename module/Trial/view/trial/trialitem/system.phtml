@@ -1,0 +1,150 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/chosen-bootstrap/chosen/chosen.css')
+    ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
+    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+
+$this->inlineScript()
+    ->appendFile('/assets/bootstrap-toggle-buttons/static/js/jquery.toggle.buttons.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/assets/chosen-bootstrap/chosen/chosen.jquery.min.js')
+    ->appendFile('/js/forms/trial/system.js');
+
+if ($project->getRetrofit()) {
+    echo $this->partial('partial/system/dialogstrialretrofit.phtml');
+} else {    
+    echo $this->partial('partial/system/dialogstrial.phtml');
+}
+
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN BASIC PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-list"></i> Trial System Setup</h4>
+                <span class="tools">
+                    <a href="javascript:;" class="icon-chevron-down"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="systemEditLoader" class="loader"></div>
+                <div class="clearfix">
+                    <div class="btn-group pull-left">
+<?php if ($this->isGranted('project.write')) { ?>
+                        <button id="btn-add-product" class="btn green" style="margin-right: 4px">
+                            Add Product <i class="icon-plus"></i>
+                        </button>
+                        <button id="btn-add-service" class="btn green" style="margin-right: 4px">
+                            Add Service <i class="icon-plus"></i>
+                        </button>
+                        <button id="btn-add-architectural" class="btn green">
+                            Add Architectural <i class="icon-plus"></i>
+                        </button>
+<?php } ?>
+                    </div>
+                    <div class="btn-group pull-right">
+                        <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
+                        </button>
+                        <!--<ul class="dropdown-menu pull-right">
+                            <li><a href="#">Print</a></li>
+                            <li><a href="#">Save as PDF</a></li>
+                            <li><a href="#">Export to Excel</a></li>
+                        </ul><!-- -->
+                    </div>
+                </div>
+                <div class="space15"></div>
+
+                <table class="table table-striped table-bordered table-advance table-hover" id="products_tbl">
+                    <thead>
+                        <tr>
+                            <th ><i class="icon-cog"></i> Product</th>
+                            <th style="width: 60px">Qty</th>
+                            <th style="width: 60px">Hrs</th>
+                            <th style="width: 60px">RRP</th>
+                            <th style="width: 60px">Monthly</th>
+                            <th style="width: 60px">Retrofit</th>
+                            <th style="width: 80px">Options</th>
+                            <th style="width: 120px">Price (inc MCD)</th>
+                            <th style="width: 120px">Monthly Price</th>
+                        </tr>
+                    </thead>
+                    <tbody><?php
+                        $totalPriceMCD = 0;
+                        $totalPriceMonthly = 0;
+                        $totalPriceInstallation = 0;
+                        $editable = $this->isGranted('project.write');
+
+                        if (!empty($systems)) {
+                            $mcd = $project->getMCD();
+                            foreach ($systems as $system) {
+                                $priceMCD = round($system['quantity'] * (round($system['ppu'] * (1- ($mcd * $system['mcd'])), 2)),2);
+                                $priceMonthly = round($system['quantity'] * $system['ppuTrial'],2);
+                                
+                                $totalPriceMCD+=$priceMCD;
+                                $totalPriceMonthly+=0;
+                                if ($system['ppuTrial']>0) {
+                                    $totalPriceMonthly+=$priceMonthly;
+                                }elseif(($system['typeId']==100) || ($system['typeId']==101)) {
+                                    $totalPriceInstallation+=$priceMCD;
+                                }
+                                
+
+                                $description = !empty($system['legacyId'])?'<span class="label label-success popovers" '
+                                        . 'data-content="Type: '.$system['category'].
+                                        '<br />Details: '.$system['description'].
+                                        '<br />Quantity: '.$system['legacyQuantity'].
+                                        (!empty($system['legacyWatts'])?'<br />Rating: '.$system['legacyWatts'].'W':'').
+                                        (!empty($system['legacyMcpu'])?'<br />Maintenance: &#163;'.number_format($system['legacyMcpu'],2):'').'" '
+                                        . 'data-html="true" '
+                                        . 'data-placement="left" '
+                                        . 'data-original-title="Retrofit Details" '
+                                        . 'data-trigger="hover">Yes</span>':'<span class="label label-important">No</span>';
+                                $title = $system['model'];
+                                $content = $system['pdesc'].'<br>';
+                                if (!empty($system['label'])) {
+                                    $content.='<br>Label: '.$system['label'];
+                                }
+                                if ($system['typeId']==3){
+                                    $attr = json_decode($system['attributes'], true);
+                                    $content.='<br>Specified: '.$attr['sLen'].'mm<br >Achievable: '.$attr['dLen'].'mm';
+                                }
+                                echo '<tr>'
+                                    . '<td>'.$system['model'].' <i class="icon-info-sign popovers" data-trigger="hover" data-html="true" data-placement="top" data-content="'.$content.'" data-original-title="'.$title.'"></i></td>'
+                                    . '<td class="row-right">'.$system['quantity'].'</td>'
+                                    . '<td class="row-right hidden-phone" class="row-right">'.$system['hours'].'</td>'
+                                    . '<td class="row-right">'.$system['ppu'].'</td>'
+                                    . '<td class="row-right">'.$system['ppuTrial'].'</td>'
+                                    . '<td>'.$description.'</td>'
+                                    . '<td>'
+                                        .($system['locked']?'locked':'<button class="btn btn-primary action-system-edit" data-systemid="'.$system['systemId'].'"><i class="icon-pencil"></i></button>&nbsp;' 
+                                        . ($editable?'<button class="btn btn-danger action-system-delete" data-systemid="'.$system['systemId'].'"><i class="icon-remove"></i></button>&nbsp;':''))
+                                        . '</td>'
+                                    . '<td class="row-right">&#163;'.number_format($priceMCD,2).'</td>'
+                                    . '<td class="row-right">&#163;'.number_format($priceMonthly,2).'</td>'
+                                    . '</tr>';
+                            }
+                        }
+                    
+                    ?></tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="8">Optional Purchase Price</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceMCD,2); ?></th>
+                        </tr>
+                        <tr>
+                            <th colspan="8">System Installation Cost</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceInstallation,2); ?></th>
+                        </tr>
+                        <tr>
+                            <th colspan="8">Monthly Price</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceMonthly,2); ?></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- END BASIC PORTLET-->
+    </div>
+</div>

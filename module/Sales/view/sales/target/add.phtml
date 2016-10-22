@@ -1,0 +1,381 @@
+<?php
+$this->inlineScript()
+    ->appendFile( '/js/forms/sales/target.js' );
+
+$this->headStyle()->captureStart(); ?>
+    .error-msg {
+    color:#D00 !important;
+    list-style:none;
+    margin:0px;
+    padding:0px;
+    }
+<?php $this->headStyle()->captureEnd(); ?>
+<?php if ( !empty($form->getMessages()) ): ?>
+    <div class="row-fluid">
+        <div class="alert alert-error">
+            Please correct following errors
+        </div>
+    </div>
+<?php endif; ?>
+<?php echo $this->form()->openTag( $form ); ?>
+    <div class="row-fluid">
+        <div class="span6">
+            User
+            <br/>
+            <?php echo $this->formElement( $form->get( 'user' ) ); ?>
+            <?php echo $this->formElementErrors( $form->get( 'user' ), array( 'class' => 'error-msg' ) ); ?>
+        </div>
+        <div class="span6">
+            Year Ending<br/>
+            <?php echo $this->formElement( $form->get( 'year' ) ); ?>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 1
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth1' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 1<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth1' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 1<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_1" value="" class="span12 pcnt" data-value="1"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 2
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth2' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 2<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth2' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 2<br/>
+
+            <div class="input-append">
+
+                <input type="text" id="p_2" value="" class="span12 pcnt" data-value="2"/>
+                <span class="add-on">%</span>
+            </div>
+
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 3
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth3' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 3<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth3' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 3<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_3" value="" class="span12 pcnt" data-value="3"/>
+
+                <span class="add-on">%</span>
+            </div>
+
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 4
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth4' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 4<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth4' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 4<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_4" value="" class="span12 pcnt" data-value="4"/>
+                <span class="add-on">%</span>
+            </div>
+
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 5
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth5' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 5<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth5' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 5<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_5" value="" class="span12 pcnt" data-value="5"/>
+                <span class="add-on">%</span>
+            </div>
+
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 6
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth6' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 6<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth6' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 6<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_6" value="" class="span12 pcnt" data-value="6"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 7
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth7' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 7<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth7' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 7<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_7" value="" class="span12 pcnt" data-value="7"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 8
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth8' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 8<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth8' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 8<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_8" value="" class="span12 pcnt" data-value="8"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 9
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth9' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 9<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth9' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 9<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_9" value="" class="span12 pcnt" data-value="9"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 10
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth10' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 10<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth10' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 10<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_10" value="" class="span12 pcnt" data-value="10" data-value="10"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 11
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth11' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 11<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth11' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 11<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_11" value="" class="span12 pcnt" data-value="11"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span4">
+            Sales Month 12
+            <br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'salesMonth12' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            Margin Month 12<br/>
+
+            <div class="input-prepend">
+                <span class="add-on">&#163;</span>
+                <?php echo $this->formElement( $form->get( 'marginMonth12' ) ); ?>
+            </div>
+        </div>
+        <div class="span4">
+            %age 12<br/>
+
+            <div class="input-append">
+                <input type="text" id="p_12" value="" class="span12 pcnt" data-value="12"/>
+                <span class="add-on">%</span>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row-fluid">
+        <div class="span12">
+            <?php echo $this->formElement( $form->get( 'my-submit' ) ); ?>
+        </div>
+    </div>
+<?php echo $this->form()->closeTag( $form ); ?>

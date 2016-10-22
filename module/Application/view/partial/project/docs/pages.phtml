@@ -1,0 +1,29 @@
+<style>
+    #footer {
+      position: fixed;
+    }
+
+    #footer  {
+        bottom: 25px;
+        text-align: center;
+        width: 100%;
+    }
+
+    #footer .page {
+        font-size: 9px;
+    }
+
+    #footer .page:after {
+        font-size: 11px;
+          content: "- Page " counter(page) " -";
+    }
+
+</style>
+<!-- Important: if you don't want a page number on the first page then you must include partial file after first page html <!-- -->
+<div id="footer">
+    <p class="page"><?php if (isset($user) && ($user->getCompany()->getPartner())) {
+        echo ($user->getCompany()->getFooter());
+    } else { ?>
+        Registered in England & Wales, Company Number 02754379;
+    Registered Office Address, 8point3 Ltd, SusCon, Brunel Way, Dartford, Kent, DA1 5FW<?php } ?><br /></p>
+</div>

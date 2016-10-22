@@ -1,0 +1,91 @@
+<style>
+    #quotehead_logo {
+        width: 240px;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    
+    table.quotehead_clientdetails {
+        border-spacing: 0px;
+        border-collapse: separate;
+        border-bottom: 1px #ccc solid;
+    }
+    
+    table.quotehead_clientdetails td {
+        margin: 0;
+        padding: 4px 0 0 6px;
+        border-top: 1px #ccc solid;
+        vertical-align: text-top;
+    }
+    
+    table.quotehead_clientdetails th {
+        margin: 0;
+        padding: 4px 6px 0 0;
+        text-align: left;
+        width: 110px;
+        border-right: 1px #ccc solid;
+        border-top: 1px #ccc solid;
+        font-weight: normal;
+        vertical-align: text-top;
+    }
+    
+</style>
+<div style="position: relative; font-size: 0.9em!important; margin-bottom: 30px;">
+<?php if ($user->getCompany()->getPartner()) {   ?>
+    <img id="quotehead_logo" src="<?php echo $resourcesUri; ?>img/partner/logo-partner.png" />
+<?php }   else {  ?>
+    <img id="quotehead_logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-1.png" />
+<?php } ?>
+    <div style="position: absolute; right: 0; top: 90px; text-align: right">
+        Date: <?php echo date('jS F Y'); ?>
+    </div>
+    <h1>Quotation Document</h1>
+    <table class="quotehead_clientdetails" >
+        <tbody>
+            <tr>
+                <th>Reference</th>
+                <td><?php echo str_pad($project->getClient()->getClientId(), 5, "0", STR_PAD_LEFT).'-'.str_pad($project->getProjectId(), 5, "0", STR_PAD_LEFT);
+                    if (isset ($invoiceNo)) {
+                        echo ' / '.$invoiceNo;
+                    }
+                ?></td>
+            </tr>
+            <tr>
+                <th>Company</th>
+                <td><?php echo $project->getClient()->getName(); ?></td>
+            </tr>
+            <tr>
+                <th>Project</th>
+                <td><?php echo $project->getName(); ?></td>
+            </tr>
+        </tbody>
+    </table>
+    <br />
+    
+    <table class="quotehead_clientdetails" style="width: 100%">
+        <tbody>
+            <tr>
+                <th>Client Details</th>
+                <td>
+<?php
+        echo $contact->getName(), ', '; 
+        if (!empty($contact->getAddress())) {
+            echo $contact->getAddress()->assemble(', ');
+        }
+?>
+                </td>
+            </tr>
+            <tr>
+                <th>Delivery Address</th>
+                <td>
+<?php
+        if (!empty($dAddress)) {
+            echo $dAddress->assemble(', ');
+        }
+?>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

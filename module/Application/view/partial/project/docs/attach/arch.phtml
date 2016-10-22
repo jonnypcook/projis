@@ -1,0 +1,130 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+?>
+
+<style>
+    #arch_logo {
+        width: 240px;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    
+    .aSection {
+        width: 100%;
+        border: 1px #222 solid;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        margin-bottom: 5px;
+    }
+    
+    .aSectionMiniContainer {
+        display: inline-block;
+        padding:0px;
+        margin:0px;
+    }
+    
+    .aSectionMiniContainerInner {
+        height: 25px;
+        font-size: 10px;
+        text-align: center;
+        border-right: 1px #222 solid;
+    }
+    
+    .aSectionMiniContainerInner.noborder {
+        border-right: 0!important;
+    }
+    
+    .aTitle, .aSubTitle {
+        font-size: 12px;
+        vertical-align: middle;
+        height: 25px;
+    }
+    
+    .aTitle {
+        font-weight: bold;
+    }
+    
+    .aSubSection {
+        margin-bottom: 15px;
+    }
+    
+</style>
+<div style="position: relative; height: 100px">
+    <h2>Architectural Configuration</h2>
+    <img id="arch_logo" src="<?php echo $resourcesUri; ?>img/logo-8p3-1.png" />
+</div>
+
+<?php
+$totalDisplayed = 0;
+if (!empty($breakdown)) {
+    $spaceName = '';
+    foreach ($breakdown as $buildingId=>$building) {
+        foreach ($building['spaces'] as $spaceId=>$space) {
+            $spaceName = $space['name'];
+            foreach ($space['products'] as $systemId=>$system) {
+                if ($system[2]==3) {
+                    $totalDisplayed++;
+                    if (!empty($spaceName)) {
+                        echo '<div class="aTitle">Space: '.$space['name'].'</div>';
+                        $spaceName = '';
+                    }
+                    $attributes = json_decode($system[16]);
+                    echo '<div class="aSubTitle">'.(!empty($system[17])?$system[17].' | ':'').'Specified Length: '.number_format(($attributes->sLen/1000), 2).'m | Achievable Length: '.number_format(($attributes->dLen/1000), 2).'m</div>';
+                    echo '<div class="aSubSection">';
+                    $secCount = 0;    
+                    foreach ($attributes->dConf as $conf) {
+                        $sections = array();
+                        $sectionLength = 0;
+                        foreach ($conf as $boards=>$cnt) {
+                            $boards = explode('-', $boards);
+                            $groupLength = 0;
+                            foreach ($boards as $type) {
+                                switch ($type) {
+                                    case 'A': $groupLength+=Project\Service\Model::BOARDLEN_A; break;
+                                    case 'B': $groupLength+=Project\Service\Model::BOARDLEN_B; break;
+                                    case 'B1': $groupLength+=Project\Service\Model::BOARDLEN_B1; break;
+                                    case 'C': $groupLength+=Project\Service\Model::BOARDLEN_C; break;
+                                }
+                            }
+                            $groupLength+=(Project\Service\Model::BOARDLEN_GAP * (count($boards)-1));
+                            $groupLength+=(Project\Service\Model::BOARDLEN_EC * 2);
+                            
+                            for ($i=0; $i<$cnt; $i++) {
+                                $sections[] = $groupLength;
+                            }
+
+                            $sectionLength+=($groupLength*$cnt);
+                        }
+                        echo '<div class="aSection" >';
+                        $k = count($sections)-1; 
+                        foreach ($sections as $j=>$gLength) {
+                            $width = round(($gLength/$sectionLength)*100, 2);
+                            echo '<div class="aSectionMiniContainer" style="width: '.$width.'%">'
+                                    . '<div class="aSectionMiniContainerInner '.(($k==$j)?'noborder':'').'"><strong>'.chr(65+$secCount).'<sub>'.($j+1).'</sub></strong> '.$gLength.'mm</div></div>';
+                            
+                        }
+                        echo '</div>';
+                        
+                        
+                        $secCount++;
+                    }
+                    echo '</div>';
+                    
+                    //print_r($sections);
+
+                }
+            }
+        }
+    }
+}
+
+if (empty($totalDisplayed)) {
+    echo 'No architectural items to display';
+}

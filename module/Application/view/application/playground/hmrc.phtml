@@ -1,0 +1,227 @@
+<?php
+$this->inlineScript()
+    ->appendFile('/assets/signalr/jquery.signalr-1.1.2.min.js')
+    ->appendFile('https://testing.wattzo.com/api/realtime/hubs')
+;/**/
+
+$cellCount = 10;
+$this->inlineScript()->captureStart();
+echo <<<JS
+var cellCount = {$cellCount};
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function mobileTrigger(on) {
+    if (on===true) {
+        $('#mobile-'+selectedCellMobile)
+            .removeClass('badge-success')
+            .removeClass('badge-important')
+            .addClass('badge-important')
+            .text('TRIGGER');
+        addAudit('<span class="text-error">Cell #'+selectedCellMobile+' Mobile Trigger Activated | Band = 2115 MHz | Signal Strength = '+getRandomInt(1,5)+'</span>');
+        channelChange('01-710-00FA32', 100);
+    } else {
+        $('#mobile-'+selectedCellMobile)
+            .removeClass('badge-success')
+            .removeClass('badge-important')
+            .addClass('badge-success')
+            .text('OK');
+        addAudit('<span class="text-info">Cell #'+selectedCellMobile+' Mobile Trigger Reset</span>');
+        channelChange('01-710-00FA32', 0);
+    }
+}
+
+var selectedCellMobile=0;
+var selectedCellTamper=5;
+
+function trigger() {
+    if (selectedCellMobile==0) { // cell is currently on
+        selectedCellMobile = getRandomInt(1,{$cellCount});
+        mobileTrigger(true);
+        setTimeout(trigger, 15000);
+    } else {
+        mobileTrigger(false);
+        selectedCellMobile = 0;
+        setTimeout(trigger, (getRandomInt(10,60)*1000));
+    }
+    
+}
+        
+function triggerTamper(on) {
+    if (on===true) {
+        $('#tamper-'+selectedCellTamper)
+            .removeClass('badge-success')
+            .removeClass('badge-important')
+            .addClass('badge-important')
+            .text('TRIGGER');
+        addAudit('<span class="text-error">Cell #'+selectedCellTamper+' Tamper Trigger Activated</span>');
+        channelChange('01-710-1704FF', 100);
+    } else {
+        $('#tamper-'+selectedCellTamper)
+            .removeClass('badge-success')
+            .removeClass('badge-important')
+            .addClass('badge-success')
+            .text('OK');
+        addAudit('<span class="text-info">Cell #'+selectedCellTamper+' Tamper Trigger Reset</span>');
+        channelChange('01-710-1704FF', 0);
+    }
+}
+        
+function addAudit(txt) {
+    var d = new Date();
+    $('#tbl-audit-body').prepend($('<tr>').append($('<td>').html(txt+ ' - '+d.toLocaleDateString("en-uk", {
+        year: "numeric", month: "short",
+        day: "numeric", hour: "2-digit", minute: "2-digit"
+    }))));
+}
+        
+var powerStatus = '';
+
+var rate = 5;        
+var hubId = "01-001-1CE70B";
+var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dhdHR6by5hY2Nlc3Njb250cm9sLndpbmRvd3MubmV0LyIsImF1ZCI6Imh0dHBzOi8vdGVzdGluZy53YXR0em8uY29tLyIsIm5iZiI6MTQxNTg5MTMyMiwiZXhwIjoyNTM0MDIzMDA3OTksImVtYWlsIjoiam9ubnkucC5jb29rQDhwb2ludDNsZWQuY28udWsiLCJ1bmlxdWVfbmFtZSI6Ikpvbm55IENvb2siLCJuYW1laWQiOiIxZGNiYzE4YjczNTU0OWE1ODdhMjRjNzNiZjYwNjFkMSIsImlkZW50aXR5cHJvdmlkZXIiOiJXYXR0em8ifQ.RKkiJ-xIdrUbbN382iIaXn8BiK14x3XA9XDAYk0i3lo';
+var serviceUri = 'https://testing.wattzo.com/api/realtime';
+        
+function CallRestAPI(method, endPoint, param, token)
+{
+    var weblink = "https://testing.wattzo.com/api/"+endPoint;
+    //console.log(weblink); return;
+
+    $.ajax(
+    {
+        url : weblink,
+        type : method,
+        data: param,
+        dataType: 'json',
+        beforeSend: function (request)
+        {
+            if ((token!=undefined) && (token!=null)) {
+                request.setRequestHeader("Authorization", "Bearer "+token);
+            }
+        },
+        crossDomain: true,
+        success : function(result, textStatus, request)
+        {
+            //process the result
+        },
+        error : function(jqXHR, textStatus, errorThrown) {
+            alert('Error: '+jqXHR.status);
+            alert('ErrorThrown: '+errorThrown)
+        }
+    });
+}
+        
+function channelChange(deviceId, value) {    
+    CallRestAPI(
+        'PUT',
+        'hubs/'+hubId+'/devices/'+deviceId+'/level',
+        'level='+value+'&rate='+rate,
+        token
+    );
+    //console.log('Device: '+deviceId+' = '+value);
+}
+        
+$(function() {
+    $.signalR.hub.url = serviceUri;
+    $.connection.hub.qs = "id=" + hubId;
+    $.ajaxSetup({ beforeSend: function (request)
+    {
+        request.setRequestHeader("Authorization", "Bearer "+token);
+    }});
+
+    $.connection.realtime.client.onUsageReceived = function (usage) {
+        //console.info("Usage received for hub.", usage.devices);
+        var changed = false;
+        for(var i in usage.devices){
+            //console.info("Usage received for hub.", usage.devices[i]);
+            if(usage.devices[i].id=="01-110-56bc89") {
+                if (powerStatus!=usage.devices[i].powerStatus) {
+                    powerStatus = usage.devices[i].powerStatus;
+                    triggerTamper((powerStatus!="Off"));
+                }
+            }
+        
+        }/**/
+        
+    };  
+
+    $.connection.hub
+    .start({ transport: 'longPolling' })
+    //.start()
+    .done(function() {
+            //console.info("Subscribed to realtime feed.", serialNumber);
+    })
+    .fail(function(ex) {
+            //console.error("Error occurred while subscribing to realtime feed.", ex);
+    });/**/
+        
+        
+    setTimeout(trigger, 10000);
+});
+JS;
+$this->inlineScript()->captureEnd();
+?>
+<div class="row-fluid">
+    <div class="span8">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget orange">
+            <div class="widget-title">
+                <h4><i class="icon-mobile-phone"></i> HM Prisons Demo</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cell</th>
+                            <th style="width: 140px">Mobile</th>
+                            <th style="width: 140px">Tamper</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                            for ($i=1; $i<=$cellCount; $i++) {
+                                echo '                        <tr>
+                            <td>Cell #'.$i.'</td>
+                            <td><span id="mobile-'.$i.'" class="badge badge-success">OK</span></td>
+                            <td><span id="tamper-'.$i.'" class="badge badge-success">OK</span></td>
+                        </tr>';
+                            }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+    <div class="span4">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-mobile-phone"></i> Event Log</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative scroller" style="height: 380px">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-audit-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>
