@@ -4,8 +4,15 @@ namespace Project\Service;
 
 use Project\Entity\Project as Project;
 
-class Model 
+class Model
 {
+    /**
+     * calculate payback and other forecast figures
+     * @param \Project\Entity\Project $project
+     * @param type $years
+     * @param array $args
+     * @return type
+     */
     function payback(Project $project, $years=12, array $args = array()) {
         //calculate funding options
         $financing = false;
@@ -15,28 +22,28 @@ class Model
                     $financing = true;
                 }
             }
-        } 
-        
+        }
+
         $em = $this->getEntityManager();
         $qb = $em->createQueryBuilder();
-        
+
         $forecast = array();
-		$overview = array();
-		$totals = array();
-        
+        $overview = array();
+        $totals = array();
+
         $dql = 'SELECT COUNT(s) FROM Space\Entity\System s JOIN s.space sp JOIN s.product p JOIN p.type pt WHERE sp.project=:pid AND pt.service=false AND p.eca=true';
         $q = $em->createQuery($dql);
         $q->setParameters(array('pid' => $project->getProjectId()));
 
         $ecaCompatibile = ($q->getSingleScalarResult()>0);
-        
+
         $qb
             ->select('s.label, s.cpu, s.ppu, s.ippu, s.quantity, s.hours, s.legacyWatts, s.legacyQuantity, s.legacyMcpu, s.lux, s.occupancy, s.locked, s.systemId, s.attributes, '
-                    . 'sp.spaceId, sp.name, '
-                    . 'b.name, b.buildingId,'
-                    . 'ba.postcode,'
-                    . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ibppu, p.mcd,'
-                    . 'pt.typeId AS productType, pt.service')
+                . 'sp.spaceId, sp.name, sp.quantity AS sQuantity, '
+                . 'b.name, b.buildingId,'
+                . 'ba.postcode,'
+                . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ibppu, p.mcd,'
+                . 'pt.typeId AS productType, pt.service')
             ->from('Space\Entity\System', 's')
             ->join('s.space', 'sp')
             ->leftjoin('sp.building', 'b')
@@ -47,69 +54,72 @@ class Model
             ->where('sp.project=?1')
             ->setParameter(1, $project->getProjectId())
             ->add('orderBy', 's.space ASC');
-        
+
         if (!empty($args['spaceId'])) {
             $qb
                 ->andWhere('sp.spaceId=?2')
                 ->setParameter(2, $args['spaceId']);
         }
 
-        
-        $query  = $qb->getQuery();      
+
+        $query  = $qb->getQuery();
         $result = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
 
         $totals = array (
             'legacyMaintenance' => 0,
-			'currentElecConsumption' => 0,
-			'ledElecConsumption' => 0,
-			'co2emmissionreduction' => 0,
-			'elec_sav_ach' => 0,
+            'currentElecConsumption' => 0,
+            'ledElecConsumption' => 0,
+            'co2emmissionreduction' => 0,
+            'elec_sav_ach' => 0,
             'productcost' => 0,
             'productcost_base' => 0,
-			'price_base' => 0,
-			'price' => 0,
-			'priceeca' => 0,
+            'price_base' => 0,
+            'price' => 0,
+            'priceeca' => 0,
             'IBP' => 0,
             'prelim' => 0,
             'overhead' => 0,
             'management' => 0,
             'fee' => 0,
-            
+
             'price_installation' => 0,
             'price_delivery' => 0,
             'price_product' => 0,
             'price_service' => 0,
             'price_access' => 0,
-            
+
             'kwhSave' => 0,
+            'legacyQuantity' => 0,
+            'ledQuantity' => 0,
         );
-        
-        
-        
+
+
+
         $discount = $project->getMcd();
-        
+
         $spaces = array();
         foreach ($result as $obj) {
             if (empty($spaces[$obj['spaceId']])) {
                 $spaces[$obj['spaceId']] = true;
             }
-            
+
             $led = (($obj['productType'] == 1)||($obj['productType'] == 3)); // type 1 is an LED
             $product = ($obj['service'] == 0);
             $installation = ($obj['productType'] == 100); // type 100 is an installation product
             $delivery = ($obj['productType'] == 101); // type 101 is a delivery product
             $service = ($obj['productType'] == 102); // type 103 is an additional service
             $access = ($obj['productType'] == 103); // type 102 is an access product
-            
+            $spaceQuantity = empty($obj['sQuantity']) ? 1 : $obj['sQuantity'];
+
             // calculate price 
             $priceIncDiscount = round($obj['ppu'] * (1-($discount * $obj['mcd'])),2);
-            $price = round(($obj['quantity'] * $priceIncDiscount),2);
-            
+            $price = round(($obj['quantity'] * $priceIncDiscount * $spaceQuantity),2);
+
             if ($product && $project->getIbp()) {
                 $totals['IBP']+=round($price * 0.018, 2);
                 //$totals['IBP']+=($obj['ibppu'] * $obj['quantity']);
             }
-            
+
             // calculate power savings (if applicable)
             if ($installation) {
                 $totals['price_installation']+=$price;
@@ -123,57 +133,62 @@ class Model
             } elseif ($access) {
                 $totals['price_access']+=$price;
             } else {
+                $totals['legacyQuantity'] += ($obj['legacyQuantity'] * $spaceQuantity);
                 $pwrSaveLeg = ($obj['legacyWatts']*$obj['legacyQuantity']);
+                if ($obj['productType'] === 1) {
+                    $totals['ledQuantity'] += ($obj['quantity'] * $spaceQuantity);
+                }
+
                 if ($obj['productType']==3) {
                     $attr = json_decode($obj['attributes']);
                     $ratio = (($attr->dLen * $attr->dUnits)/1000)/$obj['quantity'];
-                    $pwrSaveLed = round(($obj['quantity']*$ratio*$obj['pwr']) * (1-($obj['lux']/100)) * (1 - ($obj['occupancy']/100)),0);
+                    $pwrSaveLed = round(($obj['quantity'] * $ratio * $obj['pwr']) * (1-($obj['lux']/100)) * (1 - ($obj['occupancy']/100)),0);
                 } else {
                     $pwrSaveLed = ($obj['quantity']*$obj['pwr']) * (1-($obj['lux']/100)) * (1 - ($obj['occupancy']/100));
                 }
-                
+
                 $pwrSave = (!$led||(($obj['legacyWatts'] * $obj['legacyQuantity'])==0))?0:((($pwrSaveLeg-$pwrSaveLed)/($obj['legacyWatts'] * $obj['legacyQuantity'])) * 100);
                 $kwHSave = (!$led||(($obj['legacyWatts'] * $obj['legacyQuantity'])==0))?0:((($pwrSaveLeg-$pwrSaveLed)/1000) * $obj['hours'] * 52);
 
                 $currentElecConsumption = round((($obj['legacyQuantity'] * $obj['hours'] * $obj['legacyWatts'] * 52)/1000) * $project->getFuelTariff(),2);
                 $ledElecConsumption = round(((100-$pwrSave)/100) * $currentElecConsumption,2);
                 $elec_sav_ach = round($currentElecConsumption - $ledElecConsumption, 2);
-            
+
                 // calculate co2 savings
                 $co2emmissionreduction = round((($elec_sav_ach / $project->getFuelTariff()) * $project->getCo2()) / 1000,2);
 
                 // calculate maintenance cost
                 $legacyMaintenance = round($obj['legacyQuantity'] * $obj['legacyMcpu'],2);
-                
+
                 // shift totals as per iteration
-                $totals['elec_sav_ach']+=$elec_sav_ach;
-                $totals['currentElecConsumption']+=$currentElecConsumption;
-                $totals['ledElecConsumption']+=$ledElecConsumption;
-                $totals['co2emmissionreduction']+= $co2emmissionreduction;
-                $totals['legacyMaintenance']+=$legacyMaintenance;
+                $totals['elec_sav_ach'] += ($elec_sav_ach * $spaceQuantity);
+                $totals['currentElecConsumption'] += ($currentElecConsumption * $spaceQuantity);
+                $totals['ledElecConsumption'] += ($ledElecConsumption * $spaceQuantity);
+                $totals['co2emmissionreduction'] += ($co2emmissionreduction * $spaceQuantity);
+                $totals['legacyMaintenance'] += ($legacyMaintenance * $spaceQuantity);
                 /*if (!empty($obj['eca'])) {
                     $totals['priceeca']+=$price;
                 }/**/
-                $totals['price_product']+=$price;
-                $totals['productcost']+=($obj['cpu'] * $obj['quantity']);
-                $totals['kwhSave']+=$kwHSave;
+                $totals['price_product'] += $price;
+                $totals['productcost'] += ($obj['cpu'] * $obj['quantity']  * $spaceQuantity);
+                $totals['kwhSave'] += ($kwHSave * $spaceQuantity);
             }
-            
+
             if ($ecaCompatibile) {
                 if (!empty($obj['eca'])) {
-                    $totals['priceeca']+=$price;
+                    $totals['priceeca'] += $price;
                 }
-            } 
-            
-            
+            }
 
-            
+
+
+
             // shift totals as per iteration
-            $totals['price']+=$price;
+            $totals['price'] += $price;
         }
-        
+
         //echo '<pre>', print_r($totals, true), '</pre>'; die();
-        
+
         // adjust legacy maintenance if required
         if($project->getMaintenance()>0) {
             $totals['legacyMaintenance'] = $project->getMaintenance();
@@ -181,7 +196,7 @@ class Model
 
         $csav = 0;
         $carbon = 0;
-        
+
         // work out additional fee (if applicable)
         $totals['prelim'] = round($totals['price'] * $project->getFactorPrelim(),2);
         $totals['overhead'] = round(($totals['price'] + $totals['prelim']) * $project->getFactorOverhead(),2);
@@ -190,13 +205,13 @@ class Model
 
         // total cost
         $total_cost = round($totals['price'] + $totals['fee'] + $totals['IBP'],2);
-        
+
         // cost of financing
         $financing_unsupported=false;
         if ($financing) {
             $finance_data = array();
             $finance_data['amount'] = $total_cost;
-            
+
             $qb2 = $em->createQueryBuilder();
             $qb2
                 ->select('f ')
@@ -207,9 +222,9 @@ class Model
                 ->setParameter(3, $total_cost);
 
 
-            $query  = $qb2->getQuery();      
+            $query  = $qb2->getQuery();
             $result = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
-            
+
             if (empty($result)) {
                 $financing = false;
                 $financing_unsupported = true;
@@ -219,18 +234,18 @@ class Model
                 $finance_data['annualrate'] = round((((($finance_data['repayments'] *  $project->getFinanceYears()->getFinanceYearsId()) - $finance_data['amount'])/$finance_data['amount']) / $project->getFinanceYears()->getFinanceYearsId())*100,2);
             }
         }
-        
+
         // calculate eca saving & carbon allowance
         $eca = $totals['priceeca'] * $project->getEca(); // new method based on individual light eca compatibility
         $callow = $project->getCarbon();
-        
+
         $payback = $financing?0:-($totals['price'] + $totals['fee'] + $totals['IBP']);
         $payback_eca = $financing?$eca:-($totals['price'] + $totals['fee'] + $totals['IBP'] - $eca);
 
         $finance_avg_benefit = 0;
         $finance_avg_repay = 0;
         $finance_avg_netbenefit = 0;
-        
+
         $payback_year = 0;
         $ledMaintenaceOn = (($project->getMaintenanceLed()>0) && ($project->getMaintenanceLedYear()>0));
         for($i=1; $i<=$years; $i++) {
@@ -255,7 +270,7 @@ class Model
                 $finance_avg_netbenefit+=$cash_benefit;
             }
 
-            
+
             $payback-=$cost_of_financing;
             $payback_eca-=$cost_of_financing;
 
@@ -280,15 +295,15 @@ class Model
                 $payback_year = $i;
             }
         }
-        
+
         $carballow = ($callow * $carbon);
-			
+
 
         $figures = array(
             'saving' => round($csav,2),
             'cost_maintenance' => round($totals['legacyMaintenance'],2),
-            'cost_install' => $totals['price_installation'], 
-            'cost_delivery' => round($totals['price_delivery'],2), 
+            'cost_install' => $totals['price_installation'],
+            'cost_delivery' => round($totals['price_delivery'],2),
             'cost_led' => round($totals['price_product'],2), // TO DO
             'margin' => ($totals['price_product']>0)?round((1-($totals['productcost']/$totals['price_product']))*100,2):0,
             'cost' => $total_cost,
@@ -330,15 +345,18 @@ class Model
         if ($financing_unsupported) {
             $figures['finance_unsupported'] = 1;
         }
+
+        $figures['legacy_quantity'] = $totals['legacyQuantity'];
+        $figures['led_quantity'] = $totals['ledQuantity'];
         /**/
-        
+
         return array (
             'figures' => $figures,
             'forecast' => $forecast
         );
     }
-    
-    
+
+
     /**
      * calculate space performance
      * @param \Project\Entity\Project $project
@@ -348,19 +366,19 @@ class Model
     function spaceBreakdown(Project $project, array $args = array()) {
         $em = $this->getEntityManager();
         $qb = $em->createQueryBuilder();
-        
-		$breakdown = array();
-        
-        
+
+        $breakdown = array();
+
+
         $qb
             ->select('s.label, s.cpu, s.ppu, s.ippu, s.quantity, s.hours, s.legacyWatts, s.legacyQuantity, s.legacyMcpu, s.lux, s.occupancy, s.locked, s.systemId, s.attributes, '
-                    . 'sp.spaceId, sp.name AS sName, sp.root,'
-                    . 'b.name AS bName, b.buildingId,'
-                    . 'ba.postcode,'
-                    . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ibppu, p.mcd,'
-                    . 'pt.typeId AS productType, '
-                    . 'l.legacyId, l.description as legacyDescription '
-                    )
+                . 'sp.spaceId, sp.name AS sName, sp.root, sp.quantity AS sQuantity,'
+                . 'b.name AS bName, b.buildingId,'
+                . 'ba.postcode, ba.line1, ba.line2, ba.line3, ba.line4, ba.line5, '
+                . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ibppu, p.mcd,'
+                . 'pt.typeId AS productType, '
+                . 'l.legacyId, l.description as legacyDescription '
+            )
             ->from('Space\Entity\System', 's')
             ->join('s.space', 'sp')
             ->leftjoin('sp.building', 'b')
@@ -378,54 +396,60 @@ class Model
                 ->andWhere('sp.spaceId=?2')
                 ->setParameter(2, $args['spaceId']);
         }
-        
+
         if (!empty($args['products'])) {
             $qb->andWhere('pt.service = 0');
         }
-        
-        $query  = $qb->getQuery();      
+
+        $query  = $qb->getQuery();
         $result = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
-        
-        
+
+
         $discount = $project->getMcd();
-        
+
         foreach ($result as $obj) {
             $led = (($obj['productType'] == 1) || ($obj['productType'] == 3)); // type 1 is an LED
             $installation = ($obj['productType'] == 100); // type 100 is an installation product
             $delivery = ($obj['productType'] == 101); // type 101 is a delivery product
             $service = ($obj['productType'] == 102); // type 102 is a service product
             $access = ($obj['productType'] == 103); // type 103 is an access product
-            
+
             if (empty($obj['buildingId'])) {
                 $obj['buildingId'] = 0;
             }
-            
+
             if (!isset($breakdown[$obj['buildingId']])) {
                 $breakdown [$obj['buildingId']] = array (
                     'name' => $obj['bName'],
+                    'address' => $obj['line1'] .
+                        (empty($obj['line2']) ? '' : ', '. $obj['line2']) .
+                        (empty($obj['line3']) ? '' : ', '. $obj['line3']) .
+                        (empty($obj['line4']) ? '' : ', '. $obj['line4']) .
+                        (empty($obj['line5']) ? '' : ', '. $obj['line5']),
                     'postcode' => $obj['postcode'],
                     'spaces' => array ()
                 );
             }
-            
+
             if (!isset($breakdown[$obj['buildingId']] ['spaces'] [$obj['spaceId']])) {
                 $breakdown [$obj['buildingId']] ['spaces'] [$obj['spaceId']] = array (
                     'name' => $obj['sName'],
                     'root' => !empty($obj['root']),
+                    'quantity' => $obj['sQuantity'],
                     'products' => array ()
                 );
             }
-            
-            
+
+
             // calculate price
             $priceIncDiscount = round($obj['ppu'] * (1-($discount * $obj['mcd'])),2);
             $price = round(($obj['quantity'] * $priceIncDiscount),2);
-            
-            
+
+
             // calculate power savings (if applicable)
             if ($installation || $delivery || $access || $service) {
                 $breakdown[$obj['buildingId']] ['spaces'] [$obj['spaceId']] ['products'][$obj['systemId']] = array(
-					$price,
+                    $price,
                     $price,
                     $obj['productType'],
                     $obj['productId'],
@@ -436,15 +460,15 @@ class Model
                     null,
                     null,
                     null,
-					0,
-					0,
-					0,
-					0,
+                    0,
+                    0,
+                    0,
+                    0,
                     0,
                     null,
                     null,
                     null,
-				);/**/
+                );/**/
             } else {
                 $pwrSaveLeg = ($obj['legacyWatts']*$obj['legacyQuantity']);
                 if ($obj['productType']==3) {
@@ -454,24 +478,24 @@ class Model
                 } else {
                     $pwrSaveLed = ($obj['quantity']*$obj['pwr']) * (1-($obj['lux']/100)) * (1 - ($obj['occupancy']/100));
                 }
-                
-                
+
+
                 $pwrSave = (!$led||($obj['legacyWatts']==0))?0:((($pwrSaveLeg-$pwrSaveLed)/($obj['legacyWatts'] * $obj['legacyQuantity'])) * 100);
                 $kwHSave = (!$led||($obj['legacyWatts']==0))?0:((($pwrSaveLeg-$pwrSaveLed)/1000) * $obj['hours'] * 52);
 
                 $currentElecConsumption = round((($obj['legacyQuantity'] * $obj['hours'] * $obj['legacyWatts'] * 52)/1000) * $project->getFuelTariff(),2);
                 $ledElecConsumption = round(((100-$pwrSave)/100) * $currentElecConsumption,2);
                 $elec_sav_ach = round($currentElecConsumption - $ledElecConsumption, 2);
-            
+
                 // calculate co2 savings
                 $co2emmissionreduction = round((($elec_sav_ach / $project->getFuelTariff()) * $project->getCo2()) / 1000,2);
 
                 // calculate maintenance cost
                 $legacyMaintenance = round($obj['legacyQuantity'] * $obj['legacyMcpu'],2);
-                
+
                 // add line data
                 $breakdown[$obj['buildingId']] ['spaces'] [$obj['spaceId']] ['products'] [$obj['systemId']] = array(
-					$priceIncDiscount,
+                    $priceIncDiscount,
                     $price,
                     $obj['productType'],
                     $obj['productId'],
@@ -482,47 +506,48 @@ class Model
                     $obj['description'],
                     $obj['legacyQuantity'],
                     $obj['legacyWatts'],
-					$legacyMaintenance,
-					round($pwrSave,2),
-					$elec_sav_ach,
-					$co2emmissionreduction,
+                    $legacyMaintenance,
+                    round($pwrSave,2),
+                    $elec_sav_ach,
+                    $co2emmissionreduction,
                     $kwHSave,
                     $obj['attributes'],
                     $obj['label'],
                     $obj['legacyDescription'],
-				);/**/
+                );/**/
             }
-            
+
         }
 
         //echo '<pre>', print_r($breakdown, true), '</pre>';die();
-        
+
         /**/
-        
+
         return $breakdown;
     }
-    
+
     function billitems(Project $project, array $args = array()) {
         $em = $this->getEntityManager();
         //$qb = $em->createQueryBuilder();
         $discount = ($project->getMcd());
-        
+
         $query = $em->createQuery('SELECT p.productId, p.model, p.description, p.eca, pt.service, pt.name AS productType, pt.typeId, pt.service, s.ppu, s.attributes, s.label, '
-                . 'SUM(s.quantity) AS quantity, '
-                . 'SUM(s.ppu*s.quantity) AS price, '
-                . 'SUM(ROUND((s.ppu *  (1 - ('.$discount.' * p.mcd))),2) * s.quantity) AS priceMCD '
-                . 'FROM Space\Entity\System s '
-                . 'JOIN s.space sp '
-                . 'JOIN s.product p '
-                . 'JOIN p.type pt '
-                . 'WHERE sp.project='.$project->getProjectId().' '
-                . ((!empty($args['products']))?'AND pt.service = 0 ':'')
-                . 'GROUP BY s.product, s.ppu');
-        
-        
+            . 'SUM(s.quantity * sp.quantity) AS quantity, '
+            . 'SUM(s.ppu * s.quantity * sp.quantity) AS price, '
+            . 'SUM(ROUND((s.ppu * (1 - ('.$discount.' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
+            . 'SUM(s.cpu * s.quantity * sp.quantity) AS cost '
+            . 'FROM Space\Entity\System s '
+            . 'JOIN s.space sp '
+            . 'JOIN s.product p '
+            . 'JOIN p.type pt '
+            . 'WHERE sp.project='.$project->getProjectId().' '
+            . ((!empty($args['products']))?'AND pt.service = 0 ':'')
+            . 'GROUP BY s.product, s.ppu');
+
+
         return $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
     }
-    
+
     /**
      * calculate trial breakdown set
      * @param \Project\Entity\Project $project
@@ -532,19 +557,19 @@ class Model
     function trialBreakdown(Project $project, array $args = array()) {
         $em = $this->getEntityManager();
         $qb = $em->createQueryBuilder();
-        
-		$breakdown = array();
-        
-        
+
+        $breakdown = array();
+
+
         $qb
             ->select('s.label, s.quantity, s.hours, s.legacyWatts, s.legacyQuantity, s.legacyMcpu, s.lux, s.occupancy, s.systemId, '
-                    . 'sp.spaceId, sp.name AS sName, sp.root,'
-                    . 'b.name AS bName, b.buildingId,'
-                    . 'ba.postcode,'
-                    . 'pt.typeId AS productType, '
-                    . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ppu, p.ppuTrial, '
-                    . 'l.legacyId, l.description '
-                    )
+                . 'sp.spaceId, sp.name AS sName, sp.root, sp.quantity AS sQuantity, '
+                . 'b.name AS bName, b.buildingId,'
+                . 'ba.postcode,'
+                . 'pt.typeId AS productType, '
+                . 'p.model, p.pwr, p.eca, p.description, p.productId, p.ppu, p.ppuTrial, '
+                . 'l.legacyId, l.description '
+            )
             ->from('Space\Entity\System', 's')
             ->join('s.space', 'sp')
             ->leftjoin('sp.building', 'b')
@@ -558,19 +583,19 @@ class Model
             ->setParameter(1, $project->getProjectId())
             ->add('orderBy', 's.space ASC');
 
-        
-        $query  = $qb->getQuery();      
+
+        $query  = $qb->getQuery();
         $result = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
-        
+
         $discount = $project->getMcd();
-        
+
         foreach ($result as $obj) {
             $led = ($obj['productType'] == 1);
-            
+
             if (empty($obj['buildingId'])) {
                 $obj['buildingId'] = 0;
             }
-            
+
             if (!isset($breakdown[$obj['buildingId']])) {
                 $breakdown [$obj['buildingId']] = array (
                     'name' => $obj['bName'],
@@ -578,21 +603,22 @@ class Model
                     'spaces' => array ()
                 );
             }
-            
+
             if (!isset($breakdown[$obj['buildingId']] ['spaces'] [$obj['spaceId']])) {
                 $breakdown [$obj['buildingId']] ['spaces'] [$obj['spaceId']] = array (
                     'name' => $obj['sName'],
+                    'quantity' => $obj['sQuantity'],
                     'root' => !empty($obj['root']),
                     'products' => array ()
                 );
             }
-            
-            
+
+
             // calculate price
             $rrp = round($obj['ppu'],2);
             $price = round(($obj['quantity'] * $rrp),2);
-            
-            
+
+
             // calculate power savings (on a per fitting basis)
             $pwrSaveLeg = ($obj['legacyWatts']);
             $pwrSaveLed = ($obj['pwr']) * (1-($obj['lux']/100)) * (1 - ($obj['occupancy']/100));
@@ -616,20 +642,20 @@ class Model
                 round($pwrSave,2),
                 $kwHSave,
             );/**/
-            
+
         }
 
         //echo '<pre>', print_r($breakdown, true), '</pre>';die();
-        
+
         /**/
-        
+
         return $breakdown;
     }
-    
-    
+
+
     protected $_configs;
     protected $_maximum;
-    
+
     const BOARDLEN_A = 288.25;
     const BOARDLEN_B = 286.75;
     const BOARDLEN_B1 = 104.60;
@@ -637,11 +663,19 @@ class Model
     const BOARDLEN_GAP = 1;
     const BOARDLEN_ALUM = 2; // changed from 2
     const BOARDLEN_EC = 4; // changed from 2
-    
+
+    /**
+     * get picklist
+     * @param type $attributes
+     * @param array $boards
+     * @param array $architectural
+     * @param array $phosphor
+     * @param array $aluminium
+     */
     function getPickListItems($attributes, array &$boards, array &$architectural, array &$phosphor, array &$aluminium) {
         //echo '<pre>',print_r($attributes['dConf'], true), '</pre>';
         $multiplier = empty($attributes['dUnits'])?1:$attributes['dUnits'];
-        
+
         foreach ($attributes['dConf'] as $confId=>$aConfigs) {
             $size = count($aConfigs);
             $current = 0;
@@ -655,13 +689,13 @@ class Model
                 } else {
                     $architectural['_EC'][3]+=((2*$aQty)*$multiplier);
                 }
-                
+
                 $brdBd = explode('-', $aConfig);
 
                 //$rpLen+=self::BOARDLEN_EC*2;
                 $rpLen+=self::BOARDLEN_GAP*(count($brdBd)-1);
                 $rpLen+=self::BOARDLEN_ALUM*2;
-                
+
                 foreach ($brdBd as $brd) {
                     $rpLen+=constant('self::BOARDLEN_'.$brd);
 
@@ -672,12 +706,12 @@ class Model
                         $architectural['_CBL'][3]+=($aQty * $multiplier);
                         if ($lastString) {
                             $architectural['_CBL'][3]-=(1 * $multiplier);
-                        } 
+                        }
                     }
                     //$architectural['_'.$brd][3]+=$aQty;
                     $boards['_'.$brd][3]+=($aQty * $multiplier);
                 }
-                
+
                 $aluLen = $rpLen;
                 $rpLen--;
                 if (empty($phosphor["{$rpLen}"][$aConfig])) {
@@ -685,20 +719,26 @@ class Model
                     $phosphor["{$rpLen}"][$aConfig][1] = 0;
                     $aluminium["{$aluLen}"][$aConfig] = 0;
                 }
-                
-                
+
+
                 $phosphor["{$rpLen}"][$aConfig][0]+=(($lastString)?(($aQty-1) * $multiplier):($aQty * $multiplier));
                 $phosphor["{$rpLen}"][$aConfig][1]+=(($lastString)?(1 * $multiplier):0);
                 $aluminium["{$aluLen}"][$aConfig]+=($aQty * $multiplier);
-                
+
             }
         }
-        
+
     }
-    
-    
+
+    /**
+     * bulid sheet generation
+     * @param type $attributes
+     * @param type $model
+     * @param array $build
+     * @param array $buildConfig
+     */
     function getBuildsheetItems($attributes, $model, array &$build, array &$buildConfig) {
-        
+
         $multiplier = empty($attributes['dUnits'])?1:$attributes['dUnits'];
         foreach ($attributes['dConf'] as $confId=>$aConfigs) {
             $size = count($aConfigs);
@@ -709,7 +749,7 @@ class Model
                 $current++;
                 $rpLen = 0;
                 $lastString = ($current==$size);
-                
+
                 $brdBd = explode('-', $aConfig);
 
                 if ($addConfig) {
@@ -734,23 +774,29 @@ class Model
                         }
                     }
                 }
-                
+
                 $rpLen = $buildConfig[$aConfig]['LEN'];
                 if (empty($build[$model]["{$rpLen}"][$aConfig])) {
                     $build[$model]["{$rpLen}"][$aConfig][0] = 0;
                     $build[$model]["{$rpLen}"][$aConfig][1] = 0;
                 }
-                
-                
+
+
                 $build[$model]["{$rpLen}"][$aConfig][0]+=(($lastString)?(($aQty-1)*$multiplier):($aQty*$multiplier));
                 $build[$model]["{$rpLen}"][$aConfig][1]+=(($lastString)?(1*$multiplier):0);
-                
+
             }
         }
 
         //echo '<pre>',print_r($build, true), '</pre>';die();
     }
-    
+
+    /**
+     * statiglobal compare function
+     * @param type $a
+     * @param type $b
+     * @return int
+     */
     static function cmp($a, $b) {
         $aF = (float)$a;
         $bF = (float)$b;
@@ -760,13 +806,20 @@ class Model
         }
         return ($aF < $bF) ? -1 : 1;
     }
-    
-    
+
+    /**
+     * Architectural layout generation
+     * @param \Product\Entity\Product $product
+     * @param type $length
+     * @param type $mode
+     * @param array $args
+     * @return array
+     */
     function findOptimumArchitectural(\Product\Entity\Product $product, $length, $mode, array $args=array()) {
         try {
             $alternativeConfigs = !empty($args['alts']);
             $alternativeThreshold = $length-self::BOARDLEN_B1;
-            
+
             $data = array(
                 'dLen'=>0,
                 'dUnits'=>1,
@@ -776,7 +829,7 @@ class Model
                 'dCost'=>0,
                 'dConf'=>0,
             );
-            
+
             if (!empty($args['units'])) {
                 if (preg_match('/^[\d]+$/',$args['units'])) {
                     $args['units'] = (int)$args['units'];
@@ -785,12 +838,12 @@ class Model
                     }
                 }
             }
-            
+
             $curLen = 0;
             $RemotePhosphorMax = 1800; // this is a moveable target- NEED TO CLARIFY
             $maxunitlength = !empty($args['maxunitlen'])?$args['maxunitlen']:5000;  // this is a moveable target- NEED TO CLARIFY
             $fplRange = 50; // fewest phosphor lengths range
-            
+
             // find architectural details
             $attributes = $product->getAttributes();
             if (!empty($attributes)) {
@@ -802,13 +855,13 @@ class Model
                     }
                 }
             }
-            
+
             $boardConfigs = array (
                 'A' => self::BOARDLEN_A,
                 'B' => self::BOARDLEN_B,
                 'B1' => self::BOARDLEN_B1,
                 'C' => self::BOARDLEN_C,
-                
+
                 'GAP' => self::BOARDLEN_GAP,
                 'EC'  => self::BOARDLEN_EC,
                 'ALUM'  => self::BOARDLEN_ALUM,
@@ -833,7 +886,7 @@ class Model
                 'maxBoardPerRPB' => $this->_maximum,
                 'maximumUnitLength' => $maxunitlength,
             );
-            
+
             // work out the maximum length
             $maximumCnt = floor($data['maximumUnitLength']/$this->_configs[$this->_maximum][0]);
             $remainder = $data['maximumUnitLength'] - ($maximumCnt * $this->_configs[$this->_maximum][0]);
@@ -859,18 +912,18 @@ class Model
                     $optimumConfig[$chosenRem] = 1;
                 }
             }
-            
+
             // optimum length is the optimum length achievable
             $data+= array(
                 'remotePhosphorMax' => $RemotePhosphorMax,
                 'optimumConfig' => $optimumConfig,
                 'optimumLength' => 0
             );
-            
+
             foreach ($optimumConfig as $type=>$cnt) {
                 $data['optimumLength']+=$this->_configs[$type][0] * $cnt;
             }
-            
+
 
             // calculate the number of optimum lengths in required length
             $setup = array();
@@ -891,7 +944,7 @@ class Model
             // now work out optimum configuration for remainder
             $csetup = array();
             $this->architecturalFindLength($this->_configs, $remainder, array(), 0, 0, $csetup);
-            
+
             $alternatives = array();
             $tmpClosestIdx = false;
             if (!empty($csetup)) {
@@ -901,7 +954,7 @@ class Model
                     } elseif ($csetup[$tmpClosestIdx][0]<$csData[0]) {
                         $tmpClosestIdx = $idx;
                     }
-                    
+
                     if ($alternativeConfigs) {
                         $lenStr = $csData[0]+$data['dLen'];
                         if ($lenStr<$alternativeThreshold) {
@@ -915,7 +968,7 @@ class Model
                         }
                         $alternatives["{$lenStr}"][$idx]=$str;
                     }
-                    
+
                 }
 
                 if ($mode==1) { // closest length mode
@@ -928,7 +981,7 @@ class Model
                     }
                     $data['dLen']+=$csetup[$tmpClosestIdx][0];
                     $setup[] = $csetup[$tmpClosestIdx][1];
-                    
+
                     if ($alternativeConfigs) {
                         $data['dAltsId'] = $tmpClosestIdx;
                     }
@@ -944,7 +997,7 @@ class Model
                                     $tmpClosestIdx2=$idx;
                                 }
                             }
-                        } 
+                        }
                     }
                     $data['dLen']+=$csetup[$tmpClosestIdx2][0];
                     $setup[] = $csetup[$tmpClosestIdx2][1];
@@ -953,18 +1006,18 @@ class Model
                     }
                 }
             }
-            
-            
+
+
             if ($alternativeConfigs) {
                 uksort($alternatives, array('self','cmp'));
                 $data['dAlts'] = $alternatives;
             }
-            
-            
+
+
             $data['dBillU'] = ceil($data['dLen']/1000);
             $data['dBill'] = $data['dBillU'] * 1000;
             $data['dCost'] = $data['dBillU'] * $product->getPPU();
-            
+
             $data['dBillTU'] = $data['dBillU']*$data['dUnits'];
             $data['dBillT'] = $data['dBillTU'] * 1000;
             $data['dCostT'] = $data['dBillTU'] * $product->getPPU();
@@ -975,8 +1028,8 @@ class Model
             return array();
         }
     }
-    
-    
+
+
     /**
      * find set of board configs available
      * @param int $curLen
@@ -997,46 +1050,46 @@ class Model
             $config[$conf] = array ($len, $conf, true);
             if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
         }
-        
+
         $len = ($curLen+$boardGap+$boardB1);
         $conf = $currConf.'-B1';
         if ($len < $maxlen) {
             $config[$conf] = array ($len, $conf, false);
             //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
         }
-        
+
         $len = ($curLen+$boardGap+$boardB1+$boardGap+$boardC);
         $conf = $currConf.'-B1-C';
         if ($len < $maxlen) {
             $config[$conf] = array ($len, $conf, true);
             if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
         }
-        
+
         $len = ($curLen+$boardGap+$boardB1+$boardGap+$boardB1);
         $conf = $currConf.'-B1-B1';
         if ($len < $maxlen) {
             $config[$conf] = array ($len, $conf, false);
             //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
         }
-        
+
         $len = ($curLen+$boardGap+$boardB1+$boardGap+$boardB1+$boardGap+$boardC);
         $conf = $currConf.'-B1-B1-C';
         if ($len < $maxlen) {
             $config[$conf] = array ($len, $conf, true);
             if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
         }
-        
+
         $len = $curLen+$boardGap+$boardLen;
         if ($len < $maxlen) {
             $currConf = $currConf.'-'.$boardName;
             $config[$currConf] = array ($len, $currConf, false);
             //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $currConf;
             $this->architecturalIterate($len, $currConf, $boardLen, $boardName, $maxlen, $boardGap, $boardC, $boardB1, $config, $maximum);
-        } 
-        
-        
+        }
+
+
     }
-    
+
     /**
      * find architectural optimum length
      * @param array $configs
@@ -1051,47 +1104,57 @@ class Model
         if ($iteration>=4) {
             return;
         }
-        
+
         foreach ($configs as $type=>$config) {
             // if this is a linkable component
             if (($cLen+$config[0])>$MAXLEN) {
                 continue;
             }
-            
+
             $conf = $configuration;
-            
+
             if (isset($conf[$type])) {
                 $conf[$type]+=1;
             } else {
                 $conf[$type]=1;
             }
-            
+
             $csetup[] = array(
                 $cLen+$config[0],
                 $conf,
                 $iteration+1
             );
-            
+
             if ($config[2]===true) {
                 $this->architecturalFindLength($configs, $MAXLEN, $conf, $cLen+$config[0], $iteration+1, $csetup);
-            } 
-            
+            }
+
         }
     }
-    
-    
+
+
     // factory involkable methods
     protected $em;
-    
+
+
+    /**
+     * EntityManager setter
+     * @param \Doctrine\ORM\EntityManager $em
+     */
     function setEntityManager(\Doctrine\ORM\EntityManager $em) {
         $this->em = $em;
     }
-    
+
+
+    /**
+     * EntityManager getter
+     * @return type
+     */
     public function getEntityManager() {
         return $this->em;
     }
 
 
-    
+
 }
 

@@ -223,7 +223,7 @@ class Project extends EntityRepository
             = 'SELECT
                       p.project_id, p.name project_name, c.name client_name, c.client_id,
                       CONCAT(u.forename," ", u.surname) user_name,
-                      d.document_list_id, SUM(sy.ppu * sy.quantity) price, SUM(sy.cpu * sy.quantity) cost, d.created, s.space_id
+                      d.document_list_id, SUM(sy.ppu * sy.quantity * sp.quantity) price, SUM(sy.cpu * sy.quantity * sp.quantity) cost, d.created, s.space_id
                     FROM `DocumentList` d
                         LEFT JOIN `Project` p
                           ON p.`project_id` = d.`project_id`
@@ -252,9 +252,9 @@ class Project extends EntityRepository
     {
         $sql
             = 'SELECT
-                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                     CONCAT(u.forename," ", u.surname) user_name, d.document_list_id, c.client_id, d.created,
-                    SUM(sy.cpu * sy.quantity) cost
+                    SUM(sy.cpu * sy.quantity * sp.quantity) cost
                         FROM `DocumentList` d
                         LEFT JOIN `Project` p ON p.`project_id` = d.`project_id`
                         LEFT JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -282,8 +282,8 @@ class Project extends EntityRepository
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created
                 FROM `Project` p
@@ -311,9 +311,9 @@ class Project extends EntityRepository
     {
         $sql
             = 'SELECT
-              p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+              p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
               CONCAT(u.forename, " ", u.surname ) user_name, c.client_id, p.created,
-              SUM(sy.cpu * sy.quantity) cost
+              SUM(sy.cpu * sy.quantity * sp.quantity) cost
             FROM `Project` p
             LEFT JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
             LEFT JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -337,9 +337,9 @@ class Project extends EntityRepository
     {
         $sql
             = 'SELECT
-                  p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                  p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                   CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                  SUM(sy.cpu * sy.quantity) cost
+                  SUM(sy.cpu * sy.quantity * sp.quantity) cost
                         FROM `Project` p
                         LEFT JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                         LEFT JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -363,9 +363,9 @@ class Project extends EntityRepository
     {
         $sql
             = 'SELECT
-                  p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                  p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                   CONCAT(u.forename," ", u.surname) user_name, c.client_id, p.created,
-                  SUM(sy.cpu * sy.quantity) cost
+                  SUM(sy.cpu * sy.quantity * sp.quantity) cost
                 FROM `Project` p
                 LEFT JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                 LEFT JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -401,7 +401,7 @@ class Project extends EntityRepository
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed,
                   QUARTER(p.contracted) qtr
                 FROM `Project` p
@@ -445,7 +445,7 @@ class Project extends EntityRepository
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed,
                   QUARTER(p.contracted) qtr
                 FROM `Project` p
@@ -505,10 +505,10 @@ class Project extends EntityRepository
         $em       = $this->_em;
         $discount = ($project->getMcd());
         $query    = $em->createQuery('SELECT  p.mcd, p.productId, p.model, p.eca, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
-            . 'SUM(s.quantity) AS quantity, '
-            . 'SUM(s.ppu*s.quantity) AS price, '
-            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity) AS priceMCD, '
-            . 'SUM(s.cpu*s.quantity) AS cost '
+            . 'SUM(s.quantity * sp.quantity) AS quantity, '
+            . 'SUM(s.ppu * s.quantity * sp.quantity) AS price, '
+            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
+            . 'SUM(s.cpu * s.quantity * sp.quantity) AS cost '
             . 'FROM Space\Entity\System s '
             . 'JOIN s.space sp '
             . 'JOIN s.product p '
@@ -543,9 +543,9 @@ class Project extends EntityRepository
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
-                  SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity) AS priceMCD,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
+                  SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity * Sp.quantity) AS priceMCD,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
                   JOIN `Client` c
@@ -668,10 +668,10 @@ class Project extends EntityRepository
                 //echo $discount;                exit;
 
                 $query  = $this->_em->createQuery('SELECT  p.mcd, p.productId, p.model, p.eca, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
-                    . 'SUM(s.quantity) AS quantity, '
-                    . 'SUM(s.ppu*s.quantity) AS price, '
-                    . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity) AS priceMCD, '
-                    . 'SUM(s.cpu*s.quantity) AS cost '
+                    . 'SUM(s.quantity * sp.quantity) AS quantity, '
+                    . 'SUM(s.ppu*s.quantity * sp.quantity) AS price, '
+                    . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
+                    . 'SUM(s.cpu*s.quantity * sp.quantity) AS cost '
                     . 'FROM Space\Entity\System s '
                     . 'JOIN s.space sp '
                     . 'JOIN s.product p '

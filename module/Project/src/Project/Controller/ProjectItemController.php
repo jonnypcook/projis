@@ -53,18 +53,7 @@ class ProjectitemController extends ProjectSpecificController
         $discount = ($this->getProject()->getMcd());
 
         $em     = $this->getEntityManager();
-        $query  = $em->createQuery( 'SELECT  p.mcd, p.productId, p.model, p.eca, pt.service, pt.name AS productType, pt.typeId, s.ppu, s.cpu, '
-            . 'SUM(s.quantity) AS quantity, '
-            . 'SUM(s.ppu*s.quantity) AS price, '
-            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity) AS priceMCD, '
-            . 'SUM(s.cpu*s.quantity) AS cost '
-            . 'FROM Space\Entity\System s '
-            . 'JOIN s.space sp '
-            . 'JOIN s.product p '
-            . 'JOIN p.type pt '
-            . 'WHERE sp.project=' . $this->getProject()->getProjectId() . ' '
-            . 'GROUP BY s.product' );
-        $system = $query->getResult( \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY );
+        $system = $this->getModelService()->billitems($this->getProject());
 
         $query     = $em->createQuery( 'SELECT count(d) '
             . 'FROM Project\Entity\DocumentList d '

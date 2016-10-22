@@ -33,7 +33,15 @@ class Space implements InputFilterAwareInterface
      * @ORM\Column(name="notes", type="text", nullable=true)
      */
     private $notes;
-    
+
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="quantity", type="integer", nullable=false)
+     */
+    private $quantity;
+
 
     /**
      * @var integer
@@ -139,7 +147,18 @@ class Space implements InputFilterAwareInterface
         $this->contacts = new ArrayCollection();
         
         $this->serials = new ArrayCollection();
+        $this->setQuantity(1);
 	}
+
+    public function getQuantity() {
+        return $this->quantity;
+    }
+
+
+    public function setQuantity($quantity) {
+        $this->quantity = $quantity;
+        return $this;
+    }
     
     public function getSerials() {
         return $this->serials;
@@ -332,6 +351,24 @@ class Space implements InputFilterAwareInterface
                         ),
                     ),
                 ), 
+            )));
+
+            $inputFilter->add($factory->createInput(array(
+                'name'     => 'quantity', // 'usr_name'
+                'required' => false,
+                'filters'  => array(),
+                'validators' => array(
+                    array(
+                        'name'    => 'Int',
+                    ),
+                    array(
+                        'name'    => 'GreaterThan',
+                        'options' => array(
+                            'min'      => 0,
+                            'inclusive' => false
+                        ),
+                    )
+                ),
             )));
             
             $inputFilter->add($factory->createInput(array(

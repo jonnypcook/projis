@@ -36,6 +36,9 @@ class Space extends EntityRepository
                     case 'quantity':
                         $aggs[] = 'SUM(s.quantity) AS quantity';
                         break;
+                    case 'totalPpu':
+                        $aggs[] = 'SUM(s.ppu * s.quantity * sp.quantity) AS totalPpu';
+                        break;
                 }
             }
             
@@ -44,7 +47,7 @@ class Space extends EntityRepository
         
         if (!empty($aggs)) {
             $array = true;
-            $query = $this->_em->createQuery("SELECT sp.spaceId, sp.name, "
+            $query = $this->_em->createQuery("SELECT sp.spaceId, sp.name, sp.quantity AS duplicates, "
                 . implode (', ', $aggs)." "
                 . "FROM Space\Entity\Space sp "
                 . "LEFT JOIN Space\Entity\System s  WHERE sp.spaceId = s.space "

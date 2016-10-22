@@ -62,6 +62,8 @@ var Script = function () {
             null,
             null,
             { "sClass": "hidden-phone" },
+            { "sClass": "hidden-phone" },
+            { "sClass": "hidden-phone" },
             { 'bSortable': true}
         ]
     });
@@ -487,6 +489,8 @@ function findSpaces(building_id) {
                                     '<a sid="'+obj.spaces[i].spaceId+'" href="javascript:" class="action-space-edit">'+((obj.spaces[i].name.length)?obj.spaces[i].name:'unnamed')+'</a>',
                                     (obj.spaces[i].quantity==undefined)?'0':obj.spaces[i].quantity,
                                     (obj.spaces[i].ppu==undefined)?'0':obj.spaces[i].ppu,
+                                    (obj.spaces[i].duplicates==undefined)?'1':obj.spaces[i].duplicates,
+                                    (obj.spaces[i].totalPpu==undefined)?'0':obj.spaces[i].totalPpu,
                                     '<div style="width:120px"><button sid="'+obj.spaces[i].spaceId+'" class="btn btn-primary action-space-edit"><i class="icon-pencil"></i></button>&nbsp;'+
                                     '<button sid="'+obj.spaces[i].spaceId+'" class="btn btn-success action-space-copy" data-spaceId="'+obj.spaces[i].spaceId+'" data-name="'+obj.spaces[i].name+'"><i class="icon-copy"></i></button>&nbsp;'+
                                     '<button sid="'+obj.spaces[i].spaceId+'" class="btn btn-danger action-space-delete" data-spaceId="'+obj.spaces[i].spaceId+'" data-name="'+obj.spaces[i].name+'"><i class="icon-remove"></i></button>'+

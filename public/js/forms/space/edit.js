@@ -109,7 +109,7 @@ var Script = function () {
                                 
                             } else{ // no errors
                                 growl('Success!', 'The space details have been updated.', {time: 3000});
-                                //document.location = obj.url;
+                                document.location.reload();
                             }
                         }
                         catch(error){
@@ -280,7 +280,7 @@ var Script = function () {
             $('#msgs4').empty();
             var url = $(this).attr('action');
             var params = 'ts='+Math.round(new Date().getTime()/1000)+'&'+$(this).serialize();
-            $('#spaceLoader').fadeIn(function(){
+            $('#spaceBuildingLoader').fadeIn(function(){
                 $.ajax({
                     type: 'POST',
                     url: url,
@@ -325,7 +325,7 @@ var Script = function () {
                         }
                     },
                     complete: function(jqXHR, textStatus){
-                        $('#spaceLoader').fadeOut(function(){});
+                        $('#spaceBuildingLoader').fadeOut(function(){});
                     }
                 });
             });

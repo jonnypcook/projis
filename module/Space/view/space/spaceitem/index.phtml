@@ -5,7 +5,7 @@ $this->headLink()
     ->appendStylesheet('/assets/bootstrap-toggle-buttons/static/stylesheets/bootstrap-toggle-buttons.css')
     ->appendStylesheet('/assets/dropzone/css/basic.css')
     ->appendStylesheet('/assets/dropzone/css/dropzone.css')
-    ;
+;
 
 $this->inlineScript()
     ->appendFile('/assets/data-tables/jquery.dataTables.js')
@@ -61,7 +61,7 @@ $this->inlineScript()->captureEnd();
 
 if ($project->getRetrofit()) {
     echo $this->partial('partial/system/dialogsretrofit.phtml');
-} else {    
+} else {
     echo $this->partial('partial/system/dialogs.phtml');
 }
 
@@ -72,7 +72,7 @@ if ($project->getRetrofit()) {
         <h3 id="myModalLabel3">Create Space</h3>
     </div>
     <div class="modal-body">
-        <div id="spaceLoader" class="loader"></div>
+        <div id="spaceBuildingLoader" class="loader"></div>
         <div class="widget blue">
             <div class="widget-title">
                 <h4>Space Details</h4>
@@ -80,18 +80,18 @@ if ($project->getRetrofit()) {
             <div class="widget-body">
                 <!-- BEGIN FORM-->
                 <?php echo $this->form()->openTag($form); ?>
-                    <div class="control-group">
-                        <label class="control-label">Name</label>
-                        <div class="controls">
-                            <?php echo $this->formElement($form->get('name'));  ?>
-                        </div>
+                <div class="control-group">
+                    <label class="control-label">Name</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('name'));  ?>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label">Building:</label>
-                        <div class="controls">
-                            <?php echo $this->formElement($form->get('building'));  ?>
-                        </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Building:</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($form->get('building'));  ?>
                     </div>
+                </div>
                 <?php echo $this->form()->closeTag($form); ?>
                 <div id="msgs4"></div>
                 <!-- END FORM-->
@@ -114,12 +114,12 @@ if ($project->getRetrofit()) {
             Enter the note that you would like to add to the space in the box provided and then click on the Add Note button.
         </p>
         <div class="control-group">
-        <form id="AddNoteForm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/space-<?php echo $space->getSpaceId(); ?>/addnote/">
-            <div class="controls">
-                <textarea class="span12" name="note" placeholder="enter your note here"></textarea>
-            </div>
-        </form>
-        </div>   
+            <form id="AddNoteForm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/space-<?php echo $space->getSpaceId(); ?>/addnote/">
+                <div class="controls">
+                    <textarea class="span12" name="note" placeholder="enter your note here"></textarea>
+                </div>
+            </form>
+        </div>
         <div id="msgs3"></div>
     </div>
     <div class="modal-footer">
@@ -155,26 +155,26 @@ if ($project->getRetrofit()) {
                 <div class="status">Download CSV</div>
             </a>
         </div>
-<?php if (!empty($spacePrev)) { ?>        
-        <div class="metro-nav-block  nav-block-blue">
-            <a href="<?php echo $this->url('space', array('action'=>'index', 'cid'=>$project->getClient()->getClientId(), 'pid'=>$project->getProjectId(), 'sid'=>$spacePrev['spaceId'])); ?>">
-                <div class="text-center">
-                    <i class="icon-double-angle-left"></i>
-                </div>
-                <div class="status">Previous Space</div>
-            </a>
-        </div>
-<?php } ?>        
-<?php if (!empty($spaceNext)) { ?>        
-        <div class="metro-nav-block  nav-block-blue">
-            <a href="<?php echo $this->url('space', array('action'=>'index', 'cid'=>$project->getClient()->getClientId(), 'pid'=>$project->getProjectId(), 'sid'=>$spaceNext['spaceId'])); ?>">
-                <div class="text-center">
-                    <i class="icon-double-angle-right"></i>
-                </div>
-                <div class="status">Next Space</div>
-            </a>
-        </div>
-<?php } ?>
+        <?php if (!empty($spacePrev)) { ?>
+            <div class="metro-nav-block  nav-block-blue">
+                <a href="<?php echo $this->url('space', array('action'=>'index', 'cid'=>$project->getClient()->getClientId(), 'pid'=>$project->getProjectId(), 'sid'=>$spacePrev['spaceId'])); ?>">
+                    <div class="text-center">
+                        <i class="icon-double-angle-left"></i>
+                    </div>
+                    <div class="status">Previous Space</div>
+                </a>
+            </div>
+        <?php } ?>
+        <?php if (!empty($spaceNext)) { ?>
+            <div class="metro-nav-block  nav-block-blue">
+                <a href="<?php echo $this->url('space', array('action'=>'index', 'cid'=>$project->getClient()->getClientId(), 'pid'=>$project->getProjectId(), 'sid'=>$spaceNext['spaceId'])); ?>">
+                    <div class="text-center">
+                        <i class="icon-double-angle-right"></i>
+                    </div>
+                    <div class="status">Next Space</div>
+                </a>
+            </div>
+        <?php } ?>
         <div class="metro-nav-block  nav-block-orange">
             <a href="javascript:" id="btn-create-space-dialog">
                 <div class="text-center">
@@ -190,32 +190,32 @@ if ($project->getRetrofit()) {
 <div class="row-fluid">
     <div class="span12 ">
         <form id="DeleteNoteForm" action="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/space-<?php echo $space->getSpaceId(); ?>/deletenote/">
-        <div class="alert alert-info relative" id="space-notes">
-            <div id="noteDeleteLoader" class="loader"></div>
-            <button class="close" id="btn-add-note">+</button>
-<?php 
-$notes = $space->getNotes();
-$cnt = 0;
-if (!empty($notes)) {
-    $notesArr  = json_decode($notes, true);
-    if (!empty($notesArr)) {
-?>
-<?php
-        foreach ($notesArr as $idx=>$note) {
-            $cnt++;
-            echo "<div class=\"note\"><strong>Note:</strong> {$note} <a data-index=\"{$idx}\" href=\"javascript:\" class=\"delete-note\"><i class=\"icon-remove\"></i></a></div>";
-            //echo (($cnt>1)?'<br />':'')."<strong>Note {$cnt}:</strong> {$note}. <a href=\"javascript:\"><i class=\"icon-remove\"></i></a>";
-        }
-?>
-<?php
-    } 
-}
+            <div class="alert alert-info relative" id="space-notes">
+                <div id="noteDeleteLoader" class="loader"></div>
+                <button class="close" id="btn-add-note">+</button>
+                <?php
+                $notes = $space->getNotes();
+                $cnt = 0;
+                if (!empty($notes)) {
+                    $notesArr  = json_decode($notes, true);
+                    if (!empty($notesArr)) {
+                        ?>
+                        <?php
+                        foreach ($notesArr as $idx=>$note) {
+                            $cnt++;
+                            echo "<div class=\"note\"><strong>Note:</strong> {$note} <a data-index=\"{$idx}\" href=\"javascript:\" class=\"delete-note\"><i class=\"icon-remove\"></i></a></div>";
+                            //echo (($cnt>1)?'<br />':'')."<strong>Note {$cnt}:</strong> {$note}. <a href=\"javascript:\"><i class=\"icon-remove\"></i></a>";
+                        }
+                        ?>
+                        <?php
+                    }
+                }
 
-if ($cnt==0) {
-    echo '<div  id="nonote">No notes added to space</div>';
-}
-?>
-        </div>
+                if ($cnt==0) {
+                    echo '<div  id="nonote">No notes added to space</div>';
+                }
+                ?>
+            </div>
         </form>
     </div>
 </div>
@@ -245,7 +245,12 @@ if ($cnt==0) {
                         <?php echo $this->formElement($formSpace->get('building'));  ?>
                     </div>
                 </div>
-                
+                <div class="control-group">
+                    <label class="control-label">Quantity</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($formSpace->get('quantity'));  ?>
+                    </div>
+                </div>
                 <a href="javascript:" id="btnShowMoreSpaceDetails">View additional space details <i class="icon-double-angle-right"></i></a>
                 <a href="javascript:" id="btnHideMoreSpaceDetails" style="display: none">Hide additional space details <i class="icon-double-angle-left"></i></a>
                 <hr />
@@ -298,23 +303,23 @@ if ($cnt==0) {
                             <a href="javascript:;" class="icon-remove"></a>
                             </span>
             </div>
-            
+
             <div class="widget-body relative">
                 <div id="systemEditLoader" class="loader"></div>
                 <div>
                     <div class="clearfix">
                         <div class="btn-group pull-left">
-<?php if ($this->isGranted('project.write')) { ?>
-                            <button id="btn-add-product" class="btn green" style="margin-right: 4px">
-                                Add Product <i class="icon-plus"></i>
-                            </button>
-                            <button id="btn-add-service" class="btn green" style="margin-right: 4px">
-                                Add Service <i class="icon-plus"></i>
-                            </button>
-                            <button id="btn-add-architectural" class="btn green">
-                                Add Architectural <i class="icon-plus"></i>
-                            </button>
-<?php } ?>
+                            <?php if ($this->isGranted('project.write')) { ?>
+                                <button id="btn-add-product" class="btn green" style="margin-right: 4px">
+                                    Add Product <i class="icon-plus"></i>
+                                </button>
+                                <button id="btn-add-service" class="btn green" style="margin-right: 4px">
+                                    Add Service <i class="icon-plus"></i>
+                                </button>
+                                <button id="btn-add-architectural" class="btn green">
+                                    Add Architectural <i class="icon-plus"></i>
+                                </button>
+                            <?php } ?>
                         </div>
                         <div class="btn-group pull-right">
                             <button class="btn dropdown-toggle" data-toggle="dropdown">Tools <i class="icon-angle-down"></i>
@@ -324,7 +329,7 @@ if ($cnt==0) {
                                 <li><a href="javascript:" class="btn-config-export-csv">Export Full System to CSV</a></li>
                                 <li class="divider" role="presentation"></li>
                                 <li><a href="javascript:" class="btn-change-hrs">Change Hours</a></li>
-                                
+
                             </ul>
                         </div>
                     </div>
@@ -345,68 +350,75 @@ if ($cnt==0) {
                         </tr>
                         </thead>
                         <tbody>
-                        <?php 
-                            $totalPriceMCD = 0;
-                            $editable = $this->isGranted('project.write');
-                            if (!empty($systems)) {
-                                $mcd = $project->getMCD();
-                                foreach ($systems as $system) {
-                                    $priceMCD = round($system['quantity'] * (round($system['ppu'] * (1-($mcd*$system['mcd'])), 2)),2);
-                                    $totalPriceMCD+=$priceMCD;
-                                    
-                                    $description = !empty($system['legacyId'])?'<span class="label label-success popovers" '
-                                            . 'data-content="Type: '.$system['category'].
-                                            '<br />Details: '.$system['description'].
-                                            '<br />Quantity: '.$system['legacyQuantity'].
-                                            (!empty($system['legacyWatts'])?'<br />Rating: '.$system['legacyWatts'].'W':'').
-                                            (!empty($system['legacyMcpu'])?'<br />Maintenance: &#163;'.number_format($system['legacyMcpu'],2):'').'" '
-                                            . 'data-html="true" '
-                                            . 'data-placement="left" '
-                                            . 'data-original-title="Retrofit Details" '
-                                            . 'data-trigger="hover">Yes</span>':'<span class="label label-important">No</span>';
-                                    $title = $system['model'];
-                                    $content = $system['pdesc'].'<br>';
-                                    if (!empty($system['label'])) {
-                                        $content.='<br>Label: '.$system['label'];
-                                    }
-                                    if ($system['typeId']==3){
-                                        $attr = json_decode($system['attributes'], true);
-                                        $config = '';
-                                        foreach ($attr['dConf'] as $icnf) {
-                                            $config.='<br>';
-                                            foreach ($icnf as $cnf=>$qtty) {
-                                                for ($k=0; $k<$qtty; $k++) {
-                                                    $config.='['.$cnf.']';
-                                                }
+                        <?php
+                        $totalPriceMCD = 0;
+                        $totalPriceMCDQuantity = 0;
+                        $editable = $this->isGranted('project.write');
+                        if (!empty($systems)) {
+                            $duplication = empty($space->getQuantity()) ? 1 : $space->getQuantity();
+                            $mcd = $project->getMCD();
+                            foreach ($systems as $system) {
+                                $priceMCD = round($system['quantity'] * (round($system['ppu'] * (1-($mcd*$system['mcd'])), 2)),2);
+                                $totalPriceMCD+=$priceMCD;
+                                $totalPriceMCDQuantity += round($system['quantity'] * $duplication * (round($system['ppu'] * (1-($mcd*$system['mcd'])), 2)),2);
+
+                                $description = !empty($system['legacyId'])?'<span class="label label-success popovers" '
+                                    . 'data-content="Type: '.$system['category'].
+                                    '<br />Details: '.$system['description'].
+                                    '<br />Quantity: '.$system['legacyQuantity'].
+                                    (!empty($system['legacyWatts'])?'<br />Rating: '.$system['legacyWatts'].'W':'').
+                                    (!empty($system['legacyMcpu'])?'<br />Maintenance: &#163;'.number_format($system['legacyMcpu'],2):'').'" '
+                                    . 'data-html="true" '
+                                    . 'data-placement="left" '
+                                    . 'data-original-title="Retrofit Details" '
+                                    . 'data-trigger="hover">Yes</span>':'<span class="label label-important">No</span>';
+                                $title = $system['model'];
+                                $content = $system['pdesc'].'<br>';
+                                if (!empty($system['label'])) {
+                                    $content.='<br>Label: '.$system['label'];
+                                }
+                                if ($system['typeId']==3){
+                                    $attr = json_decode($system['attributes'], true);
+                                    $config = '';
+                                    foreach ($attr['dConf'] as $icnf) {
+                                        $config.='<br>';
+                                        foreach ($icnf as $cnf=>$qtty) {
+                                            for ($k=0; $k<$qtty; $k++) {
+                                                $config.='['.$cnf.']';
                                             }
                                         }
-                                        $content.='<br>Specified: '.$attr['sLen'].'mm<br >Achievable: '.$attr['dLen'].'mm<br>Units: '.(empty($attr['dUnits'])?1:$attr['dUnits']).'<br>'.$config;
                                     }
-                                    echo '<tr>'
-                                        . '<td>'.$system['model'].' <i class="icon-info-sign popovers" data-trigger="hover" data-html="true" data-placement="top" data-content="'.$content.'" data-original-title="'.$title.'"></i></td>'
-                                        . '<td class="row-right">'.$system['quantity'].'</td>'
-                                        . '<td class="row-right hidden-phone" class="row-right">'.$system['hours'].'</td>'
-                                        . '<td class="row-right">'.$system['ppu'].'</td>'
-                                        //. '<td class="row-right">'.$system['ippu'].'</td>'
-                                        . '<td class="hidden-phone">'.$system['lux'].'%</td>'
-                                        . '<td class="hidden-phone">'.$system['occupancy'].'%</td>'
-                                        . '<td>'.$description.'</td>'
-                                        . '<td><div style="width:120px">'
-                                            . (!$system['locked']?'<button class="btn btn-primary action-system-edit" data-systemid="'.$system['systemId'].'"><i class="icon-pencil"></i></button>&nbsp;'
-                                            . '<button class="btn btn-success action-system-copy" data-systemid="'.$system['systemId'].'"><i class="icon-copy"></i></button>&nbsp;'
-                                            . ($editable?'<button class="btn btn-danger action-system-delete" data-systemid="'.$system['systemId'].'"><i class="icon-remove"></i></button>&nbsp;':''):'locked')
-                                            . '</div></td>'
-                                        . '<td class="row-right">&#163;'.number_format($priceMCD,2).'</td>'
-                                        . '</tr>';
+                                    $content.='<br>Specified: '.$attr['sLen'].'mm<br >Achievable: '.$attr['dLen'].'mm<br>Units: '.(empty($attr['dUnits'])?1:$attr['dUnits']).'<br>'.$config;
                                 }
+                                echo '<tr>'
+                                    . '<td>'.$system['model'].' <i class="icon-info-sign popovers" data-trigger="hover" data-html="true" data-placement="top" data-content="'.$content.'" data-original-title="'.$title.'"></i></td>'
+                                    . '<td class="row-right">'.$system['quantity'].'</td>'
+                                    . '<td class="row-right hidden-phone" class="row-right">'.$system['hours'].'</td>'
+                                    . '<td class="row-right">'.$system['ppu'].'</td>'
+                                    //. '<td class="row-right">'.$system['ippu'].'</td>'
+                                    . '<td class="hidden-phone">'.$system['lux'].'%</td>'
+                                    . '<td class="hidden-phone">'.$system['occupancy'].'%</td>'
+                                    . '<td>'.$description.'</td>'
+                                    . '<td><div style="width:120px">'
+                                    . (!$system['locked']?'<button class="btn btn-primary action-system-edit" data-systemid="'.$system['systemId'].'"><i class="icon-pencil"></i></button>&nbsp;'
+                                        . '<button class="btn btn-success action-system-copy" data-systemid="'.$system['systemId'].'"><i class="icon-copy"></i></button>&nbsp;'
+                                        . ($editable?'<button class="btn btn-danger action-system-delete" data-systemid="'.$system['systemId'].'"><i class="icon-remove"></i></button>&nbsp;':''):'locked')
+                                    . '</div></td>'
+                                    . '<td class="row-right">&#163;'.number_format($priceMCD,2).'</td>'
+                                    . '</tr>';
                             }
-                            
+                        }
+
                         ?>
                         </tbody>
                         <tfoot>
                         <tr>
                             <th colspan="8">Total Price</th>
                             <th class="row-right">&#163;<?php echo number_format($totalPriceMCD,2); ?></th>
+                        </tr>
+                        <tr>
+                            <th colspan="8">Total Price (space quantity of <?php echo $duplication; ?>)</th>
+                            <th class="row-right">&#163;<?php echo number_format($totalPriceMCDQuantity,2); ?></th>
                         </tr>
                         </tfoot>
                     </table>
