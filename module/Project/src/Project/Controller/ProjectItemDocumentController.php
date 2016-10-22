@@ -565,7 +565,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                     {
                         $pdfVars['breakdown'] = $this->getModelService()->trialBreakdown( $this->getProject() );
 
-                        $dql = 'SELECT SUM(sys.ppu * sys.quantity) '
+                        $dql = 'SELECT SUM(sys.ppu * sys.quantity * s.quantity) '
                             . 'FROM Space\Entity\System sys '
                             . 'JOIN sys.space s '
                             . 'JOIN sys.product prd '
@@ -575,7 +575,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                         $q->setParameters( array( 'pid' => $this->getProject()->getProjectId() ) );
                         $pdfVars['installCost'] = $q->getSingleScalarResult();
 
-                        $dql = 'SELECT SUM(sys.ppu * sys.quantity) '
+                        $dql = 'SELECT SUM(sys.ppu * sys.quantity * s.quantity) '
                             . 'FROM Space\Entity\System sys '
                             . 'JOIN sys.space s '
                             . 'JOIN sys.product prd '
@@ -1153,10 +1153,10 @@ class ProjectitemdocumentController extends ProjectSpecificController
         $em       = $this->getEntityManager();
         $discount = ($this->getProject()->getMcd());
         $query    = $em->createQuery( 'SELECT  p.mcd, p.productId, p.model, p.eca, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
-            . 'SUM(s.quantity) AS quantity, '
-            . 'SUM(s.ppu*s.quantity) AS price, '
-            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity) AS priceMCD, '
-            . 'SUM(s.cpu*s.quantity) AS cost '
+            . 'SUM(s.quantity * sp.quantity) AS quantity, '
+            . 'SUM(s.ppu*s.quantity * sp.quantity) AS price, '
+            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
+            . 'SUM(s.cpu*s.quantity * sp.quantity) AS cost '
             . 'FROM Space\Entity\System s '
             . 'JOIN s.space sp '
             . 'JOIN s.product p '
@@ -1224,10 +1224,10 @@ class ProjectitemdocumentController extends ProjectSpecificController
         $em       = $this->getEntityManager();
         $discount = ($this->getProject()->getMcd());
         $query    = $em->createQuery( 'SELECT  p.mcd, p.productId, p.model, p.eca, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
-            . 'SUM(s.quantity) AS quantity, '
-            . 'SUM(s.ppu*s.quantity) AS price, '
-            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity) AS priceMCD, '
-            . 'SUM(s.cpu*s.quantity) AS cost '
+            . 'SUM(s.quantity * sp.quantity) AS quantity, '
+            . 'SUM(s.ppu*s.quantity * sp.quantity) AS price, '
+            . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
+            . 'SUM(s.cpu*s.quantity * sp.quantity) AS cost '
             . 'FROM Space\Entity\System s '
             . 'JOIN s.space sp '
             . 'JOIN s.product p '
