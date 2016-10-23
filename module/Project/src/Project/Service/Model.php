@@ -8,10 +8,10 @@ class Model
 {
     /**
      * calculate payback and other forecast figures
-     * @param \Project\Entity\Project $project
-     * @param type $years
+     * @param Project $project
+     * @param int $years
      * @param array $args
-     * @return type
+     * @return array
      */
     function payback(Project $project, $years=12, array $args = array()) {
         //calculate funding options
@@ -666,11 +666,12 @@ class Model
 
     /**
      * get picklist
-     * @param type $attributes
+     * @param $attributes
      * @param array $boards
      * @param array $architectural
      * @param array $phosphor
      * @param array $aluminium
+     * @param int $spaceMultipler
      */
     function getPickListItems($attributes, array &$boards, array &$architectural, array &$phosphor, array &$aluminium, $spaceMultipler = 1) {
         //echo '<pre>',print_r($attributes['dConf'], true), '</pre>';

@@ -17,6 +17,20 @@ class Module
         );
     }
 
+    public function getServiceConfig()
+    {
+        return array(
+            'factories' => array(
+                'Model' => 'Project\Factory\ModelFactory',
+                'DocumentService' => function($sm) {
+                    $config = $sm->get('Config');
+                    return new DocumentService($config['googleApps']['drive']['location'], $sm->get('Doctrine\ORM\EntityManager'));
+                }
+            ),
+
+        );
+    }
+
     public function getConfig()
     {
         return include __DIR__ . '/config/module.config.php';
