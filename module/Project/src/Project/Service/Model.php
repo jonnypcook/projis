@@ -672,9 +672,9 @@ class Model
      * @param array $phosphor
      * @param array $aluminium
      */
-    function getPickListItems($attributes, array &$boards, array &$architectural, array &$phosphor, array &$aluminium) {
+    function getPickListItems($attributes, array &$boards, array &$architectural, array &$phosphor, array &$aluminium, $spaceMultipler = 1) {
         //echo '<pre>',print_r($attributes['dConf'], true), '</pre>';
-        $multiplier = empty($attributes['dUnits'])?1:$attributes['dUnits'];
+        $multiplier = empty($attributes['dUnits']) ? 1 * $spaceMultipler : $attributes['dUnits'] * $spaceMultipler;
 
         foreach ($attributes['dConf'] as $confId=>$aConfigs) {
             $size = count($aConfigs);

@@ -61,7 +61,7 @@ switch ($proposalStyle) {
                     echo '<h2 '.($first?'':'style="padding-top:30px"').'>'.(($buildingId==0)?'Standalone Setup':'Building: '.$building['name']).'</h2>';
                     $echoBuilding = true;
                 }
-                echo '<h3>'.(($buildingId==0)?'Configuration':'Space: '.$space['name']).'</h3>';
+                echo '<h3>'.(($buildingId==0)?'Configuration':'Space: '.$space['name'] . ' x ' . $space['quantity']).'</h3>';
                 echo '<table class="space_details">'
                         . '<thead>'
                         . '<tr>'

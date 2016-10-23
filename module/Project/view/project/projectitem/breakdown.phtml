@@ -44,7 +44,7 @@ echo $this->partial('partial/system/modelnav.phtml', array('navRoute'=>'breakdow
                         foreach ($building ['spaces'] as $spaceId => $space) {
                     ?>
                                 <div class="alert alert-success">
-                                    <strong>Space: <?php echo ucwords ($space ['name']); ?></strong>
+                                    <strong>Space: <?php echo ucwords ($space ['name']); if ($space ['root'] !== true) echo ' x ', $space ['quantity']; ?></strong>
                                 </div>
                                 <table class="table table-striped table-bordered table-advance">
                                     <thead>

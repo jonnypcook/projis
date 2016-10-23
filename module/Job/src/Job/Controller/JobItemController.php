@@ -137,6 +137,7 @@ class JobitemController extends JobSpecificController
         {
             foreach ( $building['spaces'] as $spaceId => $space )
             {
+                $multiplier = empty($space['quantity']) ? 1 : (int)$space['quantity'];
                 foreach ( $space['products'] as $systemId => $system )
                 {
 
@@ -152,7 +153,7 @@ class JobitemController extends JobSpecificController
                             );
                         }
                         $attributes = json_decode( $system[16], true );
-                        $this->getServiceLocator()->get( 'Model' )->getPickListItems( $attributes, $boards[$system[4]], $architectural, $phosphor, $aluminium );
+                        $this->getServiceLocator()->get( 'Model' )->getPickListItems( $attributes, $boards[$system[4]], $architectural, $phosphor, $aluminium, $multiplier );
 
                         //$this->debug()->dump($boards, false); $this->debug()->dump($phosphor, false); $this->debug()->dump($aluminium, false); $this->debug()->dump($architectural);
 

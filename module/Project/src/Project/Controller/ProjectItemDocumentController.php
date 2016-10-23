@@ -1380,6 +1380,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
             '"Building Name"',
             '"Space ID"',
             '"Space Name"',
+            '"Space Multiplier"',
             '"Label"',
             '"Legacy Lighting"',
             '"Legacy Quantity"',
@@ -1449,6 +1450,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                         '"' . $building['name'] . '"',
                         $spaceId,
                         '"' . $space['name'] . '"',
+                        $space['quantity'],
                         '"' . (empty($system[17]) ? '-' : $system[17]) . '"', // label
                         '"' . $system[18] . '"', // legacy light name
                         $system[9], // hours of operation
@@ -1590,6 +1592,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
             '"Building Name"',
             '"Space ID"',
             '"Space Name"',
+            '"Space Quantity"',
             '"Label"',
             '"Legacy Lighting"',
             '"Legacy Quantity"',
@@ -1601,6 +1604,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
             '"Product"',
             '"Product Type"',
             '"LED Quantity"',
+            '"LED Quantity (inc multiplier)"',
             '"LED Rating"',
             '"Configuration"',
             '"A"',
@@ -1624,6 +1628,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
         {
             foreach ( $building['spaces'] as $spaceId => $space )
             {
+                $multiplier = empty($space['quantity']) ? 1 : (int)$space['quantity'];
                 foreach ( $space['products'] as $systemId => $system )
                 {
                     $attributes = json_decode( $system[16], true );
@@ -1648,7 +1653,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                         $phosphor  = array();
                         $aluminium = array();
 
-                        $modelService->getPickListItems( $attributes, $boards, $architectural, $phosphor, $aluminium );
+                        $modelService->getPickListItems( $attributes, $boards, $architectural, $phosphor, $aluminium, $multiplier );
                         foreach ( $attributes['dConf'] as $aConfigs )
                         {
                             if ( !empty($cStr) )
@@ -1691,6 +1696,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                         '"' . $building['name'] . '"',
                         $spaceId,
                         '"' . $space['name'] . '"',
+                        $multiplier,
                         '"' . (empty($system[17]) ? '-' : $system[17]) . '"', // label
                         '"' . $system[18] . '"', // legacy light name
                         $system[6], // legacy quantity
@@ -1702,6 +1708,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                         $system[4], // LED model
                         ($system[2] == 3) ? 'Architectural' : (($system[2] == 2) ? 'Control' : (($system[2] == 1) ? 'LED' : 'Product')), // LED model
                         $system[5], // Quantity
+                        $multiplier * $system[5],
                         $system[7], // LED rating
                         $arch ? '"' . $cStr . '"' : '',
                         $arch ? $boards['_A'][3] : 0,
