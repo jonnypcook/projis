@@ -41,7 +41,7 @@ class ToolsController extends AuthController
             // test values
             $productId = $this->params()->fromPost('productId', false);
             $length = $this->params()->fromPost('length', false);
-            $maxunitlen = $this->params()->fromPost('maxunitlen', false);
+            $maxunitlen = $this->params()->fromPost('maxunitlength', false);
             $mode = 1;
             
             if (empty($productId) || !preg_match('/^[\d]+$/', $productId)) {
@@ -53,7 +53,7 @@ class ToolsController extends AuthController
             }
             
             if (empty($maxunitlen) || !preg_match('/^[\d]+(.[\d]+)?$/', $maxunitlen)) {
-                throw new \Exception('illegal maximum unit length parameter');
+                throw new \Exception('illegal maximum unit length parameter: ' . $maxunitlen);
             }
             
             // find product cost per unit

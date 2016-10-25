@@ -153,29 +153,20 @@ if ( $project->getTest() )
                 <div>System Overview</div>
                 <span class="badge badge-success"><?php echo $prds; ?></span>
             </a>
-            <a class="icon-btn span1" href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/model/">
+            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/model/">
                 <i class="icon-bar-chart"></i>
 
                 <div>Model</div>
             </a>
-            <a class="icon-btn span1" id="costs" href="<?php echo $this->url('job', array('action' => 'resources', 'jid' => $project->getProjectId(), 'cid' => $project->getClient()->getClientId())) ?>">
-                <i class="icon-money"></i>
+            <a class="icon-btn span2" id="costs" href="<?php echo $this->url('job', array('action' => 'resources', 'jid' => $project->getProjectId(), 'cid' => $project->getClient()->getClientId())) ?>">
+                <i class="icon-gbp"></i>
                 <div>Costs</div>
-                <!--
-                <span class="badge badge-important"><?php echo count( $project->getCollaborators() ); ?></span>
-                -->
             </a>
             <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/collaborators/">
                 <i class="icon-group"></i>
 
                 <div>Collaborators</div>
                 <span class="badge badge-important"><?php echo count( $project->getCollaborators() ); ?></span>
-            </a>
-            <a class="icon-btn span2" href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/serials/">
-                <i class="icon-barcode"></i>
-
-                <div>Serials</div>
-                <span class="badge badge-important"><?php echo $serialCount; ?></span>
             </a>
             <a class="icon-btn span2 btn-add-note" href="javascript:">
                 <i class="icon-calendar"></i>

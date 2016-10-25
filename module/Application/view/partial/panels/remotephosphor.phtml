@@ -33,6 +33,14 @@ $this->inlineScript()
             </div>
         </div>
         <div class="control-group">
+            <label class="control-label">Maximum Unit Length</label>
+            <div class="controls">
+                <div class="input-append">
+                    <input name="maxunitlength" type="text" data-original-title="Maximum configurable unit length for architectural length" data-trigger="hover" class="span6  tooltips" value="5000">                                            <span class="add-on">mm</span>
+                </div>
+            </div>
+        </div>
+        <div class="control-group">
             <label class="control-label">Product</label>
             <div class="controls">
                 <?php echo $this->formElement($formRemotePhosphor->get('productId'));  ?>
