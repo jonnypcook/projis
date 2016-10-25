@@ -94,6 +94,53 @@ $(function() {
     {
         $('#cos_start_date, #cos_end_date').val('');
     }
+
+
+    $('.btn-delete-activity').on('click', function(){
+        if ( !confirm('Are you sure to remove?') )
+        {
+            return false;
+        }
+        var rid = $(this).attr('data-value');
+        var params = 'ts=' + Math.round(new Date().getTime() / 1000);
+        $.ajax({
+            url: '/resource-activity/resource-' + rid + '/remove',
+            type: 'post',
+            dataType: 'text',
+            data: params,
+            beforeSend: function(){},
+            success: function(response){
+            console.log(response);
+                var obj = $.parseJSON(response);
+                var k = 0;
+                // an error has been detected
+                if (obj.err == true) {
+                    var additional = '';
+                    if (obj.info != undefined) {
+                        for (var i in obj.info) {
+                            if (!addFormError(i, obj.info[i])) {
+                                additional += obj.info[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    if (additional != '') {
+                        msgAlert('ppMsgs', {
+                            mode: 3,
+                            body: 'Error: ' + additional,
+                            empty: true
+                        });
+                    }
+                }
+                else { // no errors
+                    growl('Success!', 'The resource has been removed successfully.', {time: 3000});
+                    window.location.reload();
+                }
+            },
+        });
+
+    });
 });
 JS;
 
@@ -360,8 +407,8 @@ $this->inlineScript()->captureEnd(); ?>
                             <td>
                                 <strong>PROJECT:</strong>
                                 <a target="_blank" href="<?php echo $this->url('job', array('jid' => $project['project']->getProjectId(), 'cid' => $project['project']->getClient()->getClientId())) ?>">
-                                <?php echo str_pad($project['project']->getClient()->getClientId(), 5, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($project['project']->getProjectId(), 5, '0', STR_PAD_LEFT); ?>
-                                <?php echo $project['project']->getName(); ?></a>
+                                    <?php echo str_pad($project['project']->getClient()->getClientId(), 5, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($project['project']->getProjectId(), 5, '0', STR_PAD_LEFT); ?>
+                                    <?php echo $project['project']->getName(); ?></a>
                                 &nbsp;&nbsp;&nbsp;&nbsp; <strong>CLIENT:</strong> <?php echo $project['project']->getClient()->getName(); ?>
                                 &nbsp;&nbsp;&nbsp;&nbsp; <strong>OWNER:</strong> <?php echo $project['project']->getClient()->getUser()->getName(); ?>
                                 &nbsp;&nbsp;&nbsp;&nbsp; <strong>EXPECTED/COMPLETED:</strong> <?php echo empty($project['project']->getCompleted()) ? 'Date not set' : $project['project']->getCompleted()->format('d/m/Y'); ?>
