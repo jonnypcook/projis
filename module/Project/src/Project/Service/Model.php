@@ -850,8 +850,8 @@ class Model
             $maxunitlength = !empty($args['maxunitlen']) ? $args['maxunitlen'] : 5000;  // this is a moveable target- NEED TO CLARIFY
             $fplRange = 50; // fewest phosphor lengths range
 
-            if ($maxunitlength < self::BOARDLEN_A) {
-                throw new \Exception('maximum unit length is less than minimum start board size');
+            if ($maxunitlength < self::BOARDLEN_B1) {
+                throw new \Exception('maximum unit length is less than minimum start board size (' . self::BOARDLEN_B1 . 'mm)');
             }
 
             // find architectural details
@@ -881,12 +881,19 @@ class Model
                 'B' => $boardConfigs['B'],
             );
 
+            $startBoardTypes = array(
+                'A' => array($boardConfigs['A'], false),
+                'B1' => array($boardConfigs['B1'], true),
+            );
+
             // find maximum and configs array if not available
             if (empty($this->_maximum) || empty($this->_configs)) {
-                $startLen = $boardConfigs['EC'] + $boardConfigs['ALUM'] + $boardConfigs['A'] + $boardConfigs['ALUM'] + $boardConfigs['EC'];  // this is the minimum length of any board
-                $this->_configs['A'] = array($startLen, 'A', false); // this is the start configuration of every board
                 $this->_maximum = 0;
-                $this->architecturalIterate($startLen, 'A', $boardConfigs['B'], 'B', $RemotePhosphorMax, $boardConfigs['GAP'], $boardConfigs['C'], $boardConfigs['B1'], $this->_configs, $this->_maximum);
+                foreach ($startBoardTypes as $type => $config) {
+                    $startLen = $boardConfigs['EC'] + $boardConfigs['ALUM'] + $config[0] + $boardConfigs['ALUM'] + $boardConfigs['EC'];  // this is the minimum length of any board
+                    $this->_configs[$type] = array($startLen, $type, $config[1]); // this is the start configuration of every board
+                    $this->architecturalIterate($startLen, $type, $boardConfigs['B'], 'B', $RemotePhosphorMax, $boardConfigs['GAP'], $boardConfigs['C'], $boardConfigs['B1'], $this->_configs, $this->_maximum);
+                }
             }
 
             // Note: in the past we iterated board types here - see beta site code for example
@@ -1065,8 +1072,8 @@ class Model
         $len = ($curLen + $boardGap + $boardB1);
         $conf = $currConf . '-B1';
         if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, false);
-            //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
+            $config[$conf] = array($len, $conf, true);
+            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf; // was commented out
         }
 
         $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardC);
@@ -1079,8 +1086,8 @@ class Model
         $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1);
         $conf = $currConf . '-B1-B1';
         if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, false);
-            //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $conf;
+            $config[$conf] = array($len, $conf, true);
+            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf; // was commented out
         }
 
         $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1 + $boardGap + $boardC);
