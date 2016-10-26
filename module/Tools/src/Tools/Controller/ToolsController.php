@@ -41,7 +41,7 @@ class ToolsController extends AuthController
             // test values
             $productId = $this->params()->fromPost('productId', false);
             $length = $this->params()->fromPost('length', false);
-            $maxunitlen = $this->params()->fromPost('maxunitlength', false);
+            $maxunitlen = $this->params()->fromPost('maxunitlen', false);
             $mode = 1;
             
             if (empty($productId) || !preg_match('/^[\d]+$/', $productId)) {
