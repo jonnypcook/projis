@@ -2,6 +2,10 @@
 
 namespace Project\Service;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Product\Entity\BoardChain;
+use Product\Entity\BoardConfigurationBoardChain;
+use Product\Entity\BoardConfiguration;
 use Project\Entity\Project as Project;
 
 class Model
@@ -184,8 +188,6 @@ class Model
             // shift totals as per iteration
             $totals['price'] += $price;
         }
-
-        //echo '<pre>', print_r($totals, true), '</pre>'; die();
 
         // adjust legacy maintenance if required
         if ($project->getMaintenance() > 0) {
@@ -812,59 +814,185 @@ class Model
         return ($aF < $bF) ? -1 : 1;
     }
 
+
+    /**
+     * add a board configuration
+     * @param $configuration
+     * @param $length
+     * @param bool|false $flush
+     */
+    function addBoardConfiguration ($configuration, $length, $chainable, $flush = false) {
+        $boardConfiguration = new BoardConfiguration();
+        $boardConfiguration->setConfiguration($configuration);
+        $boardConfiguration->setLength($length);
+        $boardConfiguration->setChainable($chainable);
+
+        $this->getEntityManager()->persist($boardConfiguration);
+
+        if ($flush === true) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+
+
+    /**
+     * generate set of board configs available
+     * @param int $curLen
+     * @param string $currConf
+     * @param int $boardLen
+     * @param string $boardName
+     * @param int $maximum
+     * @param int $boardGap
+     * @param int $boardC
+     * @param int $boardB1
+     */
+    function architecturalGenerate($curLen, $currConf, $boardLen, $boardName, $maximum, $boardGap, $boardC, $boardB1)
+    {
+        $len = ($curLen + $boardGap + $boardC);
+        $conf = $currConf . '-C';
+        if ($len < $maximum) {
+            $this->addBoardConfiguration($conf, $len, true);
+        }
+
+        $len = ($curLen + $boardGap + $boardB1);
+        $conf = $currConf . '-B1';
+        if ($len < $maximum) {
+            $this->addBoardConfiguration($conf, $len, true);
+        }
+
+        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardC);
+        $conf = $currConf . '-B1-C';
+        if ($len < $maximum) {
+            $this->addBoardConfiguration($conf, $len, true);
+        }
+
+        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1);
+        $conf = $currConf . '-B1-B1';
+        if ($len < $maximum) {
+            $this->addBoardConfiguration($conf, $len, true);
+        }
+
+        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1 + $boardGap + $boardC);
+        $conf = $currConf . '-B1-B1-C';
+        if ($len < $maximum) {
+            $this->addBoardConfiguration($conf, $len, true);
+        }
+
+        $len = $curLen + $boardGap + $boardLen;
+        if ($len < $maximum) {
+            $currConf = $currConf . '-' . $boardName;
+            $this->addBoardConfiguration($currConf, $len, false, true);
+            $this->architecturalGenerate($len, $currConf, $boardLen, $boardName, $maximum, $boardGap, $boardC, $boardB1);
+        }
+
+    }
+
+
+    function truncateBoards () {
+        $sql = 'DELETE FROM `Board_Configuration_Board_Chain`';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+
+        $sql = 'DELETE FROM `Board_Chain`';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+
+        $sql = 'DELETE FROM `Board_Configuration`';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+
+        $sql = 'ALTER TABLE `Board_Configuration` AUTO_INCREMENT = 1';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+
+        $sql = 'ALTER TABLE `Board_Chain` AUTO_INCREMENT = 1';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+
+        $sql = 'ALTER TABLE `Board_Configuration_Board_Chain` AUTO_INCREMENT = 1';
+        $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+        $stmt->execute();
+    }
+
+
+    /**
+     * @param array $configurations
+     * @param $depth
+     */
+    function addBoardChain (array $configurations, $depth) {
+        $this->transactionCount++; //return;
+
+        $boardChain = new BoardChain();
+        $length = 0;
+        foreach ($configurations as $boardId => $board) {
+            $count = count($board);
+            $boardConfiguration = $this->getEntityManager()->find('Product\Entity\BoardConfiguration', $boardId);
+            $boardConfigurationBoardChain = new BoardConfigurationBoardChain();
+            $boardConfigurationBoardChain->setBoardChain($boardChain);
+            $boardConfigurationBoardChain->setBoardConfiguration($boardConfiguration);
+            $boardConfigurationBoardChain->setCount($count);
+            $length += ($boardConfiguration->getLength() * $count);
+            $this->getEntityManager()->persist($boardConfigurationBoardChain);
+            $boardConfigurationBoardChain = null;
+        }
+
+        $boardChain->setDepth($depth);
+        $boardChain->setLength($length);
+        $this->getEntityManager()->persist($boardChain);
+        $boardChain = null;
+    }
+
+    public $transactionCount;
+
+    function architecturalGenerateLengths($boards, $currentChain, $currentLength, $maximumUnitLength, $iteration)
+    {
+        if ($iteration > 4) {
+            return;
+        }
+
+        foreach ($boards as $board) {
+            // ignore boards that exceed maximum length
+            if (($currentLength + $board['length']) > $maximumUnitLength) {
+                continue;
+            }
+
+            $chain = $currentChain;
+
+            $chain[$board['boardConfigurationId']][] = $board;
+
+            $this->addBoardChain($chain, $iteration);
+            if (($this->transactionCount % 500) === 0) {
+                $this->getEntityManager()->flush();
+                $this->getEntityManager()->clear();
+            }
+
+
+            $newLength = $currentLength + $board['length'];
+            if (($board['chainable'] == true) && (($newLength + self::BOARDLEN_B1) < $maximumUnitLength)) {
+                $this->architecturalGenerateLengths($boards, $chain, $newLength, $maximumUnitLength, $iteration + 1);
+            }
+        }
+
+    }
+
+
     /**
      * Architectural layout generation
-     * @param \Product\Entity\Product $product
-     * @param type $length
-     * @param type $mode
-     * @param array $args
      * @return array
      */
-    function findOptimumArchitectural(\Product\Entity\Product $product, $length, $mode, array $args = array())
+    function resetArchitectural()
     {
         try {
-            $alternativeConfigs = !empty($args['alts']);
-            $alternativeThreshold = $length - self::BOARDLEN_B1;
+            throw new \Exception('we are reset already');
 
-            $data = array(
-                'dLen' => 0,
-                'dUnits' => 1,
-                'dBill' => 0,
-                'dBillU' => 0,
-                'dBillTU' => 0,
-                'dCost' => 0,
-                'dConf' => 0,
-            );
+            set_time_limit(1200); // 20 mins
+            $this->truncateBoards();
 
-            if (!empty($args['units'])) {
-                if (preg_match('/^[\d]+$/', $args['units'])) {
-                    $args['units'] = (int)$args['units'];
-                    if ($args['units'] > 0) {
-                        $data['dUnits'] = $args['units'];
-                    }
-                }
-            }
+            $data = array();
 
-            $curLen = 0;
-            $RemotePhosphorMax = 1800; // this is a moveable target- NEED TO CLARIFY
-            $maxunitlength = !empty($args['maxunitlen']) ? $args['maxunitlen'] : 5000;  // this is a moveable target- NEED TO CLARIFY
-            $fplRange = 50; // fewest phosphor lengths range
-
-            if ($maxunitlength < self::BOARDLEN_B1) {
-                throw new \Exception('maximum unit length is less than minimum start board size (' . self::BOARDLEN_B1 . 'mm)');
-            }
-
-            // find architectural details
-            $attributes = $product->getAttributes();
-            if (!empty($attributes)) {
-                $attributes = json_decode($attributes, true);
-                if (!empty($attributes['arch']['phmax'])) {
-                    $RemotePhosphorMax = (int)$attributes['arch']['phmax'];
-                    if (($RemotePhosphorMax < 1000) || ($RemotePhosphorMax > 3000)) {
-                        $RemotePhosphorMax = 1800;
-                    }
-                }
-            }
+            $maximumPhosphorLength = 2000; // this is a moveable target- NEED TO CLARIFY
+            $maximumUnitLength = 5000;  // this is a moveable target- NEED TO CLARIFY
 
             $boardConfigs = array(
                 'A' => self::BOARDLEN_A,
@@ -877,158 +1005,207 @@ class Model
                 'ALUM' => self::BOARDLEN_ALUM,
             );
 
-            $midBoardTypes = array(
-                'B' => $boardConfigs['B'],
-            );
-
             $startBoardTypes = array(
                 'A' => array($boardConfigs['A'], false),
                 'B1' => array($boardConfigs['B1'], true),
             );
 
             // find maximum and configs array if not available
-            if (empty($this->_maximum) || empty($this->_configs)) {
-                $this->_maximum = 0;
-                foreach ($startBoardTypes as $type => $config) {
-                    $startLen = $boardConfigs['EC'] + $boardConfigs['ALUM'] + $config[0] + $boardConfigs['ALUM'] + $boardConfigs['EC'];  // this is the minimum length of any board
-                    $this->_configs[$type] = array($startLen, $type, $config[1]); // this is the start configuration of every board
-                    $this->architecturalIterate($startLen, $type, $boardConfigs['B'], 'B', $RemotePhosphorMax, $boardConfigs['GAP'], $boardConfigs['C'], $boardConfigs['B1'], $this->_configs, $this->_maximum);
-                }
+            foreach ($startBoardTypes as $type => $config) {
+                $startLen = $boardConfigs['EC'] + $boardConfigs['ALUM'] + $config[0] + $boardConfigs['ALUM'] + $boardConfigs['EC'];  // this is the minimum length of any board
+                $this->addBoardConfiguration($type, $startLen, $config[1]);
+                $this->architecturalGenerate($startLen, $type, $boardConfigs['B'], 'B', $maximumPhosphorLength, $boardConfigs['GAP'], $boardConfigs['C'], $boardConfigs['B1']);
             }
 
-            // Note: in the past we iterated board types here - see beta site code for example
-            $data += array(
-                'sLen' => $length,
-                'maxBoardPerRP' => $this->_configs[$this->_maximum][0],
-                'maxBoardPerRPB' => $this->_maximum,
-                'maximumUnitLength' => $maxunitlength,
-            );
+            // we have created all the board configs so flush remaining
+            $this->getEntityManager()->flush();
 
-            // work out the maximum length
-            $maximumCnt = floor($data['maximumUnitLength'] / $this->_configs[$this->_maximum][0]);
-            $remainder = $data['maximumUnitLength'] - ($maximumCnt * $this->_configs[$this->_maximum][0]);
 
-            $optimumConfig = array($this->_maximum => $maximumCnt);
+            // create all combinations under $maximumUnitLength
+            $qb = $this->getEntityManager()->createQueryBuilder();
+            $qb->select('bc')->from('Product\Entity\BoardConfiguration', 'bc');
+            $query = $qb->getQuery();
+            $boards = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+            $this->transactionCount = 0; // keeps an eye on transactions before flushing and clearing
 
-            $chosenRem = 0;
-            // work out optimum configuration for remainder
-            foreach ($this->_configs as $type => $length) {
-                if ($length[0] <= $remainder) {
-                    if (empty($chosenRem)) {
-                        $chosenRem = $type;
-                    } elseif ($length[0] > $this->_configs[$chosenRem][0]) {
-                        $chosenRem = $type;
+            // generate and save to database
+            $this->architecturalGenerateLengths($boards, array(), 0, $maximumPhosphorLength, 1);
+            echo $this->transactionCount;
+            $this->getEntityManager()->flush();
+            $this->getEntityManager()->clear();
+
+            return $data;
+        } catch (\Exception $ex) {
+            return array();
+        }
+    }
+
+
+    /**
+     * find the optimum board configuration
+     * @param bool|false $upperLimit
+     * @param bool|false $lowerLimit
+     * @param bool|false $limit
+     * @param bool|true $chainable
+     * @return bool
+     */
+    function findOptimumBoard ($upperLimit = false, $lowerLimit = false, $limit = false, $chainable = null) {
+        $queryBuilder = $this->getEntityManager()->createQueryBuilder();
+        $queryBuilder
+            ->select('bc')
+            ->from('Product\Entity\BoardConfiguration', 'bc')
+            ->addOrderBy('bc.length ', 'DESC');
+
+        if ($chainable !== null) {
+            $queryBuilder
+                ->andWhere('bc.chainable = :chainable')
+                ->setParameter('chainable', $chainable);
+        }
+
+        if ($upperLimit !== false) {
+            $queryBuilder
+                ->andWhere('bc.length <= :upperLimit')
+                ->setParameter('upperLimit', $upperLimit);
+        }
+
+        if ($lowerLimit !== false) {
+            $queryBuilder
+                ->andWhere('bc.length >= :lowerLimit')
+                ->setParameter('lowerLimit', $lowerLimit);
+        }
+
+        $query = $queryBuilder->getQuery();
+
+        if ($limit !== false) {
+            $query->setMaxResults(1);
+        }
+
+        $result = $query->getResult();
+
+        if (empty($result)) {
+            return false;
+        } elseif ($limit === 1) {
+            return $result[0];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Architectural layout generation
+     * @param \Product\Entity\Product $product
+     * @param type $length
+     * @param type $mode
+     * @param array $args
+     * @return array
+     */
+    function findOptimumArchitectural(\Product\Entity\Product $product, $length, $maximumUnitLength, $maximumPhosphorLength, $mode, array $args = array())
+    {
+        try {
+            $alternativeConfigs = !empty($args['alts']);
+            $alternativeThreshold = $length - self::BOARDLEN_B1;
+
+            $data = array('dLen' => 0, 'dUnits' => 1, 'dBill' => 0, 'dBillU' => 0, 'dBillTU' => 0, 'dCost' => 0, 'dConf' => 0);
+
+            if (!empty($args['units'])) {
+                if (preg_match('/^[\d]+$/', $args['units'])) {
+                    $args['units'] = (int)$args['units'];
+                    if ($args['units'] > 0) {
+                        $data['dUnits'] = $args['units'];
                     }
                 }
             }
 
-            if (!empty($chosenRem)) {
-                if (!empty($optimumConfig[$chosenRem])) {
-                    $optimumConfig[$chosenRem]++;
+            // ensure that phosphor is in valid range
+            if ($maximumPhosphorLength > 2000) {
+                $maximumPhosphorLength = 1800;
+            }
+
+            // largest that we can support per section
+            if ($maximumUnitLength > 10000) {
+                $maximumUnitLength = 10000;
+            }
+
+            // if the maximum unit length is greater than the length then there's no need to specify for greater values
+            if ($maximumUnitLength > $length) {
+                $maximumUnitLength = $length;
+            }
+
+            $fplRange = 50; // fewest phosphor lengths range
+            $lengthRange = self::BOARDLEN_B1; // maximum allowable range for remainder selection
+
+            if ($maximumUnitLength < self::BOARDLEN_B1) {
+                throw new \Exception('maximum unit length is less than minimum start board size (' . self::BOARDLEN_B1 . 'mm)');
+            }
+
+            // find maximum and configs array if not available
+            $maximumBoard = $this->findOptimumBoard($maximumPhosphorLength, 0, 1, true);
+
+            // Note: in the past we iterated board types here - see beta site code for example
+            $data['sLen'] = $length;
+            $data['maxBoardPerRP'] = $maximumBoard->getLength();
+            $data['maxBoardPerRPB'] = $maximumBoard->getConfiguration();
+            $data['maximumUnitLength'] = $maximumUnitLength;
+
+            // work out the maximum length
+            $maximumCnt = floor($maximumUnitLength / $maximumBoard->getLength());
+            $remainder = $maximumUnitLength - ($maximumCnt * $maximumBoard->getLength());
+
+            $data['optimumLength'] = 0; // optimum length is the optimum length achievable
+
+            $optimumConfig = ($maximumCnt == 0) ? array() : array($maximumBoard->getConfiguration() => $maximumCnt);
+            $data['optimumLength'] = $maximumBoard->getLength() * $maximumCnt;
+
+            $remainderBoard = $this->findOptimumBoard($remainder, 0, 1, true);
+
+            if (!empty($remainderBoard)) {
+                if (!empty($optimumConfig[$remainderBoard->getConfiguration()])) {
+                    $optimumConfig[$remainderBoard->getConfiguration()]++;
                 } else {
-                    $optimumConfig[$chosenRem] = 1;
+                    $optimumConfig[$remainderBoard->getConfiguration()] = 1;
                 }
+
+                $data['optimumLength'] += $remainderBoard->getLength();
             }
 
-            // optimum length is the optimum length achievable
-            $data += array(
-                'remotePhosphorMax' => $RemotePhosphorMax,
-                'optimumConfig' => $optimumConfig,
-                'optimumLength' => 0
-            );
-
-            foreach ($optimumConfig as $type => $cnt) {
-                $data['optimumLength'] += $this->_configs[$type][0] * $cnt;
-            }
+            $data['remotePhosphorMax'] = $maximumPhosphorLength;
+            $data['optimumConfig'] = $optimumConfig;
 
 
             // calculate the number of optimum lengths in required length
             $setup = array();
-            $fullLengths = floor($data['sLen'] / $data['optimumLength']);
+            $fullLengths = floor($length / $data['optimumLength']);
             $data['dLen'] = $fullLengths * $data['optimumLength'];
-            $remainder = $data['sLen'] - ($fullLengths * $data['optimumLength']);
+            $remainder = $length - ($fullLengths * $data['optimumLength']);
 
             // can't have a remainder that is less than minimum config 
-            if ($remainder < $this->_configs['A']) {
+            if ($remainder < self::BOARDLEN_B1) { // note: was 'A'
                 // do something!!!
             }
 
-            //echo '<pre>',   print_r($optimumConfig, true),'</pre>';
             for ($i = 0; $i < $fullLengths; $i++) {
                 $setup[] = $optimumConfig;
             }
-//echo '<pre>',print_r($setup, true), '</pre>';
-            // now work out optimum configuration for remainder
-            $csetup = array();
-            $this->architecturalFindLength($this->_configs, $remainder, array(), 0, 0, $csetup);
 
-            $alternatives = array();
-            $tmpClosestIdx = false;
-            if (!empty($csetup)) {
-                foreach ($csetup as $idx => $csData) {
-                    if ($tmpClosestIdx === false) {
-                        $tmpClosestIdx = $idx;
-                    } elseif ($csetup[$tmpClosestIdx][0] < $csData[0]) {
-                        $tmpClosestIdx = $idx;
-                    }
+            $maximumCnt = floor($remainder / $maximumBoard->getLength());
+            $optimumRemainderConfig = ($maximumCnt == 0) ? array() : array($maximumBoard->getConfiguration() => $maximumCnt);
+            $remainder = $remainder - ($maximumCnt * $maximumBoard->getLength());
+            $lastSectionLength = $maximumBoard->getLength() * $maximumCnt;
 
-                    if ($alternativeConfigs) {
-                        $lenStr = $csData[0] + $data['dLen'];
-                        if ($lenStr < $alternativeThreshold) {
-                            continue;
-                        }
-                        $str = '';
-                        foreach ($csData[1] as $cf => $qtty) {
-                            for ($j = 0; $j < $qtty; $j++) {
-                                $str .= (!empty($str) ? '|' : '') . "[{$cf}]";
-                            }
-                        }
-                        $alternatives["{$lenStr}"][$idx] = $str;
-                    }
 
-                }
+            $remainderBoard = $this->findOptimumBoard($remainder, 0, 1, true);
 
-                if ($mode == 1) { // closest length mode
-                    if (!empty($args['altId']) && !empty($args['altSz'])) {
-                        if (!empty($csetup[$args['altId']])) {
-                            if (round($csetup[$args['altId']][0] + $data['dLen'], 2) == round($args['altSz'], 2)) {
-                                $tmpClosestIdx = $args['altId'];
-                            }
-                        }
-                    }
-                    $data['dLen'] += $csetup[$tmpClosestIdx][0];
-                    $setup[] = $csetup[$tmpClosestIdx][1];
-
-                    if ($alternativeConfigs) {
-                        $data['dAltsId'] = $tmpClosestIdx;
-                    }
+            if (!empty($remainderBoard)) {
+                if (!empty($optimumRemainderConfig[$remainderBoard->getConfiguration()])) {
+                    $optimumRemainderConfig[$remainderBoard->getConfiguration()]++;
                 } else {
-                    $tmpClosestIdx2 = $tmpClosestIdx;
-                    $tmpIteration = $csetup[$tmpClosestIdx][2];
-                    foreach ($csetup as $idx => $csData) {
-                        if (($csetup[$tmpClosestIdx][0] - $csData[0]) <= $fplRange) {
-                            if ($tmpIteration > $csData[2]) {
-                                $tmpClosestIdx2 = $idx;
-                            } elseif ($tmpIteration == $csData[0]) {
-                                if ($csetup[$tmpClosestIdx2][0] < $csData[0]) {
-                                    $tmpClosestIdx2 = $idx;
-                                }
-                            }
-                        }
-                    }
-                    $data['dLen'] += $csetup[$tmpClosestIdx2][0];
-                    $setup[] = $csetup[$tmpClosestIdx2][1];
-                    if ($alternativeConfigs) {
-                        $data['dAltsId'] = $tmpClosestIdx2;
-                    }
+                    $optimumRemainderConfig[$remainderBoard->getConfiguration()] = 1;
                 }
+                $lastSectionLength += $remainderBoard->getLength();
             }
 
-
-            if ($alternativeConfigs) {
-                uksort($alternatives, array('self', 'cmp'));
-                $data['dAlts'] = $alternatives;
-            }
+            $data['dLen'] += $lastSectionLength;
+            $setup[] = $optimumRemainderConfig;
 
 
             $data['dBillU'] = ceil($data['dLen'] / 1000);
@@ -1043,111 +1220,6 @@ class Model
             return $data;
         } catch (\Exception $ex) {
             return array();
-        }
-    }
-
-
-    /**
-     * find set of board configs available
-     * @param int $curLen
-     * @param string $currConf
-     * @param int $boardLen
-     * @param string $boardName
-     * @param int $maxlen
-     * @param int $boardGap
-     * @param int $boardC
-     * @param int $boardB1
-     * @param array $config
-     * @param type $maximum
-     */
-    function architecturalIterate($curLen, $currConf, $boardLen, $boardName, $maxlen, $boardGap, $boardC, $boardB1, array &$config, &$maximum)
-    {
-        $len = ($curLen + $boardGap + $boardC);
-        $conf = $currConf . '-C';
-        if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, true);
-            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf;
-        }
-
-        $len = ($curLen + $boardGap + $boardB1);
-        $conf = $currConf . '-B1';
-        if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, true);
-            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf; // was commented out
-        }
-
-        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardC);
-        $conf = $currConf . '-B1-C';
-        if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, true);
-            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf;
-        }
-
-        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1);
-        $conf = $currConf . '-B1-B1';
-        if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, true);
-            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf; // was commented out
-        }
-
-        $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1 + $boardGap + $boardC);
-        $conf = $currConf . '-B1-B1-C';
-        if ($len < $maxlen) {
-            $config[$conf] = array($len, $conf, true);
-            if (empty($maximum) || ($len > $config[$maximum][0])) $maximum = $conf;
-        }
-
-        $len = $curLen + $boardGap + $boardLen;
-        if ($len < $maxlen) {
-            $currConf = $currConf . '-' . $boardName;
-            $config[$currConf] = array($len, $currConf, false);
-            //if (empty($maximum) || ($len>$config[$maximum][0])) $maximum = $currConf;
-            $this->architecturalIterate($len, $currConf, $boardLen, $boardName, $maxlen, $boardGap, $boardC, $boardB1, $config, $maximum);
-        }
-
-
-    }
-
-    /**
-     * find architectural optimum length
-     * @param array $configs
-     * @param int $MAXLEN
-     * @param array $configuration
-     * @param int $cLen
-     * @param int $iteration
-     * @param array $csetup
-     * @return void
-     */
-    function architecturalFindLength($configs, $MAXLEN, $configuration, $cLen, $iteration, &$csetup)
-    {
-        if ($iteration >= 4) {
-            return;
-        }
-
-        foreach ($configs as $type => $config) {
-            // if this is a linkable component
-            if (($cLen + $config[0]) > $MAXLEN) {
-                continue;
-            }
-
-            $conf = $configuration;
-
-            if (isset($conf[$type])) {
-                $conf[$type] += 1;
-            } else {
-                $conf[$type] = 1;
-            }
-
-            $csetup[] = array(
-                $cLen + $config[0],
-                $conf,
-                $iteration + 1
-            );
-
-            if ($config[2] === true) {
-                $this->architecturalFindLength($configs, $MAXLEN, $conf, $cLen + $config[0], $iteration + 1, $csetup);
-            }
-
         }
     }
 

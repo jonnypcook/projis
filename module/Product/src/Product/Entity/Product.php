@@ -1,5 +1,6 @@
 <?php
 namespace Product\Entity;
+
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -9,10 +10,10 @@ use Zend\Form\Annotation; // !!!! Absolutely neccessary
 use Zend\InputFilter\Factory as InputFactory;
 use Zend\InputFilter\InputFilter;
 use Zend\InputFilter\InputFilterAwareInterface;
-use Zend\InputFilter\InputFilterInterface; 
+use Zend\InputFilter\InputFilterInterface;
 
 /**
- * @ORM\Entity 
+ * @ORM\Entity
  * @ORM\Entity(repositoryClass="Product\Repository\Product")
  */
 class Product implements InputFilterAwareInterface
@@ -79,7 +80,7 @@ class Product implements InputFilterAwareInterface
      * @ORM\Column(name="eca", type="boolean", nullable=false)
      */
     private $eca;
-    
+
     /**
      * @var boolean
      *
@@ -100,8 +101,8 @@ class Product implements InputFilterAwareInterface
      *
      * @ORM\Column(name="created", type="datetime")
      */
-    private $created; 
-    
+    private $created;
+
 
     /**
      * @var integer
@@ -109,8 +110,8 @@ class Product implements InputFilterAwareInterface
      * @ORM\ManyToOne(targetEntity="Brand")
      * @ORM\JoinColumn(name="product_brand_id", referencedColumnName="product_brand_id", nullable=false)
      */
-    private $brand; 
-    
+    private $brand;
+
 
     /**
      * @var integer
@@ -118,26 +119,26 @@ class Product implements InputFilterAwareInterface
      * @ORM\ManyToOne(targetEntity="Type")
      * @ORM\JoinColumn(name="product_type_id", referencedColumnName="product_type_id", nullable=false)
      */
-    private $type; 
-    
-    
+    private $type;
+
+
     /**
      * @var integer
      *
      * @ORM\ManyToOne(targetEntity="Build")
      * @ORM\JoinColumn(name="product_build_id", referencedColumnName="product_build_id", nullable=false)
      */
-    private $build; 
-    
-    
+    private $build;
+
+
     /**
      * @var int
      *
      * @ORM\Column(name="sagepay", type="integer")
      */
     private $sagepay;
-    
-    
+
+
     /**
      * @var string
      *
@@ -146,18 +147,18 @@ class Product implements InputFilterAwareInterface
     private $attributes;
 
 
-    /** 
-     * @ORM\OneToMany(targetEntity="Job\Entity\DispatchProduct", mappedBy="product") 
+    /**
+     * @ORM\OneToMany(targetEntity="Job\Entity\DispatchProduct", mappedBy="product")
      */
-    protected $dispatches; 
-    
-    
-    /** 
-     * @ORM\OneToMany(targetEntity="Product\Entity\Pricing", mappedBy="product") 
+    protected $dispatches;
+
+
+    /**
+     * @ORM\OneToMany(targetEntity="Product\Entity\Pricing", mappedBy="product")
      */
-    protected $pricepoints; 
-    
-    
+    protected $pricepoints;
+
+
     /**
      * @var integer
      *
@@ -166,17 +167,26 @@ class Product implements InputFilterAwareInterface
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $productId;
-    
-    
-    /** 
-     * @ORM\OneToMany(targetEntity="Space\Entity\System", mappedBy="product") 
-     */
-    protected $systems; 
 
-	
+
+    /**
+     * @ORM\OneToMany(targetEntity="Space\Entity\System", mappedBy="product")
+     */
+    protected $systems;
+
+
+    /**
+     * @var integer
+     *
+     * @ORM\ManyToMany(targetEntity="Product\Entity\Phosphor")
+     * @ORM\JoinTable(name="Product_Phosphor", joinColumns={@ORM\JoinColumn(name="product_id", referencedColumnName="product_id")}, inverseJoinColumns={@ORM\JoinColumn(name="phosphor_id", referencedColumnName="phosphor_id")})
+     */
+    private $phosphors;
+
+
     public function __construct()
-	{
-		$this->setCreated(new \DateTime());
+    {
+        $this->setCreated(new \DateTime());
         $this->setIbppu(0);
         $this->setLeadtime(30);
         $this->setActive(true);
@@ -184,212 +194,305 @@ class Product implements InputFilterAwareInterface
         $this->setMcd(false);
         $this->brand = new ArrayCollection();
         $this->type = new ArrayCollection();
-	    $this->build = new ArrayCollection();
-	    $this->dispatches = new ArrayCollection();
-	    $this->pricepoints = new ArrayCollection();
-	}
-    
-    public function getDispatches() {
+        $this->build = new ArrayCollection();
+        $this->dispatches = new ArrayCollection();
+        $this->pricepoints = new ArrayCollection();
+        $this->phosphors = new ArrayCollection();
+    }
+
+    public function getPhosphors()
+    {
+        return $this->phosphors;
+    }
+
+    public function setPhosphors($phosphors)
+    {
+        $this->phosphors->clear();
+        foreach ($phosphors as $phosphor) {
+            $this->phosphors[] = $phosphor;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Collection $phosphors
+     */
+    public function addPhosphors(Collection $phosphors)
+    {
+        foreach ($phosphors as $phosphor) {
+            $this->phosphors->add($phosphor);
+        }
+    }
+
+    /**
+     * @param Collection $phosphors
+     */
+    public function removePhosphors(Collection $phosphors)
+    {
+        foreach ($phosphors as $phosphor) {
+            $this->phosphors->removeElement($phosphor);
+        }
+    }
+
+    /**
+     * @param $phosphorId
+     * @return bool
+     */
+    public function hasPhosphor($phosphorId)
+    {
+        foreach ($this->phosphors as $phosphor) {
+            if ($phosphorId == $phosphor->getPhosphorId()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getDispatches()
+    {
         return $this->dispatches;
     }
 
-    public function getSystems() {
+    public function getSystems()
+    {
         return $this->systems;
     }
-    
-    public function getPricepoints() {
+
+    public function getPricepoints()
+    {
         return $this->pricepoints;
     }
 
-    public function setPricepoints($pricepoints) {
+    public function setPricepoints($pricepoints)
+    {
         $this->pricepoints = $pricepoints;
         return $this;
     }
 
-    
-    public function setDispatches($dispatches) {
+
+    public function setDispatches($dispatches)
+    {
         $this->dispatches = $dispatches;
         return $this;
     }
 
-    public function setSystems($systems) {
+    public function setSystems($systems)
+    {
         $this->systems = $systems;
         return $this;
     }
 
-    public function getLeadtime() {
+    public function getLeadtime()
+    {
         return $this->leadtime;
     }
 
-    public function setLeadtime($leadtime) {
+    public function setLeadtime($leadtime)
+    {
         $this->leadtime = $leadtime;
         return $this;
     }
 
-    public function getBuild() {
+    public function getBuild()
+    {
         return $this->build;
     }
 
-    public function setBuild($build) {
+    public function setBuild($build)
+    {
         $this->build = $build;
         return $this;
     }
 
-        
-    public function getBrand() {
+
+    public function getBrand()
+    {
         return $this->brand;
     }
 
-    public function getType() {
+    public function getType()
+    {
         return $this->type;
     }
 
-    public function getModel() {
+    public function getModel()
+    {
         return $this->model;
     }
 
-    public function getDescription() {
+    public function getDescription()
+    {
         return $this->description;
     }
 
-    public function getCpu() {
+    public function getCpu()
+    {
         return $this->cpu;
     }
 
-    public function getPpu() {
+    public function getPpu()
+    {
         return $this->ppu;
     }
 
-    public function getIbppu() {
+    public function getIbppu()
+    {
         return $this->ibppu;
     }
 
-    public function getPpuTrial() {
+    public function getPpuTrial()
+    {
         return $this->ppuTrial;
     }
 
-    public function getActive() {
+    public function getActive()
+    {
         return $this->active;
     }
 
-    public function getEca() {
+    public function getEca()
+    {
         return $this->eca;
     }
 
-    public function getMcd() {
+    public function getMcd()
+    {
         return $this->mcd;
     }
 
-    public function getPwr() {
+    public function getPwr()
+    {
         return $this->pwr;
     }
 
-    public function getCreated() {
+    public function getCreated()
+    {
         return $this->created;
     }
-    
-    public function getSagepay() {
+
+    public function getSagepay()
+    {
         return $this->sagepay;
     }
 
-    
-    public function getProductId() {
+
+    public function getProductId()
+    {
         return $this->productId;
     }
 
-    public function setModel($model) {
+    public function setModel($model)
+    {
         $this->model = $model;
         return $this;
     }
 
-    public function setDescription($description) {
+    public function setDescription($description)
+    {
         $this->description = $description;
         return $this;
     }
 
-    public function setCpu($cpu) {
+    public function setCpu($cpu)
+    {
         $this->cpu = $cpu;
         return $this;
     }
 
-    public function setPpu($ppu) {
+    public function setPpu($ppu)
+    {
         $this->ppu = $ppu;
         return $this;
     }
 
-    public function setIbppu($ibppu) {
+    public function setIbppu($ibppu)
+    {
         $this->ibppu = $ibppu;
         return $this;
     }
 
-    public function setPpuTrial($ppuTrial) {
+    public function setPpuTrial($ppuTrial)
+    {
         $this->ppuTrial = $ppuTrial;
         return $this;
     }
 
-    public function setActive($active) {
+    public function setActive($active)
+    {
         $this->active = $active;
         return $this;
     }
-    
-    public function setBrand($brand) {
+
+    public function setBrand($brand)
+    {
         $this->brand = $brand;
         return $this;
     }
 
-    public function setType($type) {
+    public function setType($type)
+    {
         $this->type = $type;
         return $this;
     }
 
-    public function setEca($eca) {
+    public function setEca($eca)
+    {
         $this->eca = $eca;
         return $this;
     }
 
-    public function setMcd($mcd) {
+    public function setMcd($mcd)
+    {
         $this->mcd = $mcd;
         return $this;
     }
 
-    public function setPwr($pwr) {
+    public function setPwr($pwr)
+    {
         $this->pwr = $pwr;
         return $this;
     }
 
-    public function setCreated(\DateTime $created) {
+    public function setCreated(\DateTime $created)
+    {
         $this->created = $created;
         return $this;
     }
 
-    public function setProductId($productId) {
+    public function setProductId($productId)
+    {
         $this->productId = $productId;
         return $this;
     }
 
-    public function getAttributes() {
+    public function getAttributes()
+    {
         return $this->attributes;
     }
 
-    public function setAttributes($attributes) {
+    public function setAttributes($attributes)
+    {
         $this->attributes = $attributes;
         return $this;
     }
-    
-    public function setSagepay($sagepay) {
+
+    public function setSagepay($sagepay)
+    {
         $this->sagepay = $sagepay;
         return $this;
     }
 
-     /**
+    /**
      * Populate from an array.
      *
      * @param array $data
      */
-    public function populate($data = array()) 
+    public function populate($data = array())
     {
         //print_r($data);die();
-        foreach ($data as $name=>$value) {
+        foreach ($data as $name => $value) {
             $fn = "set{$name}";
             try {
                 $this->$fn($value);
@@ -404,14 +507,14 @@ class Product implements InputFilterAwareInterface
      *
      * @return array
      */
-    public function getArrayCopy() 
+    public function getArrayCopy()
     {
         return get_object_vars($this);
     }
-    
-    
+
+
     protected $inputFilter;
-    
+
     /**
      * set the input filter- only in forstructural and inheritance purposes
      * @param \Zend\InputFilter\InputFilterInterface $inputFilter
@@ -421,133 +524,132 @@ class Product implements InputFilterAwareInterface
     {
         throw new \Exception("Not used");
     }
-    
-    
+
+
     /**
-     * 
+     *
      * @return Zend\InputFilter\InputFilter
      */
     public function getInputFilter()
     {
         if (!$this->inputFilter) {
             $inputFilter = new InputFilter();
- 
+
             $factory = new InputFactory();
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'model', // 'usr_name'
+                'name' => 'model', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
-                'validators' => array(), 
+                'filters' => array(),
+                'validators' => array(),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'description', // 'usr_name'
+                'name' => 'description', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
-                'validators' => array(), 
+                'filters' => array(),
+                'validators' => array(),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'pwr', // 'usr_name'
+                'name' => 'pwr', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
+                'filters' => array(),
                 'validators' => array(
                     array(
-                        'name'    => '\Zend\I18n\Validator\Float',
+                        'name' => '\Zend\I18n\Validator\Float',
                     ),
                     array(
-                        'name'    => 'GreaterThan',
+                        'name' => 'GreaterThan',
                         'options' => array(
-                            'min'      => 0,
+                            'min' => 0,
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'cpu', // 'usr_name'
+                'name' => 'cpu', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
+                'filters' => array(),
                 'validators' => array(
                     array(
-                        'name'    => '\Zend\I18n\Validator\Float',
+                        'name' => '\Zend\I18n\Validator\Float',
                     ),
                     array(
-                        'name'    => 'GreaterThan',
+                        'name' => 'GreaterThan',
                         'options' => array(
-                            'min'      => 0,
+                            'min' => 0,
                             'inclusive' => false
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'ppu', // 'usr_name'
+                'name' => 'ppu', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
+                'filters' => array(),
                 'validators' => array(
                     array(
-                        'name'    => '\Zend\I18n\Validator\Float',
+                        'name' => '\Zend\I18n\Validator\Float',
                     ),
                     array(
-                        'name'    => 'GreaterThan',
+                        'name' => 'GreaterThan',
                         'options' => array(
-                            'min'      => 0,
+                            'min' => 0,
                             'inclusive' => false
                         ),
                     ),
-                ), 
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'ibppu', // 'usr_name'
+                'name' => 'ibppu', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
+                'filters' => array(),
                 'validators' => array(
                     array(
-                        'name'    => '\Zend\I18n\Validator\Float',
+                        'name' => '\Zend\I18n\Validator\Float',
                     ),
                     array(
-                        'name'    => 'GreaterThan',
+                        'name' => 'GreaterThan',
                         'options' => array(
-                            'min'      => 0,
+                            'min' => 0,
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
-                'name'     => 'ppuTrial', // 'usr_name'
+                'name' => 'ppuTrial', // 'usr_name'
                 'required' => true,
-                'filters'  => array(),
+                'filters' => array(),
                 'validators' => array(
                     array(
-                        'name'    => '\Zend\I18n\Validator\Float',
+                        'name' => '\Zend\I18n\Validator\Float',
                     ),
                     array(
-                        'name'    => 'GreaterThan',
+                        'name' => 'GreaterThan',
                         'options' => array(
-                            'min'      => 0,
+                            'min' => 0,
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
-            
+
+
             /**/
- 
-            $this->inputFilter = $inputFilter;        
+
+            $this->inputFilter = $inputFilter;
         }
- 
+
         return $this->inputFilter;
-    } 
+    }
 }
 
 

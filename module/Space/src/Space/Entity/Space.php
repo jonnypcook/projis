@@ -78,8 +78,7 @@ class Space implements InputFilterAwareInterface
      *
      * @ORM\Column(name="root", type="boolean", nullable=false)
      */
-    private $root;    
-    
+    private $root;
 
     /**
      * @var boolean
