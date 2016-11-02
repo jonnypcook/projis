@@ -496,8 +496,32 @@ class ProjectitemController extends ProjectSpecificController
             . "ORDER BY ps.activated DESC" );
         $saves = $query->getResult( \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY );
 
+        // prep phosphor information
+        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
+        $results = $query->getResult();
+        $productPhosphor = array();
+        foreach ($results as $result) {
+            if (empty($result->getPhosphors())) {
+                continue;
+            }
+
+
+            if (empty($productPhosphor[$result->getProductId()])) {
+                $productPhosphor[$result->getProductId()] = array();
+            }
+
+            foreach ($result->getPhosphors() as $phosphor) {
+                if ($phosphor->isEnabled() === false) {
+                    continue;
+                }
+
+                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
+            }
+
+        }
 
         $this->getView()
+            ->setVariable('productPhosphor', $productPhosphor)
             ->setVariable( 'saves', $saves )
             ->setVariable( 'space', $space )
             ->setVariable( 'form', $form )
