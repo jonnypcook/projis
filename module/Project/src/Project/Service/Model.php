@@ -1002,8 +1002,8 @@ class Model
                 'A' => self::BOARDLEN_A,
                 'B' => self::BOARDLEN_B,
                 'B1' => self::BOARDLEN_B1,
-                'B1PP' => self::BOARDLEN_B1, // stand-alone version
-                'B1FP' => self::BOARDLEN_B1, // end version
+                'B1PP' => self::BOARDLEN_B1PP, // stand-alone version
+                'B1FP' => self::BOARDLEN_B1FP, // end version
                 'C' => self::BOARDLEN_C,
 
                 'GAP' => self::BOARDLEN_GAP,
