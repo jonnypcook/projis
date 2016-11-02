@@ -1,7 +1,41 @@
 <?php
+$phosphorProductJS = array();
+$phosphorProductJSStr = '';
+foreach ($productPhosphor as $productId => $phosphorLengths) {
+    if (empty($phosphorLengths)) {
+        continue;
+    }
+    $data = array();
+    foreach ($phosphorLengths as $phosphorLength) {
+        $data [] = "'{$phosphorLength[0]}': " . (empty($phosphorLength[1]) ? 'false' : 'true');
+    }
+    $phosphorProductJS[] = "{$productId}: {" . implode(', ', $data) . "}";
+}
+
+$phosphorProductJSStr = '{' . implode(', ', $phosphorProductJS) . '}';
+
 $editable = $this->isGranted('project.write');
 $this->inlineScript()->captureStart();
 echo <<<JS
+
+function resetPhosphorDropdown(productId, selected) {
+    var phosphorProducts = {$phosphorProductJSStr};
+
+    $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength] option:not(.default)').remove();
+
+    if (!phosphorProducts[productId] || phosphorProducts[productId].length < 1) {
+        return;
+    }
+
+    var selectList = $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]');
+    for (var i in phosphorProducts[productId]) {
+        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[productId][i] ? ' (default)': '')));
+    }
+
+    if (!!selected) {
+        selectList.val(selected);
+    }
+}
 
 function calculateArchitecturalChange() {
     try {
@@ -10,6 +44,7 @@ function calculateArchitecturalChange() {
         var productId = $('form[name=SpaceAddArchitecturalForm] select[name=product]').val();
         var length = $('form[name=SpaceAddArchitecturalForm] input[name=length]').val();
         var maximumunitlength = $('form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').val();
+        var maximumPhosphorLength = $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]').val();
 
         if (productId=='') {
             throw "no product defined";
@@ -20,7 +55,7 @@ function calculateArchitecturalChange() {
         }
 
         var url = '/tools/rpQuickCalculate/';
-        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&productId='+productId+'&length='+length+'&maxunitlen='+maximumunitlength;
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&productId='+productId+'&length='+length+'&maxunitlen='+maximumunitlength + '&maximumPhosphorLength=' + maximumPhosphorLength;
             
         $.ajax({
             type: 'POST',
@@ -42,10 +77,29 @@ function calculateArchitecturalChange() {
                     if (obj.err == true) {
                         throw "error calculating";
                     } else{ // no errors
+                        var architecturalConfiguration = '',
+                            clrs = ["warning", "info"];
+
+                        for (var i in obj.info.dConf) {
+                            architecturalConfiguration+='<span class="text-' + clrs[(i%2)] + '">';
+                            for (var j in obj.info.dConf[i]) {
+                                for (var k=0; k<obj.info.dConf[i][j]; k++) {
+                                    architecturalConfiguration += '[' + j + ']';
+                                }
+
+                            }
+                            architecturalConfiguration += '</span><br>';
+                        }
+
+                        $('#architecturalConfiguration').html(architecturalConfiguration);
+                        $('#architecturalSpecified').text(obj.info.sLen + 'mm');
+                        $('#architecturalAchievable').text(obj.info.dLen + 'mm');
+                        $('#architecturalBillable').text(obj.info.dBillU + ' x ' + $('form[name=SpaceAddArchitecturalForm] input[name=quantity]').val());
+                        
                         $('#architecturalLength')
                             .removeClass('label-important')
                             .addClass('label-inverse')
-                            .text('Maximum achievable length of '+obj.info.dLen+'mm ('+obj.info.dBillU+' units)');
+                            .text('Maximum achievable length of ' + obj.info.dLen + 'mm (' + obj.info.dBillU + ' units)');
 
                         var configs = $('select[name=configurations]');
                         configs.empty();
@@ -74,10 +128,7 @@ function calculateArchitecturalChange() {
                     }
                 }
                 catch(error){
-                    $('#architecturalLength')
-                        .removeClass('label-inverse')
-                        .addClass('label-important')
-                        .text('select a product to calculate achievable length and units required');
+                    resetArchitecturalSetup();
                 }
             },
             complete: function(jqXHR, textStatus){}
@@ -233,22 +284,32 @@ function setupTabForm (obj) {
     $('a[href=#widget_tab1]').tab('show');
 }
         
-function resetArchitecturalTabForm () {
+function resetArchitecturalSetup () {
     $('#architecturalLength')
         .removeClass('label-inverse')
         .addClass('label-important')
         .text('select a product to calculate achievable length and units required');
+
+    $('#architecturalConfiguration').html('');
+    $('#architecturalSpecified').text('-');
+    $('#architecturalAchievable').text('-');
+    $('#architecturalBillable').text('-');
+
+    resetPhosphorDropdown(0);
+}
+
+function resetArchitecturalTabForm () {
+    resetArchitecturalSetup();
     setupArchitecturalTabForm({});
 }
 
-        
 var chsnConf, chsnLen;
 function setupArchitecturalTabForm (obj) {
     $('form[name=SpaceAddArchitecturalForm] input[name=length]').val((obj.length==null)?'':obj.length);
     $('form[name=SpaceAddArchitecturalForm] select[name=product]').val((obj.productId==null)?'':obj.productId);
     $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('liszt:updated');
     if (obj.modify!=null) {
-        $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('change');
+        $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('change', {pLen: obj.pLen});
     }
     $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val((obj.ppu==null)?'':obj.ppu);
     $('form[name=SpaceAddArchitecturalForm] input[name=ippu]').val((obj.ippu==null)?'0':obj.ippu);
@@ -419,8 +480,7 @@ function changeHours() {
     }/**/
     return false;
 }
-        
-        
+
 function copySystem(systemId) {
     try {
         var url = '/client-{$project->getClient()->getClientId()}/project-{$project->getProjectId()}/space-{$space->getSpaceId()}/copysystem/';
@@ -569,6 +629,7 @@ var Script = function () {
                                         units: (obj.system.attributes.dUnits==null)?1:obj.system.attributes.dUnits,
                                         chsnConf: (obj.system.attributes.chsnConf==null)?false:obj.system.attributes.chsnConf,
                                         dLen: (obj.system.attributes.dLen==null)?false:obj.system.attributes.dLen,
+                                        pLen: (obj.system.attributes.pLen==null)?false:obj.system.attributes.pLen,
                                         mul: obj.system.attributes.mul,
                                         modify: obj.system.systemId,
                                     });
@@ -685,7 +746,7 @@ var Script = function () {
         var nextTab = (activeTab<2)?activeTab+1:activeTab;
         
         if (activeTab != nextTab) {
-            setTabButtons (nextTab, 'architectural', 3);
+            setTabButtons (nextTab, 'architectural', 4);
             $('a[href=#widgetA_tab'+nextTab+']').tab('show');
         }
         
@@ -703,7 +764,7 @@ var Script = function () {
         var nextTab = (activeTab>1)?activeTab-1:activeTab;
         
         if (activeTab != nextTab) {
-            setTabButtons (nextTab, 'architectural', 3);
+            setTabButtons (nextTab, 'architectural', 4);
             $('a[href=#widgetA_tab'+nextTab+']').tab('show');
         }
         
@@ -729,7 +790,7 @@ var Script = function () {
         }
         
         activeTab = parseInt(activeTab);
-        setTabButtons (activeTab, 'architectural', 3);
+        setTabButtons (activeTab, 'architectural', 4);
     });
     
     // Product Selector change event
@@ -757,15 +818,19 @@ var Script = function () {
         );
     });
             
-    $('form[name=SpaceAddArchitecturalForm] input[name=length], form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').on('change', function(e) {
+    $('form[name=SpaceAddArchitecturalForm] input[name=length], form[name=SpaceAddArchitecturalForm] input[name=maxunitlength], ' +
+     'form[name=SpaceAddArchitecturalForm] input[name=quantity], ' +
+      'form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]').on('change', function(e) {
         calculateArchitecturalChange();
     });
     
-    $('form[name=SpaceAddArchitecturalForm] select[name=product]').on('change', function(e) {
+    $('form[name=SpaceAddArchitecturalForm] select[name=product]').on('change', function(e, data) {
         var opt = $(this).find('option[value='+$(this).val()+']');
         if (opt == undefined) {
             return;
         }
+
+        resetPhosphorDropdown($(this).val(), data.pLen);
         $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val(opt.attr('data-ppu'));
         $('#architecturalInfo').attr('data-original-title',
             '<div style="text-align: left">'+opt.text()+'<br />'+
@@ -845,7 +910,8 @@ var Script = function () {
 JS;
 $this->inlineScript()->captureEnd();
 ?>
-<div id="modalChangeHours" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+<div id="modalChangeHours" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3">Change Hours&nbsp;</h3>
@@ -855,18 +921,21 @@ $this->inlineScript()->captureEnd();
         <p>
             Enter the details and scope of the hourly change that you would like to make
         </p>
+
         <form name="changeHoursForm" id="changeHoursForm" class="form-horizontal form-nomargin">
             <div class="control-group">
                 <label class="control-label">Hours (if applicable)</label>
+
                 <div class="controls">
                     <div class="input-append">
-                        <?php echo $this->formElement($formSystem->get('hours'));  ?>
+                        <?php echo $this->formElement($formSystem->get('hours')); ?>
                         <span class="add-on">per week</span>
                     </div>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">Scope</label>
+
                 <div class="controls">
                     <select name="scope">
                         <option value="1">Products in this Space</option>
@@ -879,10 +948,12 @@ $this->inlineScript()->captureEnd();
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
-        <button class="btn btn-success" id="btn-change-hours" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+        <button class="btn btn-success" id="btn-change-hours" aria-hidden="true"><i class="icon-ok"></i> Confirm
+        </button>
     </div>
 </div>
-<div id="modalCopySystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+<div id="modalCopySystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3">Duplicate System Confirmation&nbsp;</h3>
@@ -890,16 +961,18 @@ $this->inlineScript()->captureEnd();
     <div class="modal-body">
         <div id="systemCopyLoader" class="loader"></div>
         <p>
-            Are you sure that you would like to duplicate the selected system item?<br /><br />
+            Are you sure that you would like to duplicate the selected system item?<br/><br/>
             Please note: the item will be an exact copy and you may require editing.
         </p>
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
-        <button class="btn btn-success" id="btn-confirm-copy" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
+        <button class="btn btn-success" id="btn-confirm-copy" aria-hidden="true"><i class="icon-ok"></i> Confirm
+        </button>
     </div>
 </div>
-<div id="modalDeleteSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+<div id="modalDeleteSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3">Delete Confirmation&nbsp;</h3>
@@ -907,7 +980,7 @@ $this->inlineScript()->captureEnd();
     <div class="modal-body">
         <div id="systemDeleteLoader" class="loader"></div>
         <p>
-            Are you sure that you would like to delete the selected system item?<br /><br />
+            Are you sure that you would like to delete the selected system item?<br/><br/>
             Please note: a deleted item cannot be retrieved.
         </p>
     </div>
@@ -916,10 +989,12 @@ $this->inlineScript()->captureEnd();
         <button class="btn btn-success" id="btn-confirm" aria-hidden="true"><i class="icon-ok"></i> Confirm</button>
     </div>
 </div>
-<div id="modalSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+<div id="modalSystem" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3" class="create-title-product">Add Product&nbsp;</h3>
+
         <h3 id="myModalLabel3" class="modify-title-product">Modify Product Setup&nbsp;</h3>
     </div>
     <div class="modal-body">
@@ -933,133 +1008,156 @@ $this->inlineScript()->captureEnd();
                 <div class="tabbable ">
                     <ul class="nav nav-tabs" id="tabsAddProduct">
                         <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Additional</a></li>
-                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Product Details</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Product Details</a>
+                        </li>
                     </ul>
                     <?php echo $this->form()->openTag($formSystem); ?>
-                    <input type="hidden" name="systemId" value="" style="display: none" />
-                        <div class="tab-content" style="min-height: 260px">
-                            <div class="tab-pane active" id="widget_tab1">
-                                <div class="control-group">
-                                    <label class="control-label">Product <span id="productInfo" class="btn btn-mini btn-default tooltips" data-original-title="No product selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
-                                    <div class="controls">
-                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
-                                            <option></option>
-                                            <?php
-                                                $group = null;
-                                                if (!empty($products)) {
-                                                    foreach ($products as $product){
-                                                        if ($product['typeId'] == 3) { // service item should not be displayed here
-                                                            continue;
-                                                        }
-                                                        
-                                                        if ($product['service'] == 1) { // service item should not be displayed here
-                                                            continue;
-                                                        }
-                                                        if ($group != $product['brand']) {
-                                                            $group = $product['brand'];
-                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
-                                                        }
-                                                        $model = $product['model'];
-                                                        if ($product['brandId']==6 ) { // philips product - need to show Philips ID
-                                                            $attr = json_decode($product['attributes']);
-                                                            if (!empty($attr->philips)) {
-                                                                if (!empty($attr->philips->eoc)) {
-                                                                    $model.= ' | '. $attr->philips->eoc;
-                                                                }
-                                                                if (!empty($attr->philips->model)) {
-                                                                    $model.= ' | '. $attr->philips->model;
-                                                                }
-                                                            }
-                                                                
-                                                        } 
-                                                        echo '<option value="'.$product['productId'].'" '.
-                                                                'data-ppu="'.$product['ppu'].'" '.
-                                                                'data-pwr="'.round($product['pwr'], 0).'" '.
-                                                                'data-type="'.$product['type'].'" '.
-                                                                'data-brand="'.$product['brand'].'" '.
-                                                                'data-eca="'.(!empty($product['eca'])?1:0).'" '.
-                                                                '>'.$model.'</option>';
-                                                    }
-                                                    echo (empty($group)?'':'</optgroup>');
+                    <input type="hidden" name="systemId" value="" style="display: none"/>
+
+                    <div class="tab-content" style="min-height: 260px">
+                        <div class="tab-pane active" id="widget_tab1">
+                            <div class="control-group">
+                                <label class="control-label">Product <span id="productInfo"
+                                                                           class="btn btn-mini btn-default tooltips"
+                                                                           data-original-title="No product selected"
+                                                                           data-placement="right" data-html="true"
+                                                                           data-trigger="hover"><i
+                                            class="icon-info"></i></span></label>
+
+                                <div class="controls">
+                                    <select class="span12 chzn-select" name="product" data-placeholder="Select Product"
+                                            style="width: 300px">
+                                        <option></option>
+                                        <?php
+                                        $group = null;
+                                        if (!empty($products)) {
+                                            foreach ($products as $product) {
+                                                if ($product['typeId'] == 3) { // service item should not be displayed here
+                                                    continue;
                                                 }
-                                            ?>
-                                        </select>
-                                    </div>
+
+                                                if ($product['service'] == 1) { // service item should not be displayed here
+                                                    continue;
+                                                }
+                                                if ($group != $product['brand']) {
+                                                    $group = $product['brand'];
+                                                    echo (empty($group) ? '' : '</optgroup>') . '<optgroup label="' . $product['brand'] . '">';
+                                                }
+                                                $model = $product['model'];
+                                                if ($product['brandId'] == 6) { // philips product - need to show Philips ID
+                                                    $attr = json_decode($product['attributes']);
+                                                    if (!empty($attr->philips)) {
+                                                        if (!empty($attr->philips->eoc)) {
+                                                            $model .= ' | ' . $attr->philips->eoc;
+                                                        }
+                                                        if (!empty($attr->philips->model)) {
+                                                            $model .= ' | ' . $attr->philips->model;
+                                                        }
+                                                    }
+
+                                                }
+                                                echo '<option value="' . $product['productId'] . '" ' .
+                                                    'data-ppu="' . $product['ppu'] . '" ' .
+                                                    'data-pwr="' . round($product['pwr'], 0) . '" ' .
+                                                    'data-type="' . $product['type'] . '" ' .
+                                                    'data-brand="' . $product['brand'] . '" ' .
+                                                    'data-eca="' . (!empty($product['eca']) ? 1 : 0) . '" ' .
+                                                    '>' . $model . '</option>';
+                                            }
+                                            echo(empty($group) ? '' : '</optgroup>');
+                                        }
+                                        ?>
+                                    </select>
                                 </div>
-                                <div class="control-group">
-                                    <label class="control-label">Quantity</label>
-                                    <div class="controls">
-                                        <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('quantity'));  ?>
-                                            <span class="add-on">units</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="control-group">
-                                    <label class="control-label">Price</label>
-                                    <div class="controls">
-                                        <div class="input-append input-prepend">
-                                            <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
-                                            <span class="add-on">per unit</span>
-                                        </div>
-                                    </div>
-                                </div> 
-                                <div class="control-group">
-                                    <label class="control-label">Install Cost</label>
-                                    <div class="controls">
-                                        <div class="input-append input-prepend">
-                                            <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('ippu'));  ?>
-                                            <span class="add-on">per unit</span>
-                                        </div>
-                                    </div>
-                                </div> 
-                                <div class="control-group">
-                                    <label class="control-label">Hours (if applicable)</label>
-                                    <div class="controls">
-                                        <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('hours'));  ?>
-                                            <span class="add-on">per week</span>
-                                        </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Quantity</label>
+
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <?php echo $this->formElement($formSystem->get('quantity')); ?>
+                                        <span class="add-on">units</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="tab-pane" id="widget_tab2">
-                                <div class="control-group">
-                                    <label class="control-label">Label</label>
-                                    <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                            <div class="control-group">
+                                <label class="control-label">Price</label>
+
+                                <div class="controls">
+                                    <div class="input-append input-prepend">
+                                        <span class="add-on">&#163;</span>
+                                        <?php echo $this->formElement($formSystem->get('ppu')); ?>
+                                        <span class="add-on">per unit</span>
                                     </div>
-                                </div> 
-                                <p>
-                                    If the product you are adding has a LUX or occupancy sensor then you need to measure the 
-                                    percentage energy saving effect that the switch has on the product.
-                                </p>
-                                <hr >
-                                <div class="control-group">
-                                    <label class="control-label">Occupancy Saving</label>
-                                    <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('occupancy'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Install Cost</label>
+
+                                <div class="controls">
+                                    <div class="input-append input-prepend">
+                                        <span class="add-on">&#163;</span>
+                                        <?php echo $this->formElement($formSystem->get('ippu')); ?>
+                                        <span class="add-on">per unit</span>
                                     </div>
-                                </div> 
-                                <div class="control-group">
-                                    <label class="control-label">LUX Saving</label>
-                                    <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('lux'));  ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Hours (if applicable)</label>
+
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <?php echo $this->formElement($formSystem->get('hours')); ?>
+                                        <span class="add-on">per week</span>
                                     </div>
-                                </div> 
-                                
+                                </div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="widget_tab2">
+                            <div class="control-group">
+                                <label class="control-label">Label</label>
+
+                                <div class="controls">
+                                    <?php echo $this->formElement($formSystem->get('label')); ?>
+                                </div>
+                            </div>
+                            <p>
+                                If the product you are adding has a LUX or occupancy sensor then you need to measure the
+                                percentage energy saving effect that the switch has on the product.
+                            </p>
+                            <hr>
+                            <div class="control-group">
+                                <label class="control-label">Occupancy Saving</label>
+
+                                <div class="controls">
+                                    <?php echo $this->formElement($formSystem->get('occupancy')); ?>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">LUX Saving</label>
+
+                                <div class="controls">
+                                    <?php echo $this->formElement($formSystem->get('lux')); ?>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
                     <?php echo $this->form()->closeTag($formSystem); ?>
                 </div>
                 <div id="productMsgs"></div>
-                <button class="btn btn-default" disabled="disabled" id="btn-last-system"><i class="icon-arrow-left icon-white"></i> Last</button>
-                <button class="btn btn-default" id="btn-next-system">Next <i class="icon-arrow-right icon-white"></i></button>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-system"><i
+                        class="icon-arrow-left icon-white"></i> Last
+                </button>
+                <button class="btn btn-default" id="btn-next-system">Next <i class="icon-arrow-right icon-white"></i>
+                </button>
                 <?php if ($editable) { ?>
-                <button class="btn btn-success" style="float: right" id="btn-create-system-entry"><i class="icon-plus icon-white"></i> Add Product</button>
-                <button class="btn btn-success" style="float: right" id="btn-modify-system-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                    <button class="btn btn-success" style="float: right" id="btn-create-system-entry"><i
+                            class="icon-plus icon-white"></i> Add Product
+                    </button>
+                    <button class="btn btn-success" style="float: right" id="btn-modify-system-entry"><i
+                            class="icon-edit icon-white"></i> Save Changes
+                    </button>
                 <?php } ?>
             </div>
         </div>
@@ -1068,10 +1166,12 @@ $this->inlineScript()->captureEnd();
         <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
     </div>
 </div>
-<div id="modalSystemService" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+<div id="modalSystemService" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3" class="create-title-service">Add Service&nbsp;</h3>
+
         <h3 id="myModalLabel3" class="modify-title-service">Modify Service Setup&nbsp;</h3>
     </div>
     <div class="modal-body">
@@ -1084,71 +1184,83 @@ $this->inlineScript()->captureEnd();
                 <div id="systemServiceLoader" class="loader"></div>
                 <div class="tabbable ">
                     <ul class="nav nav-tabs" id="tabsAddService">
-                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Service Details</a></li>
+                        <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Service Details</a>
+                        </li>
                     </ul>
                     <form name="SpaceAddServiceForm" id="SpaceAddServiceForm" class="form-horizontal form-nomargin">
-                    <input type="hidden" name="systemId" value="" style="display: none" />
-                    <input type="hidden" name="lux" value="0" style="display: none" />
-                    <input type="hidden" name="occupancy" value="0" style="display: none" />
-                    <input type="hidden" name="legacy" value="0" style="display: none" />
-                    <input type="hidden" name="quantity" value="1" style="display: none" />
-                    <input type="hidden" name="ippu" value="0" style="display: none" />
-                    <input type="hidden" name="sMode" value="1" style="display: none" />
+                        <input type="hidden" name="systemId" value="" style="display: none"/>
+                        <input type="hidden" name="lux" value="0" style="display: none"/>
+                        <input type="hidden" name="occupancy" value="0" style="display: none"/>
+                        <input type="hidden" name="legacy" value="0" style="display: none"/>
+                        <input type="hidden" name="quantity" value="1" style="display: none"/>
+                        <input type="hidden" name="ippu" value="0" style="display: none"/>
+                        <input type="hidden" name="sMode" value="1" style="display: none"/>
+
                         <div class="tab-content" style="min-height: 260px">
                             <div class="tab-pane active" id="widget_tab1">
                                 <div class="control-group">
-                                    <label class="control-label">Product <span id="serviceInfo" class="btn btn-mini btn-default tooltips" data-original-title="No service selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
+                                    <label class="control-label">Product <span id="serviceInfo"
+                                                                               class="btn btn-mini btn-default tooltips"
+                                                                               data-original-title="No service selected"
+                                                                               data-placement="right" data-html="true"
+                                                                               data-trigger="hover"><i
+                                                class="icon-info"></i></span></label>
+
                                     <div class="controls">
-                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                        <select class="span12 chzn-select" name="product"
+                                                data-placeholder="Select Product" style="width: 300px">
                                             <option></option>
                                             <?php
-                                                $group = null;
-                                                if (!empty($products)) {
-                                                    foreach ($products as $product){
-                                                        if ($product['service'] != 1) { // service item should not be displayed here
-                                                            continue;
-                                                        }
-                                                        if ($group != $product['brand']) {
-                                                            $group = $product['brand'];
-                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
-                                                        }
-                                                        echo '<option value="'.$product['productId'].'" '.
-                                                                'data-ppu="'.$product['ppu'].'" '.
-                                                                'data-type="'.$product['type'].'" '.
-                                                                'data-brand="'.$product['brand'].'" '.
-                                                                '>'.$product['model'].'</option>';
+                                            $group = null;
+                                            if (!empty($products)) {
+                                                foreach ($products as $product) {
+                                                    if ($product['service'] != 1) { // service item should not be displayed here
+                                                        continue;
                                                     }
-                                                    echo (empty($group)?'':'</optgroup>');
+                                                    if ($group != $product['brand']) {
+                                                        $group = $product['brand'];
+                                                        echo (empty($group) ? '' : '</optgroup>') . '<optgroup label="' . $product['brand'] . '">';
+                                                    }
+                                                    echo '<option value="' . $product['productId'] . '" ' .
+                                                        'data-ppu="' . $product['ppu'] . '" ' .
+                                                        'data-type="' . $product['type'] . '" ' .
+                                                        'data-brand="' . $product['brand'] . '" ' .
+                                                        '>' . $product['model'] . '</option>';
                                                 }
+                                                echo(empty($group) ? '' : '</optgroup>');
+                                            }
                                             ?>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="control-group">
                                     <label class="control-label">Cost (supplier cost)</label>
+
                                     <div class="controls">
                                         <div class="input-prepend">
                                             <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('cpu'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('cpu')); ?>
                                         </div>
                                     </div>
-                                </div>                                 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Price (to client)</label>
+
                                     <div class="controls">
                                         <div class="input-append input-prepend">
                                             <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('ppu')); ?>
                                             <span class="add-on">per unit</span>
                                         </div>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Label</label>
+
                                     <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                                        <?php echo $this->formElement($formSystem->get('label')); ?>
                                     </div>
-                                </div> 
+                                </div>
 
                             </div>
                         </div>
@@ -1156,8 +1268,12 @@ $this->inlineScript()->captureEnd();
                 </div>
                 <div id="serviceMsgs"></div>
                 <?php if ($editable) { ?>
-                <button class="btn btn-success" style="float: right" id="btn-create-system-service-entry"><i class="icon-plus icon-white"></i> Add Service</button>
-                <button class="btn btn-success" style="float: right" id="btn-modify-system-service-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                    <button class="btn btn-success" style="float: right" id="btn-create-system-service-entry"><i
+                            class="icon-plus icon-white"></i> Add Service
+                    </button>
+                    <button class="btn btn-success" style="float: right" id="btn-modify-system-service-entry"><i
+                            class="icon-edit icon-white"></i> Save Changes
+                    </button>
                 <?php } ?>
                 <div class="clearfix"></div>
             </div>
@@ -1167,10 +1283,12 @@ $this->inlineScript()->captureEnd();
         <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
     </div>
 </div>
-<div id="modalArchitectural" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4" aria-hidden="true">
+<div id="modalArchitectural" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel4"
+     aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="myModalLabel3" class="create-title-architectural">Add Architectural&nbsp;</h3>
+
         <h3 id="myModalLabel3" class="modify-title-architectural">Modify Architectural Setup&nbsp;</h3>
     </div>
     <div class="modal-body">
@@ -1183,81 +1301,95 @@ $this->inlineScript()->captureEnd();
                 <div id="systemArchitecturalLoader" class="loader"></div>
                 <div class="tabbable ">
                     <ul class="nav nav-tabs" id="tabsAddArchitectural">
+                        <li class=""><a data-number="4" href="#widgetA_tab4" data-toggle="tab">Options</a></li>
                         <li class=""><a data-number="3" href="#widgetA_tab3" data-toggle="tab">Options</a></li>
                         <li class=""><a data-number="2" href="#widgetA_tab2" data-toggle="tab">Additional</a></li>
                         <li class="active"><a data-number="1" href="#widgetA_tab1" data-toggle="tab">Product</a></li>
                     </ul>
-                    <form name="SpaceAddArchitecturalForm" id="SpaceAddArchitecturalForm" class="form-horizontal form-nomargin">
-                    <input type="hidden" name="altId" value=""  />
-                    <input type="hidden" name="altSz" value=""  />
-                    <input type="hidden" name="qMode" value="1"  />
-                    <input type="hidden" name="systemId" value="" style="display: none" />
+                    <form name="SpaceAddArchitecturalForm" id="SpaceAddArchitecturalForm"
+                          class="form-horizontal form-nomargin">
+                        <input type="hidden" name="altId" value=""/>
+                        <input type="hidden" name="altSz" value=""/>
+                        <input type="hidden" name="qMode" value="1"/>
+                        <input type="hidden" name="systemId" value="" style="display: none"/>
+
                         <div class="tab-content" style="min-height: 260px">
                             <div class="tab-pane active" id="widgetA_tab1">
                                 <div class="control-group">
-                                    <label class="control-label">Product <span id="architecturalInfo" class="btn btn-mini btn-default tooltips" data-original-title="No product selected" data-placement="right" data-html="true" data-trigger="hover"><i class="icon-info"></i></span></label>
+                                    <label class="control-label">Product <span id="architecturalInfo"
+                                                                               class="btn btn-mini btn-default tooltips"
+                                                                               data-original-title="No product selected"
+                                                                               data-placement="right" data-html="true"
+                                                                               data-trigger="hover"><i
+                                                class="icon-info"></i></span></label>
+
                                     <div class="controls">
-                                        <select class="span12 chzn-select" name="product" data-placeholder="Select Product" style="width: 300px" >
+                                        <select class="span12 chzn-select" name="product"
+                                                data-placeholder="Select Product" style="width: 300px">
                                             <option></option>
                                             <?php
-                                                $group = null;
-                                                if (!empty($products)) {
-                                                    foreach ($products as $product){
-                                                        if ($product['typeId'] != 3) { // service item should not be displayed here
-                                                            continue;
-                                                        }
-                                                        if ($group != $product['brand']) {
-                                                            $group = $product['brand'];
-                                                            echo (empty($group)?'':'</optgroup>').'<optgroup label="'.$product['brand'].'">';
-                                                        }
-                                                        echo '<option value="'.$product['productId'].'" '.
-                                                                'data-ppu="'.$product['ppu'].'" '.
-                                                                'data-pwr="'.round($product['pwr'], 0).'" '.
-                                                                'data-type="'.$product['type'].'" '.
-                                                                'data-brand="'.$product['brand'].'" '.
-                                                                'data-eca="'.(!empty($product['eca'])?1:0).'" '.
-                                                                '>'.$product['model'].'</option>';
+                                            $group = null;
+                                            if (!empty($products)) {
+                                                foreach ($products as $product) {
+                                                    if ($product['typeId'] != 3) { // service item should not be displayed here
+                                                        continue;
                                                     }
-                                                    echo (empty($group)?'':'</optgroup>');
+                                                    if ($group != $product['brand']) {
+                                                        $group = $product['brand'];
+                                                        echo (empty($group) ? '' : '</optgroup>') . '<optgroup label="' . $product['brand'] . '">';
+                                                    }
+                                                    echo '<option value="' . $product['productId'] . '" ' .
+                                                        'data-ppu="' . $product['ppu'] . '" ' .
+                                                        'data-pwr="' . round($product['pwr'], 0) . '" ' .
+                                                        'data-type="' . $product['type'] . '" ' .
+                                                        'data-brand="' . $product['brand'] . '" ' .
+                                                        'data-eca="' . (!empty($product['eca']) ? 1 : 0) . '" ' .
+                                                        '>' . $product['model'] . '</option>';
                                                 }
+                                                echo(empty($group) ? '' : '</optgroup>');
+                                            }
                                             ?>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="control-group">
                                     <label class="control-label">Required Length</label>
+
                                     <div class="controls">
                                         <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('length'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('length')); ?>
                                             <span class="add-on">mm</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="control-group">
                                     <label class="control-label">Price</label>
+
                                     <div class="controls">
                                         <div class="input-append input-prepend">
                                             <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('ppu'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('ppu')); ?>
                                             <span class="add-on">per unit</span>
                                         </div>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Install Cost</label>
+
                                     <div class="controls">
                                         <div class="input-append input-prepend">
                                             <span class="add-on">&#163;</span>
-                                            <?php echo $this->formElement($formSystem->get('ippu'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('ippu')); ?>
                                             <span class="add-on">per unit</span>
                                         </div>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Unit Count</label>
+
                                     <div class="controls">
                                         <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('quantity'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('quantity')); ?>
                                             <span class="add-on">Units</span>
                                         </div>
                                     </div>
@@ -1266,32 +1398,37 @@ $this->inlineScript()->captureEnd();
                             <div class="tab-pane" id="widgetA_tab2">
                                 <div class="control-group">
                                     <label class="control-label">Label</label>
+
                                     <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('label'));  ?>
+                                        <?php echo $this->formElement($formSystem->get('label')); ?>
                                     </div>
-                                </div> 
+                                </div>
                                 <p>
-                                    If the product you are adding has a LUX or occupancy sensor then you need to measure the 
+                                    If the product you are adding has a LUX or occupancy sensor then you need to measure
+                                    the
                                     percentage energy saving effect that the switch has on the product.
                                 </p>
-                                <hr >
+                                <hr>
                                 <div class="control-group">
                                     <label class="control-label">Occupancy Saving</label>
+
                                     <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('occupancy'));  ?>
+                                        <?php echo $this->formElement($formSystem->get('occupancy')); ?>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">LUX Saving</label>
+
                                     <div class="controls">
-                                        <?php echo $this->formElement($formSystem->get('lux'));  ?>
+                                        <?php echo $this->formElement($formSystem->get('lux')); ?>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Hours (if applicable)</label>
+
                                     <div class="controls">
                                         <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('hours'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('hours')); ?>
                                             <span class="add-on">per week</span>
                                         </div>
                                     </div>
@@ -1299,11 +1436,13 @@ $this->inlineScript()->captureEnd();
                             </div>
                             <div class="tab-pane" id="widgetA_tab3">
                                 <p>
-                                    In order to a non-standard setup for the architectural configuration please first enter a length on the &quot;Product&quot; tab.
+                                    In order to a non-standard setup for the architectural configuration please first
+                                    enter a length on the &quot;Product&quot; tab.
                                 </p>
-                                <hr >
+                                <hr>
                                 <div class="control-group">
                                     <label class="control-label">Configurations: </label>
+
                                     <div class="controls">
                                         <select name="configurations" class="span12">
                                             <option>No Configurations Available</option>
@@ -1312,10 +1451,36 @@ $this->inlineScript()->captureEnd();
                                 </div>
                                 <div class="control-group">
                                     <label class="control-label">Max Unit Length</label>
+
                                     <div class="controls">
                                         <div class="input-append">
-                                            <?php echo $this->formElement($formSystem->get('maxunitlength'));  ?>
+                                            <?php echo $this->formElement($formSystem->get('maxunitlength')); ?>
                                             <span class="add-on">mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Max Phosphor Length</label>
+
+                                    <div class="controls">
+                                        <select name="maximumPhosphorLength">
+                                            <option class="default" value="">Use Default Length</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="widgetA_tab4">
+                                <p>
+                                    Below are the configuration details of the proposed architectural lengths.
+                                </p>
+                                <hr>
+                                <div style="height: 160px; overflow: auto">
+                                    <div class="row-fluid">
+                                        <div class="span8" id="architecturalConfiguration"></div>
+                                        <div class="span4">
+                                            Specified: <span id="architecturalSpecified"></span><br/>
+                                            Achieved: <span id="architecturalAchievable"></span><br/>
+                                            Billable: <span id="architecturalBillable"></span><br/>
                                         </div>
                                     </div>
                                 </div>
@@ -1324,17 +1489,26 @@ $this->inlineScript()->captureEnd();
                     </form>
                 </div>
                 <div id="architecturalMsgs"></div>
-                <button class="btn btn-default" disabled="disabled" id="btn-last-architectural"><i class="icon-arrow-left icon-white"></i> Last</button>
-                <button class="btn btn-default" id="btn-next-architectural">Next <i class="icon-arrow-right icon-white"></i></button>
+                <button class="btn btn-default" disabled="disabled" id="btn-last-architectural"><i
+                        class="icon-arrow-left icon-white"></i> Last
+                </button>
+                <button class="btn btn-default" id="btn-next-architectural">Next <i
+                        class="icon-arrow-right icon-white"></i></button>
                 <?php if ($editable) { ?>
-                <button class="btn btn-success" style="float: right" id="btn-create-architectural-entry"><i class="icon-plus icon-white"></i> Add Architectural</button>
-                <button class="btn btn-success" style="float: right" id="btn-modify-architectural-entry"><i class="icon-edit icon-white"></i> Save Changes</button>
+                    <button class="btn btn-success" style="float: right" id="btn-create-architectural-entry"><i
+                            class="icon-plus icon-white"></i> Add Architectural
+                    </button>
+                    <button class="btn btn-success" style="float: right" id="btn-modify-architectural-entry"><i
+                            class="icon-edit icon-white"></i> Save Changes
+                    </button>
                 <?php } ?>
             </div>
         </div>
     </div>
     <div class="modal-footer">
-        <div class="label label-important" style="float: left" id="architecturalLength">select a product to calculate achievable length and units required</div>
+        <div class="label label-important" style="float: left" id="architecturalLength">select a product to calculate
+            achievable length and units required
+        </div>
         <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
     </div>
 </div>

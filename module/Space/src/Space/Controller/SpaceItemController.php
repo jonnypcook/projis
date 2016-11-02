@@ -61,6 +61,29 @@ class SpaceitemController extends SpaceSpecificController
         $query = $this->getEntityManager()->createQuery("SELECT l.legacyId, l.description, l.quantity, l.pwr_item, l.pwr_ballast, l.emergency, l.dim_item, l.dim_unit, c.maintenance, c.name as category, p.productId FROM Product\Entity\Legacy l JOIN l.category c LEFT JOIN l.product p ORDER BY l.category ASC, l.description ASC");
         $legacies = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
 
+        // prep phosphor information
+        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
+        $results = $query->getResult();
+        $productPhosphor = array();
+        foreach ($results as $result) {
+            if (empty($result->getPhosphors())) {
+                continue;
+            }
+
+
+            if (empty($productPhosphor[$result->getProductId()])) {
+                $productPhosphor[$result->getProductId()] = array();
+            }
+
+            foreach ($result->getPhosphors() as $phosphor) {
+                if ($phosphor->isEnabled() === false) {
+                    continue;
+                }
+
+                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
+            }
+
+        }
 
         $systems = $this->getEntityManager()->getRepository('Space\Entity\System')->findBySpaceId($this->getSpace()->getSpaceId(), array('array' => true));
 
@@ -74,6 +97,7 @@ class SpaceitemController extends SpaceSpecificController
 
 
         $this->getView()
+            ->setVariable('productPhosphor', $productPhosphor)
             ->setVariable('spaceNext', $spaceNext)
             ->setVariable('spacePrev', $spacePrev)
             ->setVariable('formSystem', $formSystem)
@@ -236,7 +260,7 @@ class SpaceitemController extends SpaceSpecificController
                 $altId = $this->params()->fromPost('altId', false);
                 $altSz = $this->params()->fromPost('altSz', false);
                 $maximumUnitLength = $this->params()->fromPost('maxunitlength', false);
-                $maximumPhosphorLength = $this->params()->fromPost('maxPhosphorLength', false);
+                $maximumPhosphorLength = $this->params()->fromPost('maximumPhosphorLength', false);
                 $mode = 1;
 
                 $errors = array();
@@ -312,6 +336,7 @@ class SpaceitemController extends SpaceSpecificController
 
                 // we only want some of the attributes
                 $attributes = array_intersect_key($attributes, array(
+                    'pLen' => true,
                     'dLen' => true,
                     'dConf' => true,
                     'sLen' => true,

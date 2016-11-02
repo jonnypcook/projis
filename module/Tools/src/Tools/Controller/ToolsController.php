@@ -29,12 +29,18 @@ class ToolsController extends AuthController
         return $this->getView();
     }
 
+    /**
+     * tool used to reset architectural configuration
+     * @return JsonModel
+     */
     public function resetArchitecturalConfigurationAction () {
         try {
 
             if (!($this->getRequest()->isXmlHttpRequest())) {
-//                throw new \Exception('illegal request');
+                throw new \Exception('illegal request');
             }
+
+            die('this tool has been disabled');
 
             $data = $this->getServiceLocator()->get('Model')->resetArchitectural();
             echo '<pre>', print_r($data, true), '</pre>';die();
@@ -45,7 +51,11 @@ class ToolsController extends AuthController
 
         return new JsonModel(empty($data)?array('err'=>true):$data);/**/
     }
-    
+
+    /**
+     * calculate the optimum architectural layout
+     * @return JsonModel
+     */
     public function rpQuickCalculateAction() {
         try {
             
@@ -57,10 +67,8 @@ class ToolsController extends AuthController
             $productId = $this->params()->fromPost('productId', false);
             $length = $this->params()->fromPost('length', false);
             $maximumUnitLength = $this->params()->fromPost('maxunitlen', false);
-            $maximumPhosphorLength = $this->params()->fromPost('maxPhosphorLength', false);
+            $maximumPhosphorLength = $this->params()->fromPost('maximumPhosphorLength', false);
             $mode = 1;
-
-//            $productId = 658; $length = 12000; $maximumUnitLength = 7000; $mode = 1; echo 'Params: length = ' . $length . ', maximum unit length = ' . $maximumUnitLength . '<hr>';
 
             if (empty($productId) || !preg_match('/^[\d]+$/', $productId)) {
                 throw new \Exception('illegal product parameter');
