@@ -662,6 +662,8 @@ class Model
     const BOARDLEN_A = 288.25;
     const BOARDLEN_B = 286.75;
     const BOARDLEN_B1 = 104.60;
+    const BOARDLEN_B1PP = 104.60;
+    const BOARDLEN_B1FP = 104.60;
     const BOARDLEN_C = 288.35;
     const BOARDLEN_GAP = 1;
     const BOARDLEN_ALUM = 2; // changed from 2
