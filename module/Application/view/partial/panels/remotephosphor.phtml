@@ -8,6 +8,54 @@
 $this->inlineScript()
     ->appendFile('/js/forms/tools/remotephosphor.js');
 
+
+$phosphorProductJS = array();
+$phosphorProductJSStr = '';
+foreach ($productPhosphor as $productId => $phosphorLengths) {
+    if (empty($phosphorLengths)) {
+        continue;
+    }
+    $data = array();
+    foreach ($phosphorLengths as $phosphorLength) {
+        $data [] = "'{$phosphorLength[0]}': " . (empty($phosphorLength[1]) ? 'false' : 'true');
+    }
+    $phosphorProductJS[] = "{$productId}: {" . implode (', ', $data) . "}";
+}
+
+$phosphorProductJSStr = '{' . implode(', ', $phosphorProductJS) . '}';
+
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+
+function resetPhosphorDropdown(productId, selected) {
+    var phosphorProducts = {$phosphorProductJSStr};
+
+    $('form[name=RemotePhosphorForm] select[name=maximumPhosphorLength] option:not(.default)').remove();
+
+    if (!phosphorProducts[productId] || phosphorProducts[productId].length < 1) {
+        return;
+    }
+
+    var selectList = $('form[name=RemotePhosphorForm] select[name=maximumPhosphorLength]');
+    for (var i in phosphorProducts[productId]) {
+        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[productId][i] ? ' (default)': '')));
+    }
+
+    if (!!selected) {
+        selectList.val(selected);
+    }
+}
+
+$('form[name=RemotePhosphorForm] select[name=productId]').on('change', function(e) {
+    resetPhosphorDropdown($(this).val());
+});
+
+JS;
+$this->inlineScript()->captureEnd();
+?>
+
+
 ?>
 <div class="widget blue" >
     <div class="widget-title">
@@ -23,29 +71,53 @@ $this->inlineScript()
         <div class="alert">
             Enter the required length and product type of the architectural LED and click on the calculate button to get a quick overview of achievable configurations.
         </div>
-        <div class="control-group">
-            <label class="control-label">Required Length</label>
-            <div class="controls">
-                <div class="input-append">
-                    <?php echo $this->formElement($formRemotePhosphor->get('length'));  ?>
-                    <span class="add-on">mm</span>
+        <div class="row-fluid">
+            <div class="span6">
+                <div class="control-group">
+                    <label class="control-label">Required Length</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <?php echo $this->formElement($formRemotePhosphor->get('length'));  ?>
+                            <span class="add-on">mm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span6">
+                <div class="control-group">
+                    <label class="control-label">Maximum Unit Length</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input name="maxunitlen" type="text" data-original-title="Maximum configurable unit length for architectural length" data-trigger="hover" class="span6  tooltips" value="5000">                                            <span class="add-on">mm</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="control-group">
-            <label class="control-label">Maximum Unit Length</label>
-            <div class="controls">
-                <div class="input-append">
-                    <input name="maxunitlen" type="text" data-original-title="Maximum configurable unit length for architectural length" data-trigger="hover" class="span6  tooltips" value="5000">                                            <span class="add-on">mm</span>
+        <div class="row-fluid">
+            <div class="span6">
+                <div class="control-group">
+                    <label class="control-label">Product</label>
+                    <div class="controls">
+                        <?php echo $this->formElement($formRemotePhosphor->get('productId'));  ?>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Product</label>
-            <div class="controls">
-                <?php echo $this->formElement($formRemotePhosphor->get('productId'));  ?>
+            <div class="span6">
+                <div class="control-group">
+                    <label class="control-label">Phosphor Length</label>
+
+                    <div class="controls">
+                        <select name="maximumPhosphorLength">
+                            <option class="default" value="">Use Default Length</option>
+                        </select>
+                    </div>
+                </div>
+
             </div>
         </div>
+
+
         <button class="btn btn-success pull-right" id="btn-remotephosphor-calculate"><i class="icon-bar-chart"></i> Calculate</button>
         <div class="clearfix"></div>
         <hr />

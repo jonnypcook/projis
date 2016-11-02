@@ -145,7 +145,32 @@ class DashboardController extends AuthController
                 ->setAttribute('action', '/tools/rpQuickCalculate/')
                 ->setAttribute('class', 'form-horizontal');
 
+        // prep phosphor information
+        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
+        $results = $query->getResult();
+        $productPhosphor = array();
+        foreach ($results as $result) {
+            if (empty($result->getPhosphors())) {
+                continue;
+            }
+
+
+            if (empty($productPhosphor[$result->getProductId()])) {
+                $productPhosphor[$result->getProductId()] = array();
+            }
+
+            foreach ($result->getPhosphors() as $phosphor) {
+                if ($phosphor->isEnabled() === false) {
+                    continue;
+                }
+
+                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
+            }
+
+        }
+
         $this->getView()
+                ->setVariable('productPhosphor', $productPhosphor)
                 ->setVariable('projects', $projects)
                 ->setVariable('info', $info)
                 ->setVariable('activities', $activities)
