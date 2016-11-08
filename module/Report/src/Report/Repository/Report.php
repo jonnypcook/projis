@@ -32,7 +32,7 @@ class Report extends EntityRepository
                 = 'SELECT 
                       MONTH(p.contracted) mth, 
                       YEAR(p.contracted) yr,
-                      SUM(Sy.ppu * Sy.quantity) price
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price
                     FROM Project p
                         JOIN `Client` c
                           ON c.`client_id` = p.`client_id`
@@ -142,7 +142,7 @@ class Report extends EntityRepository
                 = 'SELECT
                       MONTH(p.contracted) mth,
                       YEAR(p.contracted) yr,
-                      SUM(Sy.ppu * Sy.quantity) price,
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                       QUARTER(p.contracted) qtr
                     FROM Project p
                         JOIN `Client` c
@@ -217,9 +217,9 @@ class Report extends EntityRepository
                       d.name as department_name,
                       c.client_id,
                       u.user_id,
-                      SUM(Sy.ppu * Sy.quantity) price,
-                      SUM(Sy.cpu*Sy.quantity) AS cost,
-                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity) AS priceMCD,
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                      SUM(Sy.cpu*Sy.quantity * Sp.quantity) AS cost,
+                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity * Sp.quantity) AS priceMCD,
                       p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                     FROM `Project` p
                       JOIN `Client` c
@@ -264,9 +264,9 @@ class Report extends EntityRepository
                       u.user_id,
                       c.client_id,
                       d.name as department_name,
-                      SUM(Sy.ppu * Sy.quantity) price,
-                      SUM(Sy.cpu*Sy.quantity) AS cost,
-                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity) AS priceMCD,
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                      SUM(Sy.cpu*Sy.quantity * Sp.quantity) AS cost,
+                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity * Sp.quantity) AS priceMCD,
                       p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                     FROM `Project` p
                      JOIN `Client` c
@@ -313,9 +313,9 @@ class Report extends EntityRepository
                       u.user_id,
                       c.client_id,
                       d.name as department_name,
-                      SUM(Sy.ppu * Sy.quantity) price,
-                      SUM(Sy.cpu*Sy.quantity) AS cost,
-                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity) AS priceMCD,
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                      SUM(Sy.cpu*Sy.quantity * Sp.quantity) AS cost,
+                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity * Sp.quantity) AS priceMCD,
                       p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed,
                       QUARTER(p.contracted) qtr
                     FROM `Project` p
@@ -363,9 +363,9 @@ class Report extends EntityRepository
                       u.user_id,
                       c.client_id,
                       d.name as department_name,
-                      SUM(Sy.ppu * Sy.quantity) price,
-                      SUM(Sy.cpu*Sy.quantity) AS cost,
-                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity) AS priceMCD,
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                      SUM(Sy.cpu * Sy.quantity * Sp.quantity) AS cost,
+                      SUM(ROUND((Sy.ppu * (1 - (pr.mcd * p.mcd))),2) * Sy.quantity * Sp.quantity) AS priceMCD,
                       p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed,
                       QUARTER(p.contracted) qtr
                     FROM `Project` p

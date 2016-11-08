@@ -141,7 +141,7 @@ class ReportexportController extends AuthController
                       Client.name           client_name,
                       Client.client_id      client_id,
                       Client.created,
-                      SUM(sy.quantity * sy.ppu) price,
+                      SUM(sy.quantity * sy.ppu * sp.quantity) price,
                       CONCAT(u.forename , " ", u.surname) user_name
                     FROM `Project`
                       INNER JOIN `Client`
@@ -167,7 +167,7 @@ class ReportexportController extends AuthController
                       Client.name           client_name,
                       Client.client_id      client_id,
                       Client.created,
-                      SUM(sy.quantity * sy.ppu) price,
+                      SUM(sy.quantity * sy.ppu * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname ) user_name
                     FROM `Project`
                       INNER JOIN `Client`
@@ -262,7 +262,7 @@ class ReportexportController extends AuthController
                 = 'SELECT
                       p.project_id, p.name project_name, c.name client_name, c.client_id,
                       CONCAT(u.forename," ", u.surname) user_name,
-                      d.document_list_id, SUM(sy.ppu * sy.quantity) price, d.created, s.space_id, SUM(sy.cpu * sy.quantity) cost
+                      d.document_list_id, SUM(sy.ppu * sy.quantity * s.quantity) price, d.created, s.space_id, SUM(sy.cpu * sy.quantity * s.quantity) cost
                     FROM `DocumentList` d
                         INNER JOIN `Project` p
                           ON p.`project_id` = d.`project_id`
@@ -288,7 +288,7 @@ class ReportexportController extends AuthController
                 = 'SELECT
                       p.project_id, p.name project_name, c.name client_name, c.client_id,
                       CONCAT(u.forename," ", u.surname) user_name,
-                      d.document_list_id, SUM(sy.ppu * sy.quantity) price, SUM(sy.cpu * sy.quantity) cost, d.created, s.space_id
+                      d.document_list_id, SUM(sy.ppu * sy.quantity * s.quantity) price, SUM(sy.cpu * sy.quantity * s.quantity) cost, d.created, s.space_id
                     FROM `DocumentList` d
                         INNER JOIN `Project` p
                           ON p.`project_id` = d.`project_id`
@@ -327,9 +327,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                     CONCAT(u.forename," ", u.surname) user_name, d.document_list_id, c.client_id, d.created,
-                    SUM(sy.cpu * sy.quantity) cost
+                    SUM(sy.cpu * sy.quantity * sp.quantity) cost
                         FROM `DocumentList` d
                         INNER JOIN `Project` p ON p.`project_id` = d.`project_id`
                         INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -349,9 +349,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                    p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                     CONCAT(u.forename," ", u.surname) user_name, d.document_list_id, c.client_id, d.created,
-                    SUM(sy.cpu * sy.quantity) cost
+                    SUM(sy.cpu * sy.quantity * sp.quantity) cost
                         FROM `DocumentList` d
                         INNER JOIN `Project` p ON p.`project_id` = d.`project_id`
                         INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -389,8 +389,8 @@ class ReportexportController extends AuthController
                           p.name          project_name,
                           c.name          client_name,
                           c.client_id,
-                          SUM(Sy.ppu * Sy.quantity) price,
-                          SUM(Sy.cpu * Sy.quantity) cost,
+                          SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                          SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                           CONCAT(u.forename," ", u.surname) user_name,
                           p.created
                         FROM `Project` p
@@ -416,8 +416,8 @@ class ReportexportController extends AuthController
                           p.name          project_name,
                           c.name          client_name,
                           c.client_id,
-                          SUM(Sy.ppu * Sy.quantity) price,
-                          SUM(Sy.cpu * Sy.quantity) cost,
+                          SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                          SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                           CONCAT(u.forename, " ", u.surname) user_name,
                           p.created
                         FROM `Project` p
@@ -508,9 +508,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                     FROM `Project` p
                     INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                     INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -529,9 +529,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname ) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                     FROM `Project` p
                     LEFT JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                     LEFT JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -612,9 +612,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -633,9 +633,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -722,9 +722,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -743,9 +743,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -773,9 +773,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename, " " , u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
@@ -795,9 +795,9 @@ class ReportexportController extends AuthController
         {
             $sql
                 = 'SELECT
-                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity) price,
+                      p.project_id, p.name project_name, c.name client_name, SUM(sy.ppu * sy.quantity * sp.quantity) price,
                       CONCAT(u.forename," ", u.surname) user_name, c.client_id, p.created,
-                      SUM(sy.cpu * sy.quantity) cost
+                      SUM(sy.cpu * sy.quantity * sp.quantity) cost
                             FROM `Project` p
                             INNER JOIN `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
