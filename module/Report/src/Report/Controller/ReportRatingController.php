@@ -370,8 +370,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
@@ -400,8 +400,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id,p.contracted, p.completed
                 FROM `Project` p
@@ -446,8 +446,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -476,8 +476,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id,p.contracted, p.completed
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -518,8 +518,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
@@ -548,8 +548,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
@@ -606,8 +606,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed, c.client_id
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -636,8 +636,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed, c.client_id
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -678,8 +678,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
@@ -707,8 +707,8 @@ class ReportRatingController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
@@ -750,8 +750,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -780,8 +780,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
-                  SUM(Sy.cpu * Sy.quantity) cost,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
+                  SUM(Sy.cpu * Sy.quantity * Sp.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
                 FROM `Project` p
                   LEFT JOIN `Client` c
@@ -836,8 +836,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(sy.ppu * sy.quantity) price,
-                  SUM(sy.cpu * sy.quantity) cost,
+                  SUM(sy.ppu * sy.quantity * s.quantity) price,
+                  SUM(sy.cpu * sy.quantity * s.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
 
                     FROM System sy
@@ -865,8 +865,8 @@ class ReportRatingController extends AuthController
                   c.name          client_name,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   c.client_id,
-                  SUM(sy.ppu * sy.quantity) price,
-                  SUM(sy.cpu * sy.quantity) cost,
+                  SUM(sy.ppu * sy.quantity * s.quantity) price,
+                  SUM(sy.cpu * sy.quantity * s.quantity) cost,
                   p.created, p.expected_date, p.rating, p.project_status_id, p.contracted, p.completed
 
                     FROM System sy
@@ -980,7 +980,7 @@ class ReportRatingController extends AuthController
                 if ( $type == 'customer' )
                 {
                     $sql
-                        = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.rating
+                        = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.rating
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -999,7 +999,7 @@ class ReportRatingController extends AuthController
                 else
                 {
                     $sql
-                        = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.rating
+                        = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.rating
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -1020,7 +1020,7 @@ class ReportRatingController extends AuthController
             {
 
                 $sql
-                    = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.rating
+                    = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.rating
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`

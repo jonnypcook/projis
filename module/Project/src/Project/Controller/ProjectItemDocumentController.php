@@ -1587,36 +1587,29 @@ class ProjectitemdocumentController extends ProjectSpecificController
      */
     function exportSystemBuildAction()
     {
-        $data[] = array(
-            '"Building ID"',
-            '"Building Name"',
-            '"Space ID"',
-            '"Space Name"',
-            '"Space Quantity"',
-            '"Label"',
-            '"Legacy Lighting"',
-            '"Legacy Quantity"',
-            '"Specified Length"',
-            '"Achievable Length"',
-            '"Weekly Hours of Operation"',
-            '"Life Span"',
-            '"Legacy Rating"',
-            '"Product"',
-            '"Product Type"',
-            '"LED Quantity"',
-            '"LED Quantity (inc multiplier)"',
-            '"LED Rating"',
-            '"Configuration"',
-            '"A"',
-            '"B"',
-            '"B1"',
-            '"C"',
-            '"End Caps"',
-            '"Red/Black Cable"',
-            '"WAGO"',
-            '"Phosphor"',
-            '"Aluminium"',
-        );
+        $mini   = (bool)$this->params()->fromQuery( 'mini', false );
+        $data = array();
+
+        if ($mini) {
+            $data[] = array(
+                '"Space ID"', '"Space Quantity"', '"Label"',
+                '"Specified Length"', '"Achievable Length"',
+                '"Product"', '"Product Type"',
+                '"LED Quantity"', '"LED Quantity (inc multiplier)"', '"Configuration"',
+                '"A"', '"B"', '"B1"', '"B1PP"', '"B1FP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
+                '"Phosphor"', '"Aluminium"',
+            );
+        } else {
+            $data[] = array(
+                '"Building ID"', '"Building Name"', '"Space ID"', '"Space Name"', '"Space Quantity"', '"Label"',
+                '"Legacy Lighting"', '"Legacy Quantity"', '"Specified Length"', '"Achievable Length"',
+                '"Weekly Hours of Operation"', '"Life Span"', '"Legacy Rating"', '"Product"', '"Product Type"',
+                '"LED Quantity"', '"LED Quantity (inc multiplier)"', '"LED Rating"', '"Configuration"',
+                '"A"', '"B"', '"B1"', '"B1PP"', '"B1FP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
+                '"Phosphor"', '"Aluminium"',
+            );
+        }
+
 
         $args = array();
 
@@ -1640,6 +1633,8 @@ class ProjectitemdocumentController extends ProjectSpecificController
                             '_A'  => array( $system[3], 'A Board', 'PCB Boards Type A', 0 ),
                             '_B'  => array( $system[3], 'B Board', 'PCB Boards Type B', 0 ),
                             '_B1' => array( $system[3], 'B1 Board', 'PCB Boards Type B1', 0 ),
+                            '_B1PP' => array( $system[3], 'B1PP Board', 'PCB Boards Type B1PP', 0 ),
+                            '_B1FP' => array( $system[3], 'B1FP Board', 'PCB Boards Type B1FP', 0 ),
                             '_C'  => array( $system[3], 'C Board', 'PCB Boards Type C', 0 ),
                         );
 
@@ -1691,36 +1686,62 @@ class ProjectitemdocumentController extends ProjectSpecificController
 
                     }
                     $led = ($system[2] == 1);
-                    $row = array(
-                        $buildingId,
-                        '"' . $building['name'] . '"',
-                        $spaceId,
-                        '"' . $space['name'] . '"',
-                        $multiplier,
-                        '"' . (empty($system[17]) ? '-' : $system[17]) . '"', // label
-                        '"' . $system[18] . '"', // legacy light name
-                        $system[6], // legacy quantity
-                        $arch ? $attributes['sLen'] : '0', // specified length
-                        $arch ? $attributes['dLen'] : '0', // achievable length
-                        $system[9], // hours of operation
-                        $led ? ($system[9] ? number_format( 50000 / ($system[9] * 52), 2 ) : 0) : 0, // life span
-                        $system[10], // legacy rating
-                        $system[4], // LED model
-                        ($system[2] == 3) ? 'Architectural' : (($system[2] == 2) ? 'Control' : (($system[2] == 1) ? 'LED' : 'Product')), // LED model
-                        $system[5], // Quantity
-                        $multiplier * $system[5],
-                        $system[7], // LED rating
-                        $arch ? '"' . $cStr . '"' : '',
-                        $arch ? $boards['_A'][3] : 0,
-                        $arch ? $boards['_B'][3] : 0,
-                        $arch ? $boards['_B1'][3] : 0,
-                        $arch ? $boards['_C'][3] : 0,
-                        $arch ? $architectural['_EC'][3] : 0,
-                        $arch ? $architectural['_CBL'][3] : 0,
-                        $arch ? $architectural['_WG'][3] : 0,
-                        $arch ? implode( ' | ', $phosphorStr ) : 0,
-                        $arch ? implode( ' | ', $aluminiumStr ) : 0,
-                    );
+                    if ($mini) {
+                        $row = array(
+                            $spaceId,
+                            $multiplier,
+                            '"' . (empty($system[17]) ? '-' : $system[17]) . '"', // label
+                            $arch ? $attributes['sLen'] : '0', // specified length
+                            $arch ? $attributes['dLen'] : '0', // achievable length
+                            $system[4], // LED model
+                            ($system[2] == 3) ? 'Architectural' : (($system[2] == 2) ? 'Control' : (($system[2] == 1) ? 'LED' : 'Product')), // LED model
+                            $system[5], // Quantity
+                            $multiplier * $system[5],
+                            $arch ? '"' . $cStr . '"' : '',
+                            $arch ? $boards['_A'][3] : 0,
+                            $arch ? $boards['_B'][3] : 0,
+                            $arch ? $boards['_B1'][3] : 0,
+                            $arch ? $boards['_B1PP'][3] : 0,
+                            $arch ? $boards['_B1FP'][3] : 0,
+                            $arch ? $boards['_C'][3] : 0,
+                            $arch ? $architectural['_EC'][3] : 0,
+                            $arch ? $architectural['_CBL'][3] : 0,
+                            $arch ? $architectural['_WG'][3] : 0,
+                            $arch ? implode( ' | ', $phosphorStr ) : 0,
+                            $arch ? implode( ' | ', $aluminiumStr ) : 0,
+                        );                    } else {
+                        $row = array(
+                            $buildingId,
+                            '"' . $building['name'] . '"',
+                            $spaceId,
+                            '"' . $space['name'] . '"',
+                            $multiplier,
+                            '"' . (empty($system[17]) ? '-' : $system[17]) . '"', // label
+                            '"' . $system[18] . '"', // legacy light name
+                            $system[6], // legacy quantity
+                            $arch ? $attributes['sLen'] : '0', // specified length
+                            $arch ? $attributes['dLen'] : '0', // achievable length
+                            $system[9], // hours of operation
+                            $led ? ($system[9] ? number_format( 50000 / ($system[9] * 52), 2 ) : 0) : 0, // life span
+                            $system[10], // legacy rating
+                            $system[4], // LED model
+                            ($system[2] == 3) ? 'Architectural' : (($system[2] == 2) ? 'Control' : (($system[2] == 1) ? 'LED' : 'Product')), // LED model
+                            $system[5], // Quantity
+                            $multiplier * $system[5],
+                            $system[7], // LED rating
+                            $arch ? '"' . $cStr . '"' : '',
+                            $arch ? $boards['_A'][3] : 0,
+                            $arch ? $boards['_B'][3] : 0,
+                            $arch ? $boards['_B1'][3] : 0,
+                            $arch ? $boards['_B1PP'][3] : 0,
+                            $arch ? $boards['_B1FP'][3] : 0,
+                            $arch ? $boards['_C'][3] : 0,
+                            $arch ? $architectural['_EC'][3] : 0,
+                            $arch ? $architectural['_CBL'][3] : 0,
+                            $arch ? $architectural['_WG'][3] : 0,
+                            $arch ? implode( ' | ', $phosphorStr ) : 0,
+                            $arch ? implode( ' | ', $aluminiumStr ) : 0,
+                        );                    }
 
                     $data[] = $row;
                 }

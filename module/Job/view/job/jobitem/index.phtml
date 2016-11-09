@@ -425,6 +425,8 @@ if ( $project->getTest() )
                                                 Sheet</a></li>
                                         <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/" class="btn-config-export-csv">System
                                                 Setup</a></li>
+                                        <li role="presentation"><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/?mini=1" class="btn-config-export-csv">System
+                                                Setup (Mini)</a></li>
                                         <?php if ( $architectural )
                                         { ?>
                                             <li class="divider" role="presentation"></li>

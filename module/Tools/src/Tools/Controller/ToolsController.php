@@ -28,7 +28,34 @@ class ToolsController extends AuthController
         //$this->getView()->setVariable('form', $form);
         return $this->getView();
     }
-    
+
+    /**
+     * tool used to reset architectural configuration
+     * @return JsonModel
+     */
+    public function resetArchitecturalConfigurationAction () {
+        try {
+
+            if (!($this->getRequest()->isXmlHttpRequest())) {
+                throw new \Exception('illegal request');
+            }
+
+            die('this tool has been disabled');
+
+            $data = $this->getServiceLocator()->get('Model')->resetArchitectural();
+            echo '<pre>', print_r($data, true), '</pre>';die();
+            $data = array('err'=>false, 'info'=>$data);
+        } catch (\Exception $ex) {
+            $data = array('err'=>true, 'info'=>array('ex'=>$ex->getMessage()));
+        }
+
+        return new JsonModel(empty($data)?array('err'=>true):$data);/**/
+    }
+
+    /**
+     * calculate the optimum architectural layout
+     * @return JsonModel
+     */
     public function rpQuickCalculateAction() {
         try {
             
@@ -36,14 +63,13 @@ class ToolsController extends AuthController
                 throw new \Exception('illegal request');
             }
             
-            $post = $this->getRequest()->getPost();
-            
             // test values
             $productId = $this->params()->fromPost('productId', false);
             $length = $this->params()->fromPost('length', false);
-            $maxunitlen = $this->params()->fromPost('maxunitlength', false);
+            $maximumUnitLength = $this->params()->fromPost('maxunitlen', false);
+            $maximumPhosphorLength = $this->params()->fromPost('maximumPhosphorLength', false);
             $mode = 1;
-            
+
             if (empty($productId) || !preg_match('/^[\d]+$/', $productId)) {
                 throw new \Exception('illegal product parameter');
             }
@@ -51,23 +77,45 @@ class ToolsController extends AuthController
             if (empty($length) || !preg_match('/^[\d]+(.[\d]+)?$/', $length)) {
                 throw new \Exception('illegal product parameter');
             }
-            
-            if (empty($maxunitlen) || !preg_match('/^[\d]+(.[\d]+)?$/', $maxunitlen)) {
-                throw new \Exception('illegal maximum unit length parameter: ' . $maxunitlen);
+
+            if (empty($maximumUnitLength) || !preg_match('/^[\d]+(.[\d]+)?$/', $maximumUnitLength)) {
+                throw new \Exception('illegal maximum unit length parameter: ' . $maximumUnitLength);
             }
-            
+
+            if (!empty($maximumPhosphorLength) && !preg_match('/^[\d]+(.[\d]+)?$/', $maximumPhosphorLength)) {
+                throw new \Exception('illegal maximum phosphor unit length parameter: ' . $maximumPhosphorLength);
+            }
+
             // find product cost per unit
             $product = $this->getEntityManager()->find('Product\Entity\Product', $productId);
             if (!($product instanceof \Product\Entity\Product)) {
                 throw new \Exception('illegal product selection');
             }
-            
+
+            // ensure product is architectural
             if ($product->getType()->getTypeId() != 3) { // architectural
                 throw new \Exception('illegal product type');
             }
-            
-            $data = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $mode, array('alts'=>true, 'maxunitlen'=>$maxunitlen));
-            
+
+            // we now have a maximum
+            if (empty($maximumPhosphorLength)) {
+                if (!empty($product->getPhosphors())) {
+                    foreach ($product->getPhosphors() as $phosphor) {
+                        if ($phosphor->isDefault() === true) {
+                            $maximumPhosphorLength = $phosphor->getLength();
+                            break;
+                        } elseif (empty($maximumPhosphorLength) || $phosphor->getLength() > $maximumPhosphorLength) {
+                            $maximumPhosphorLength = $phosphor->getLength();
+                        }
+                    }
+                }
+            }
+
+            if (empty($maximumPhosphorLength)) {
+                throw new \Exception('maximum phosphor unit length not provided via parameter or product');
+            }
+
+            $data = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $maximumUnitLength, $maximumPhosphorLength, $mode, array('alts'=>true));
             $data = array('err'=>false, 'info'=>$data);
         } catch (\Exception $ex) {
             $data = array('err'=>true, 'info'=>array('ex'=>$ex->getMessage()));

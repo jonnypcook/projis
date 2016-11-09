@@ -149,6 +149,8 @@ class JobitemController extends JobSpecificController
                                 '_A'  => array( $system[3], 'A Board', 'PCB Boards Type A', 0 ),
                                 '_B'  => array( $system[3], 'B Board', 'PCB Boards Type B', 0 ),
                                 '_B1' => array( $system[3], 'B1 Board', 'PCB Boards Type B1', 0 ),
+                                '_B1PP' => array( $system[3], 'B1PP Board', 'PCB Boards Type B1PP', 0 ),
+                                '_B1FP' => array( $system[3], 'B1FP Board', 'PCB Boards Type B1FP', 0 ),
                                 '_C'  => array( $system[3], 'C Board', 'PCB Boards Type C', 0 ),
                             );
                         }
@@ -276,7 +278,7 @@ class JobitemController extends JobSpecificController
         }
 
         $filename = 'buildsheet ' . str_pad( $this->getProject()->getClient()->getClientId(), 5, "0", STR_PAD_LEFT ) . '-' . str_pad( $this->getProject()->getProjectId(), 5, "0", STR_PAD_LEFT ) . ' ' . date( 'dmyHis' ) . '.csv';
-        $data     = array( array( '"Configuration"', '"Model"', '"Quantity"', '"Phosphor Length"', '"Aluminium Length"', '"End Cap"', '"End Cap (Terminating)"', '"A"', '"B"', '"B1"', '"C"', '"WAGO"', '"Black/Red Wire"' ) );
+        $data     = array( array( '"Configuration"', '"Model"', '"Quantity"', '"Phosphor Length"', '"Aluminium Length"', '"End Cap"', '"End Cap (Terminating)"', '"A"', '"B"', '"B1"', '"B1PP"', '"B1FP"', '"C"', '"WAGO"', '"Black/Red Wire"' ) );
 
         //$this->debug()->dump($stringConfig, false);
         //$this->debug()->dump($build);
@@ -302,6 +304,8 @@ class JobitemController extends JobSpecificController
                             $stringConfig[$config]['_A'],
                             $stringConfig[$config]['_B'],
                             $stringConfig[$config]['_B1'],
+                            $stringConfig[$config]['_B1PP'],
+                            $stringConfig[$config]['_B1FP'],
                             $stringConfig[$config]['_C'],
                             $stringConfig[$config]['_WG'],
                             $stringConfig[$config]['_CBL'] - ($hasCBoard ? $sType : 0),

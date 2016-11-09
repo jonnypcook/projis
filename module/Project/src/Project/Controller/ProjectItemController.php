@@ -496,8 +496,32 @@ class ProjectitemController extends ProjectSpecificController
             . "ORDER BY ps.activated DESC" );
         $saves = $query->getResult( \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY );
 
+        // prep phosphor information
+        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
+        $results = $query->getResult();
+        $productPhosphor = array();
+        foreach ($results as $result) {
+            if (empty($result->getPhosphors())) {
+                continue;
+            }
+
+
+            if (empty($productPhosphor[$result->getProductId()])) {
+                $productPhosphor[$result->getProductId()] = array();
+            }
+
+            foreach ($result->getPhosphors() as $phosphor) {
+                if ($phosphor->isEnabled() === false) {
+                    continue;
+                }
+
+                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
+            }
+
+        }
 
         $this->getView()
+            ->setVariable('productPhosphor', $productPhosphor)
             ->setVariable( 'saves', $saves )
             ->setVariable( 'space', $space )
             ->setVariable( 'form', $form )
@@ -2274,6 +2298,8 @@ class ProjectitemController extends ProjectSpecificController
                                 '_A'  => array( $system[3], 'A Board', 'PCB Boards Type A', 0 ),
                                 '_B'  => array( $system[3], 'B Board', 'PCB Boards Type B', 0 ),
                                 '_B1' => array( $system[3], 'B1 Board', 'PCB Boards Type B1', 0 ),
+                                '_B1PP' => array( $system[3], 'B1PP Board', 'PCB Boards Type B1PP', 0 ),
+                                '_B1FP' => array( $system[3], 'B1FP Board', 'PCB Boards Type B1FP', 0 ),
                                 '_C'  => array( $system[3], 'C Board', 'PCB Boards Type C', 0 ),
                             );
                         }

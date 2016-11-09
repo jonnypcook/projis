@@ -24,6 +24,7 @@ if (!empty($architectural)) {
                             <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/picklist/?mode=1" >Download picklist (CSV)</a></li>
                             <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/job-<?php echo $project->getProjectId(); ?>/buildsheet/" >Build Sheet (CSV)</a></li><!-- -->
                             <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/" class="btn-config-export-csv">Download system setup (CSV)</a></li>
+                            <li><a href="/client-<?php echo $project->getClient()->getClientId(); ?>/project-<?php echo $project->getProjectId(); ?>/document/exportsystembuild/?mini=1" class="btn-config-export-csv">Download system setup mini (CSV)</a></li>
                         </ul><!-- -->
                     </div>
                 </div>

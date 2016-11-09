@@ -60,7 +60,7 @@ class ReportController extends AuthController
                 FROM `Project` p
                 INNER JOIN `Client` c ON c.`client_id` = p.`client_id`
                 INNER JOIN (
-                    SELECT SUM(ROUND((sys.`quantity` * sys.`ppu`)*(1-(p.`mcd` * pr.`mcd`)), 2)) AS `price`, p.`project_id`
+                    SELECT SUM(ROUND((sys.`quantity` * sys.`ppu` * s.quantity)*(1-(p.`mcd` * pr.`mcd`)), 2)) AS `price`, p.`project_id`
                     FROM `System` sys
                     INNER JOIN `Product` pr ON pr.`product_id` = sys.`product_id`
                     inner Join `Space` s on s.`space_id` = sys.`space_id`
@@ -510,7 +510,7 @@ class ReportController extends AuthController
             if ( $user_id )
             {
                 $sql
-                    = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select SUM(sy.`ppu` * sy.`quantity` * s.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -524,7 +524,7 @@ class ReportController extends AuthController
             else
             {
                 $sql
-                    = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select SUM(sy.`ppu` * sy.`quantity` * s.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -554,7 +554,7 @@ class ReportController extends AuthController
             if ( $user_id )
             {
                 $sql
-                    = 'select Sum(sy.ppu * sy.quantity) `price`, MONTH(p.`contracted`) `mth`, YEAR(p.`contracted`) `yr`
+                    = 'select Sum(sy.ppu * sy.quantity * sp.quantity) `price`, MONTH(p.`contracted`) `mth`, YEAR(p.`contracted`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -570,7 +570,7 @@ class ReportController extends AuthController
             else
             {
                 $sql
-                    = 'SELECT SUM(sy.ppu * sy.quantity) `price`, MONTH(p.`contracted`) `mth`, YEAR(p.`contracted`) `yr`
+                    = 'SELECT SUM(sy.ppu * sy.quantity * sp.quantity) `price`, MONTH(p.`contracted`) `mth`, YEAR(p.`contracted`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -603,7 +603,7 @@ class ReportController extends AuthController
             if ( $user_id )
             {
                 $sql
-                    = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -618,7 +618,7 @@ class ReportController extends AuthController
             else
             {
                 $sql
-                    = 'select  SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select  SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -647,7 +647,7 @@ class ReportController extends AuthController
             if ( $user_id )
             {
                 $sql
-                    = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -663,7 +663,7 @@ class ReportController extends AuthController
             else
             {
                 $sql
-                    = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
+                    = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, MONTH(p.`created`) `mth`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1009,7 +1009,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `allValue`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `allValue`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1021,7 +1021,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `allValue`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `allValue`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1040,7 +1040,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select Sum(sy.ppu * sy.quantity) `wonValue`
+                = 'select Sum(sy.ppu * sy.quantity * sp.quantity) `wonValue`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1055,7 +1055,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'SELECT SUM(sy.ppu * sy.quantity) `wonValue`
+                = 'SELECT SUM(sy.ppu * sy.quantity * sp.quantity) `wonValue`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1079,7 +1079,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `lostValue`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `lostValue`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1092,7 +1092,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select  SUM(sy.`ppu` * sy.`quantity`) `lostValue`
+                = 'select  SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `lostValue`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1113,7 +1113,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `openValue`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `openValue`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1127,7 +1127,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `openValue`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `openValue`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1587,7 +1587,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1601,7 +1601,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1631,7 +1631,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select Sum(sy.ppu * sy.quantity) `price`, QUARTER(p.`contracted`) `qtr`, YEAR(p.`contracted`) `yr`
+                = 'select Sum(sy.ppu * sy.quantity * sp.quantity) `price`, QUARTER(p.`contracted`) `qtr`, YEAR(p.`contracted`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1647,7 +1647,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'SELECT SUM(sy.ppu * sy.quantity) `price`, QUARTER(p.`contracted`) `qtr`, YEAR(p.`contracted`) `yr`
+                = 'SELECT SUM(sy.ppu * sy.quantity * sp.quantity) `price`, QUARTER(p.`contracted`) `qtr`, YEAR(p.`contracted`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1680,7 +1680,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1695,7 +1695,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select  SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select  SUM(sy.`ppu` * sy.`quantity` * sp.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                             from `Project` p
                             inner join `Project_Status` ps ON ps.`project_status_id` = p.`project_status_id`
                             inner join `Client` c ON c.`client_id` = p.`client_id`
@@ -1723,7 +1723,7 @@ class ReportController extends AuthController
         if ( $user_id )
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1739,7 +1739,7 @@ class ReportController extends AuthController
         else
         {
             $sql
-                = 'select SUM(sy.`ppu` * sy.`quantity`) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
+                = 'select SUM(sy.`ppu` * sy.`quantity` * s.quantity) `price`, QUARTER(p.`created`) `qtr`, YEAR(p.`created`) `yr`
                         FROM System sy
                         INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                         inner join `Project` p ON p.`project_id` = s.`project_id`
@@ -1850,7 +1850,7 @@ class ReportController extends AuthController
         // End : Total counts
         // Start: Total Value
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -1879,7 +1879,7 @@ class ReportController extends AuthController
 
         // start: Rating values
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.`rating` rating
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.`rating` rating
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -1947,7 +1947,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created,
                   u.`user_id`
@@ -2018,7 +2018,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created,
                   u.`user_id`
@@ -2121,7 +2121,7 @@ class ReportController extends AuthController
 
         // Start: Total Value
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2150,7 +2150,7 @@ class ReportController extends AuthController
 
         // start: Rating values
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.`rating` rating
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.`rating` rating
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2218,7 +2218,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          customer_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created,
                   u.`user_id`
                 FROM `Project` p
@@ -2288,7 +2288,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          customer_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created,
                   u.`user_id`
                 FROM `Project` p
@@ -2385,7 +2385,7 @@ class ReportController extends AuthController
 
         // Start: Total Value
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2413,7 +2413,7 @@ class ReportController extends AuthController
 
         // start: Rating values
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.`rating` rating
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.`rating` rating
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2479,7 +2479,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created,
                   u.`user_id`
@@ -2548,7 +2548,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          client_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   CONCAT(u.forename, " ", u.surname) user_name,
                   p.created,
                   u.`user_id`
@@ -2643,7 +2643,7 @@ class ReportController extends AuthController
 
         // Start: Total Value
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2671,7 +2671,7 @@ class ReportController extends AuthController
 
         // start: Rating values
         $sql
-            = 'SELECT SUM(sy.`ppu` * sy.`quantity`) `value`, p.`rating` rating
+            = 'SELECT SUM(sy.`ppu` * sy.`quantity` * s.quantity) `value`, p.`rating` rating
                     FROM System sy
                     INNER JOIN `Space` s ON s.`space_id` = sy.`space_id`
                     INNER JOIN `Project` p ON p.`project_id` = s.`project_id`
@@ -2737,7 +2737,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          customer_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created,
                   u.`user_id`, c.`client_id`
                 FROM `Project` p
@@ -2806,7 +2806,7 @@ class ReportController extends AuthController
                   p.name          project_name,
                   c.name          customer_name,
                   c.client_id,
-                  SUM(Sy.ppu * Sy.quantity) price,
+                  SUM(Sy.ppu * Sy.quantity * Sp.quantity) price,
                   p.created,
                   u.`user_id`
                 FROM `Project` p
@@ -2863,7 +2863,7 @@ class ReportController extends AuthController
                 = 'SELECT 
                       MONTH(p.contracted) mth, 
                       YEAR(p.contracted) yr,
-                      SUM(Sy.ppu * Sy.quantity) price
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price
                     FROM Project p
                         JOIN `Client` c
                           ON c.`client_id` = p.`client_id`
@@ -3052,7 +3052,7 @@ class ReportController extends AuthController
                 = 'SELECT
                       YEAR(p.contracted) yr,
                       QUARTER(p.contracted) qtr,
-                      SUM(Sy.ppu * Sy.quantity) price
+                      SUM(Sy.ppu * Sy.quantity * Sp.quantity) price
                     FROM Project p
                         JOIN `Client` c
                           ON c.`client_id` = p.`client_id`
