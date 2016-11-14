@@ -212,7 +212,7 @@ var Script = function () {
     
     $('#ProductConfigForm input[name=cpu]').on('change', function (e) {
         var cpu = $('#ProductConfigForm input[name=cpu]').val();
-        if (!cpu.match(/^[\d]+$/)) {
+        if (!cpu.match(/^[\d]+([.][\d]+)?$/)) {
             return false;
         }
         $('#ProductConfigForm input[name=ppu]').val((cpu/0.55).toFixed(2));
