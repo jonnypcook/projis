@@ -27,6 +27,26 @@ $this->headStyle()->captureStart()
     
 <?php 
 $this->headStyle()->captureEnd();
+
+$colourTemperatures = '{' . implode(': true, ', $phosphorColours) . ': true}';
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+
+var colourTemperatures = {$colourTemperatures};
+
+$('#ProductConfigForm input[name=colourTemperature]').on('change', function (e) {
+    var colour = $('#ProductConfigForm input[name=colourTemperature]').val();
+
+    if (colourTemperatures[colour] === undefined) {
+        $('#phosphorLengthSection').removeClass('hidden');
+    } else if (!$('#phosphorLengthSection').hasClass('hidden')) {
+        $('#phosphorLengthSection').addClass('hidden');
+    }
+});
+
+JS;
+$this->inlineScript()->captureEnd();
 ?>
 <div class="row-fluid">
     <div class="span12">
@@ -95,7 +115,8 @@ $this->headStyle()->captureEnd();
                 <div id="productAddLoader" class="loader"></div>
                 <div class="tabbable ">
                     <ul class="nav nav-tabs" id="tabsAddProduct">
-                        <li class=""><a data-number="3" href="#widget_tab3" data-toggle="tab">Other</a></li>
+                        <li class=""><a data-number="4" href="#widget_tab4" data-toggle="tab">Settings</a></li>
+                        <li class=""><a data-number="3" href="#widget_tab3" data-toggle="tab">State</a></li>
                         <li class=""><a data-number="2" href="#widget_tab2" data-toggle="tab">Pricing</a></li>
                         <li class="active"><a data-number="1" href="#widget_tab1" data-toggle="tab">Details</a></li>
                     </ul>
@@ -177,15 +198,6 @@ $this->headStyle()->captureEnd();
                             </div>
                             <div class="tab-pane" id="widget_tab3">
                                 <div class="control-group">
-                                    <label class="control-label">Power</label>
-                                    <div class="controls">
-                                        <div class="input-append">
-                                            <?php echo $this->formElement($form->get('pwr'));  ?>
-                                            <span class="add-on">watts</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="control-group">
                                     <label class="control-label">Active</label>
                                     <div class="controls">
                                         <div id="active-toggle-button">
@@ -210,7 +222,42 @@ $this->headStyle()->captureEnd();
                                     </div>
                                 </div>
                             </div>
+                            <div class="tab-pane" id="widget_tab4">
+                                <div class="control-group">
+                                    <label class="control-label">Power</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($form->get('pwr'));  ?>
+                                            <span class="add-on">watts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="hidden remote-phosphor">
+                                    <div class="control-group">
+                                        <label class="control-label">Colour Temperature</label>
+                                        <div class="controls">
+                                            <input name="colourTemperature" type="number" data-original-title="Phosphor colour temperature for product" data-trigger="hover" class="span6  tooltips" value="">
+                                        </div>
+                                    </div>
+                                    <div class="hidden" id="phosphorLengthSection">
+                                        <p>
+                                            Important: this colour temperature has no default phosphor length added to the system.
+                                            Please specify a phosphor length for this colour temperature to proceed.
+                                        </p>
+                                        <div class="control-group">
+                                            <label class="control-label">Default Phosphor Length</label>
+                                            <div class="controls">
+                                                <div class="input-append">
+                                                    <input name="phosphorLength" type="number" data-original-title="Default phosphor length for product" data-trigger="hover" class="span6  tooltips" value="">
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
                     <?php echo $this->form()->closeTag($form); ?>
                 </div>
                 <div id="productMsgs"></div>

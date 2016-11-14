@@ -225,8 +225,8 @@ class ProductConfigForm extends Form implements \DoctrineModule\Persistence\Obje
             'options' => array(
             ),
         ));
-        
-        
+
+
     }
     
     protected $objectManager;
