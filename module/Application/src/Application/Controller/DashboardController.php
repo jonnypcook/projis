@@ -146,31 +146,27 @@ class DashboardController extends AuthController
                 ->setAttribute('class', 'form-horizontal');
 
         // prep phosphor information
-        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
-        $results = $query->getResult();
-        $productPhosphor = array();
-        foreach ($results as $result) {
-            if (empty($result->getPhosphors())) {
+        $phosphors = $this->getEntityManager()->getRepository('\Product\Entity\Phosphor')->findAll();
+        $phosphorColours = array();
+        foreach ($phosphors as $phosphor) {
+            if ($phosphor->isEnabled() === false) {
                 continue;
             }
 
-
-            if (empty($productPhosphor[$result->getProductId()])) {
-                $productPhosphor[$result->getProductId()] = array();
-            }
-
-            foreach ($result->getPhosphors() as $phosphor) {
-                if ($phosphor->isEnabled() === false) {
-                    continue;
-                }
-
-                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
-            }
-
+            $phosphorColours[$phosphor->getColour()][] = array ($phosphor->getLength(), $phosphor->isDefault());
         }
 
+        $query = $this->getEntityManager()->createQuery("SELECT p.model, p.ppu, p.eca, p.pwr, p.productId, p.attributes, p.colour, b.name as brand, b.brandId, t.name as type, t.service, t.typeId "
+            . "FROM Product\Entity\Product p "
+            . "JOIN p.brand b "
+            . "JOIN p.type t "
+            . "WHERE p.active = 1 "
+            . "ORDER BY b.name ASC, p.model ASC");
+        $products = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+
         $this->getView()
-                ->setVariable('productPhosphor', $productPhosphor)
+                ->setVariable('phosphorColours', $phosphorColours)
+                ->setVariable('products', $products)
                 ->setVariable('projects', $projects)
                 ->setVariable('info', $info)
                 ->setVariable('activities', $activities)

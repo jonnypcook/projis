@@ -34,7 +34,7 @@ class Phosphor
     /**
      * @var boolean
      *
-     * @ORM\Column(name="default", type="boolean", nullable=false)
+     * @ORM\Column(name="defaultOption", type="boolean", nullable=false)
      */
     private $default;
 

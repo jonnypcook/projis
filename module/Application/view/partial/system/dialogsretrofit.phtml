@@ -1,35 +1,34 @@
 <?php
-$phosphorProductJS = array();
-$phosphorProductJSStr = '';
-foreach ($productPhosphor as $productId => $phosphorLengths) {
-    if (empty($phosphorLengths)) {
+$phosphorColoursJS = array();
+$phosphorColoursJSStr = '';
+foreach ($phosphorColours as $color => $phosphorColour) {
+    if (empty($phosphorColour)) {
         continue;
     }
     $data = array();
-    foreach ($phosphorLengths as $phosphorLength) {
+    foreach ($phosphorColour as $phosphorLength) {
         $data [] = "'{$phosphorLength[0]}': " . (empty($phosphorLength[1]) ? 'false' : 'true');
     }
-    $phosphorProductJS[] = "{$productId}: {" . implode (', ', $data) . "}";
+    $phosphorColoursJS[] = "{$color}: {" . implode (', ', $data) . "}";
 }
 
-$phosphorProductJSStr = '{' . implode(', ', $phosphorProductJS) . '}';
+$phosphorColoursJSStr = '{' . implode(', ', $phosphorColoursJS) . '}';
 
 $editable = $this->isGranted('project.write');
 $this->inlineScript()->captureStart();
 echo <<<JS
 
-function resetPhosphorDropdown(productId, selected) {
-    var phosphorProducts = {$phosphorProductJSStr};
+function resetPhosphorDropdown(color, selected) {
+    var phosphorProducts = {$phosphorColoursJSStr};
 
     $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength] option:not(.default)').remove();
 
-    if (!phosphorProducts[productId] || phosphorProducts[productId].length < 1) {
+    if (!phosphorProducts[color] || phosphorProducts[color].length < 1) {
         return;
     }
-
     var selectList = $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]');
-    for (var i in phosphorProducts[productId]) {
-        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[productId][i] ? ' (default)': '')));
+    for (var i in phosphorProducts[color]) {
+        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[color][i] ? ' (default)': '')));
     }
 
     if (!!selected) {
@@ -832,7 +831,7 @@ var Script = function () {
             return;
         }
 
-        resetPhosphorDropdown($(this).val(), data.pLen);
+        resetPhosphorDropdown(opt.attr('data-colour'), data.pLen);
         $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val(opt.attr('data-ppu'));
         $('#architecturalInfo').attr('data-original-title',
             '<div style="text-align: left">'+opt.text()+'<br />'+
@@ -1453,6 +1452,7 @@ $this->inlineScript()->captureEnd();
                                                     echo '<option value="' . $product['productId'] . '" ' .
                                                         'data-ppu="' . $product['ppu'] . '" ' .
                                                         'data-pwr="' . round($product['pwr'], 0) . '" ' .
+                                                        'data-colour="' . round($product['colour'], 0) . '" ' .
                                                         'data-type="' . $product['type'] . '" ' .
                                                         'data-brand="' . $product['brand'] . '" ' .
                                                         'data-eca="' . (!empty($product['eca']) ? 1 : 0) . '" ' .

@@ -34,9 +34,9 @@ var Script = function () {
             $('#btn-last').attr('disabled','disabled');
         } 
 
-        if (tab == 3) {
+        if (tab == 4) {
             $('#btn-next').attr('disabled','disabled');
-        } else if (tab < 3) {
+        } else if (tab < 4) {
             $('#btn-next').removeAttr('disabled');
         }
     }
@@ -49,7 +49,7 @@ var Script = function () {
         }
         
         activeTab = parseInt(activeTab);
-        var nextTab = (activeTab<3)?activeTab+1:activeTab;
+        var nextTab = (activeTab<4)?activeTab+1:activeTab;
         
         if (activeTab != nextTab) {
             setTabButtons (nextTab);
@@ -104,7 +104,7 @@ var Script = function () {
                             var obj=jQuery.parseJSON(response);
                             var k = 0;
                             // an error has been detected
-                            var tab = 3;
+                            var tab = 4;
                             var additional='';
                             if (obj.err == true) {
                                 if (obj.info != undefined) {
@@ -116,7 +116,8 @@ var Script = function () {
                                             switch (i) {
                                                 case 'brand': case 'type': case 'model': case 'description': tab = 1; break;
                                                 case 'cpu': case 'ppu': case 'ibppu': case 'ppu_trial': if (tab>=2) tab = 2; break;
-                                                case 'active': case 'pwr': case 'eca': case 'mcd': case 'sagepay': if (tab>=3) tab = 3; break;
+                                                case 'active': case 'eca': case 'mcd': case 'sagepay': if (tab>=3) tab = 3; break;
+                                                case 'pwr': case 'phosphorLength': case 'colourTemperature': if (tab>=4) tab = 4; break;
                                             }
                                         }
                                     }
@@ -211,12 +212,23 @@ var Script = function () {
     
     $('#ProductConfigForm input[name=cpu]').on('change', function (e) {
         var cpu = $('#ProductConfigForm input[name=cpu]').val();
-        if (!cpu.match(/^[\d]+$/)) {
+        if (!cpu.match(/^[\d]+([.][\d]+)?$/)) {
             return false;
         }
         $('#ProductConfigForm input[name=ppu]').val((cpu/0.55).toFixed(2));
     });
-    
+
+    $('#ProductConfigForm select[name=type]').on('change', function (e) {
+        var type = $('#ProductConfigForm select[name=type]').val();
+
+        if (type == 3) {
+            $('.remote-phosphor').removeClass('hidden');
+        } else if (!$('.remote-phosphor').hasClass('hidden')) {
+            $('.remote-phosphor').addClass('hidden');
+        }
+    });
+
+
     $(document).on('click','.copy-product', function(e) {
         e.preventDefault();
         var productId = $(this).attr('data-productId');
