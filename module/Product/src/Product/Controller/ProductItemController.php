@@ -4,6 +4,8 @@ namespace Product\Controller;
 // Authentication with Remember Me
 // http://samsonasik.wordpress.com/2012/10/23/zend-framework-2-create-login-authentication-using-authenticationservice-with-rememberme/
 
+use Product\Entity\Phosphor;
+use Project\Service\Model;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
@@ -211,8 +213,75 @@ class ProductitemController extends AuthController
             try{
                 $post = $this->getRequest()->getPost();
                 $form->setData($post);
+
+                $additionalErrorCheck = array();
+                if ((int)$post['type'] === 3) { // architectural products require default unit length
+                    $phosphors = $this->getEntityManager()->getRepository('\Product\Entity\Phosphor')->findAll();
+                    $colourTemperature = (float)$post['colourTemperature'];
+
+                    if (empty($colourTemperature) || !preg_match('/^[\d]+?$/', $colourTemperature)) {
+                        $additionalErrorCheck['colourTemperature'] = array(
+                            'isEmpty' => 'Value required for architectural products'
+                        );
+                    } elseif ($colourTemperature < 0) {
+                        $additionalErrorCheck['invalidTemperature'] = array(
+                            'isEmpty' => 'Invalid colour temperature'
+                        );
+                    }
+
+                    $found = false;
+                    foreach ($phosphors as $phosphor) {
+                        if ($phosphor->getColour() == $colourTemperature) {
+                            $found = true;
+                            break;
+                        }
+                    }
+
+                    if (!$found) {
+                        $phosphorLength = (float)$post['phosphorLength'];
+                        if (empty($post['phosphorLength']) || !preg_match('/^[\d]+([.][\d]+)?$/', $post['phosphorLength'])) {
+                            $additionalErrorCheck['phosphorLength'] = array(
+                                'isEmpty' => 'Value required for colour temperature (' . $colourTemperature . ')'
+                            );
+                        } elseif ($phosphorLength < Model::BOARDLEN_B1) {
+                            $additionalErrorCheck['phosphorLength'] = array(
+                                'isEmpty' => 'Phosphor length is too small'
+                            );
+                        } elseif ($phosphorLength > 2000) {
+                            $additionalErrorCheck['phosphorLength'] = array(
+                                'isEmpty' => 'Phosphor length is too long'
+                            );
+                        }
+                    }
+
+                }
                 
-                if ($form->isValid()) {
+                if ($form->isValid() && empty($additionalErrorCheck)) {
+                    if ((int)$post['type'] === 3) {
+                        $phosphorObj = false;
+                        $colourTemperature = (float)$post['colourTemperature'];
+                        foreach ($phosphors as $phosphor) {
+                            if ($phosphor->getColour() == $colourTemperature) {
+                                $phosphorObj = $phosphor;
+                                if ($phosphor->isDefault()) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!($phosphorObj instanceof Phosphor)) {
+                            $phosphorLength = (float)$post['phosphorLength'];
+                            $phosphorObj = new Phosphor();
+                            $phosphorObj->setColour($colourTemperature);
+                            $phosphorObj->setDefault(true);
+                            $phosphorObj->setEnabled(true);
+                            $phosphorObj->setLength($phosphorLength);
+                            $this->getEntityManager()->persist($phosphorObj);
+                        }
+
+                        $this->getProduct()->setColour($colourTemperature);
+                    }
+
                     $form->bindValues();
                     $this->getEntityManager()->flush();
                     $data = array('err'=>false);
@@ -220,7 +289,7 @@ class ProductitemController extends AuthController
                         'product'=>$this->getProduct()->getProductId()
                     ));
                 }else {
-                    $data = array('err'=>true, 'info'=>$form->getMessages());
+                    $data = array('err'=>true, 'info'=>array_merge($form->getMessages(), $additionalErrorCheck));
                 }/**/
             } catch (\Exception $ex) {
                 $data = array('err'=>true, 'info'=>array('ex'=>$ex->getMessage()));
@@ -233,8 +302,23 @@ class ProductitemController extends AuthController
             $formPricing = new \Product\Form\PricingForm($this->getEntityManager());
             $formPricing->setAttribute('action', '/product-'.$this->getProduct()->getProductId().'/savepricing/')
                 ->setAttribute('class', 'form-horizontal');
-            
+
+            $queryBuilder = $this->getEntityManager()->createQueryBuilder();
+            $queryBuilder
+                ->select('p.colour')
+                ->from('Product\Entity\Phosphor', 'p')
+                ->distinct('p.colour');
+
+            $query = $queryBuilder->getQuery();
+            $result = $query->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+
+            $phosphorColours = array();
+            foreach ($result as $obj) {
+                $phosphorColours[] = $obj['colour'];
+            }
+
             $this->getView()
+                    ->setVariable('phosphorColours', $phosphorColours)
                     ->setVariable('form', $form)
                     ->setVariable('formPricing', $formPricing);
             return $this->getView();

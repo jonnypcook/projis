@@ -476,7 +476,7 @@ class ProjectitemController extends ProjectSpecificController
         $buildings = $this->getEntityManager()->getRepository( 'Client\Entity\Building' )->findByProjectId( $this->getProject()->getProjectId(), array( 'order' => 'building' ) );
 
         // get product information
-        $query    = $this->getEntityManager()->createQuery( "SELECT p.model, p.ppu, p.eca, p.pwr, p.attributes, p.productId, b.name as brand, b.brandId, t.name as type, t.service, t.typeId "
+        $query    = $this->getEntityManager()->createQuery( "SELECT p.model, p.ppu, p.eca, p.pwr, p.attributes, p.colour, p.productId, b.name as brand, b.brandId, t.name as type, t.service, t.typeId "
             . "FROM Product\Entity\Product p "
             . "JOIN p.brand b "
             . "JOIN p.type t "
@@ -497,31 +497,18 @@ class ProjectitemController extends ProjectSpecificController
         $saves = $query->getResult( \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY );
 
         // prep phosphor information
-        $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
-        $results = $query->getResult();
-        $productPhosphor = array();
-        foreach ($results as $result) {
-            if (empty($result->getPhosphors())) {
+        $phosphors = $this->getEntityManager()->getRepository('\Product\Entity\Phosphor')->findAll();
+        $phosphorColours = array();
+        foreach ($phosphors as $phosphor) {
+            if ($phosphor->isEnabled() === false) {
                 continue;
             }
 
-
-            if (empty($productPhosphor[$result->getProductId()])) {
-                $productPhosphor[$result->getProductId()] = array();
-            }
-
-            foreach ($result->getPhosphors() as $phosphor) {
-                if ($phosphor->isEnabled() === false) {
-                    continue;
-                }
-
-                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
-            }
-
+            $phosphorColours[$phosphor->getColour()][] = array ($phosphor->getLength(), $phosphor->isDefault());
         }
 
         $this->getView()
-            ->setVariable('productPhosphor', $productPhosphor)
+            ->setVariable('phosphorColours', $phosphorColours)
             ->setVariable( 'saves', $saves )
             ->setVariable( 'space', $space )
             ->setVariable( 'form', $form )

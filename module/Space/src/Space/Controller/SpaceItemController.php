@@ -50,7 +50,7 @@ class SpaceitemController extends SpaceSpecificController
         $formSpace->setAttribute('action', '/client-' . $this->getProject()->getClient()->getClientId() . '/project-' . $this->getProject()->getProjectId() . '/space-' . $this->getSpace()->getSpaceId() . '/update/');
         $formSpace->bind($this->getSpace());
 
-        $query = $this->getEntityManager()->createQuery("SELECT p.model, p.ppu, p.eca, p.pwr, p.productId, p.attributes, b.name as brand, b.brandId, t.name as type, t.service, t.typeId "
+        $query = $this->getEntityManager()->createQuery("SELECT p.model, p.ppu, p.eca, p.pwr, p.productId, p.attributes, p.colour, b.name as brand, b.brandId, t.name as type, t.service, t.typeId "
             . "FROM Product\Entity\Product p "
             . "JOIN p.brand b "
             . "JOIN p.type t "
@@ -64,26 +64,6 @@ class SpaceitemController extends SpaceSpecificController
         // prep phosphor information
         $query = $this->getEntityManager()->createQuery("SELECT p FROM Product\Entity\Product p WHERE p.type = 3");
         $results = $query->getResult();
-        $productPhosphor = array();
-        foreach ($results as $result) {
-            if (empty($result->getPhosphors())) {
-                continue;
-            }
-
-
-            if (empty($productPhosphor[$result->getProductId()])) {
-                $productPhosphor[$result->getProductId()] = array();
-            }
-
-            foreach ($result->getPhosphors() as $phosphor) {
-                if ($phosphor->isEnabled() === false) {
-                    continue;
-                }
-
-                $productPhosphor[$result->getProductId()][] = array ($phosphor->getLength(), $phosphor->isDefault());
-            }
-
-        }
 
         $systems = $this->getEntityManager()->getRepository('Space\Entity\System')->findBySpaceId($this->getSpace()->getSpaceId(), array('array' => true));
 
@@ -95,9 +75,18 @@ class SpaceitemController extends SpaceSpecificController
             ->setName('SpaceCreateNewForm');
         $form->get('building')->setValue($this->getSpace()->getBuilding()->getBuildingId());
 
+        $phosphors = $this->getEntityManager()->getRepository('\Product\Entity\Phosphor')->findAll();
+        $phosphorColours = array();
+        foreach ($phosphors as $phosphor) {
+            if ($phosphor->isEnabled() === false) {
+                continue;
+            }
+
+            $phosphorColours[$phosphor->getColour()][] = array ($phosphor->getLength(), $phosphor->isDefault());
+        }
 
         $this->getView()
-            ->setVariable('productPhosphor', $productPhosphor)
+            ->setVariable('phosphorColours', $phosphorColours)
             ->setVariable('spaceNext', $spaceNext)
             ->setVariable('spacePrev', $spacePrev)
             ->setVariable('formSystem', $formSystem)
@@ -308,9 +297,20 @@ class SpaceitemController extends SpaceSpecificController
                 }
 
                 // we now have a maximum
-                if (empty($maximumPhosphorLength)) {
-                    if (!empty($product->getPhosphors())) {
-                        foreach ($product->getPhosphors() as $phosphor) {
+                if (empty($maximumPhosphorLength) && !empty($product->getColour())) {
+                    $queryBuilder = $this->getEntityManager()->createQueryBuilder();
+                    $queryBuilder
+                        ->select('p')
+                        ->from('Product\Entity\Phosphor', 'p')
+                        ->where('p.colour=?1')
+                        ->orderBy('p.default', 'DESC')
+                        ->orderBy('p.length', 'DESC')
+                        ->setParameter(1, $product->getColour());
+                    $query = $queryBuilder->getQuery();
+                    $phosphors = $query->getResult();
+
+                    if (!empty($phosphors)) {
+                        foreach ($phosphors as $phosphor) {
                             if ($phosphor->isDefault() === true) {
                                 $maximumPhosphorLength = $phosphor->getLength();
                                 break;

@@ -9,37 +9,37 @@ $this->inlineScript()
     ->appendFile('/js/forms/tools/remotephosphor.js');
 
 
-$phosphorProductJS = array();
-$phosphorProductJSStr = '';
-foreach ($productPhosphor as $productId => $phosphorLengths) {
-    if (empty($phosphorLengths)) {
+$phosphorColoursJS = array();
+$phosphorColoursJSStr = '';
+foreach ($phosphorColours as $color => $phosphorColour) {
+    if (empty($phosphorColour)) {
         continue;
     }
     $data = array();
-    foreach ($phosphorLengths as $phosphorLength) {
+    foreach ($phosphorColour as $phosphorLength) {
         $data [] = "'{$phosphorLength[0]}': " . (empty($phosphorLength[1]) ? 'false' : 'true');
     }
-    $phosphorProductJS[] = "{$productId}: {" . implode (', ', $data) . "}";
+    $phosphorColoursJS[] = "{$color}: {" . implode (', ', $data) . "}";
 }
 
-$phosphorProductJSStr = '{' . implode(', ', $phosphorProductJS) . '}';
+$phosphorColoursJSStr = '{' . implode(', ', $phosphorColoursJS) . '}';
 
 
 $this->inlineScript()->captureStart();
 echo <<<JS
 
-function resetPhosphorDropdown(productId, selected) {
-    var phosphorProducts = {$phosphorProductJSStr};
+function resetPhosphorDropdown(color, selected) {
+    var phosphorProducts = {$phosphorColoursJSStr};
 
     $('form[name=RemotePhosphorForm] select[name=maximumPhosphorLength] option:not(.default)').remove();
 
-    if (!phosphorProducts[productId] || phosphorProducts[productId].length < 1) {
+    if (!phosphorProducts[color] || phosphorProducts[color].length < 1) {
         return;
     }
 
     var selectList = $('form[name=RemotePhosphorForm] select[name=maximumPhosphorLength]');
-    for (var i in phosphorProducts[productId]) {
-        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[productId][i] ? ' (default)': '')));
+    for (var i in phosphorProducts[color]) {
+        selectList.append($('<option>').val(i).text(i + (!!phosphorProducts[color][i] ? ' (default)': '')));
     }
 
     if (!!selected) {
@@ -48,15 +48,18 @@ function resetPhosphorDropdown(productId, selected) {
 }
 
 $('form[name=RemotePhosphorForm] select[name=productId]').on('change', function(e) {
-    resetPhosphorDropdown($(this).val());
+    var opt = $(this).find('option[value=' + $(this).val() + ']');
+    if (opt == undefined) {
+        return;
+    }
+
+    resetPhosphorDropdown(opt.attr('data-colour'));
 });
 
 JS;
 $this->inlineScript()->captureEnd();
 ?>
 
-
-?>
 <div class="widget blue" >
     <div class="widget-title">
         <h4><i class="icon-bar-chart"></i> Remote Phosphor Calculator</h4>
@@ -99,7 +102,27 @@ $this->inlineScript()->captureEnd();
                 <div class="control-group">
                     <label class="control-label">Product</label>
                     <div class="controls">
-                        <?php echo $this->formElement($formRemotePhosphor->get('productId'));  ?>
+                        <select class="span12" name="productId" data-placeholder="Select Product">
+                            <option></option>
+                            <?php
+                            $group = null;
+                            if (!empty($products)) {
+                                foreach ($products as $product) {
+                                    if ($product['typeId'] != 3) { // service item should not be displayed here
+                                        continue;
+                                    }
+                                    echo '<option value="' . $product['productId'] . '" ' .
+                                        'data-ppu="' . $product['ppu'] . '" ' .
+                                        'data-pwr="' . round($product['pwr'], 0) . '" ' .
+                                        'data-colour="' . round($product['colour'], 0) . '" ' .
+                                        'data-type="' . $product['type'] . '" ' .
+                                        'data-brand="' . $product['brand'] . '" ' .
+                                        'data-eca="' . (!empty($product['eca']) ? 1 : 0) . '" ' .
+                                        '>' . $product['model'] . '</option>';
+                                }
+                            }
+                            ?>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -108,7 +131,7 @@ $this->inlineScript()->captureEnd();
                     <label class="control-label">Phosphor Length</label>
 
                     <div class="controls">
-                        <select name="maximumPhosphorLength">
+                        <select name="maximumPhosphorLength" class="span12">
                             <option class="default" value="">Use Default Length</option>
                         </select>
                     </div>

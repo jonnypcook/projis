@@ -10,6 +10,26 @@ $this->inlineScript()
     ->appendFile('/assets/data-tables/DT_bootstrap.js')
     ->appendFile('/js/forms/product/setup.js');
 
+$colourTemperatures = '{' . implode(': true, ', $phosphorColours) . ': true}';
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+
+var colourTemperatures = {$colourTemperatures};
+
+$('#ProductConfigForm input[name=colourTemperature]').on('change', function (e) {
+    var colour = $('#ProductConfigForm input[name=colourTemperature]').val();
+
+    if (colourTemperatures[colour] === undefined) {
+        $('#phosphorLengthSection').removeClass('hidden');
+    } else if (!$('#phosphorLengthSection').hasClass('hidden')) {
+        $('#phosphorLengthSection').addClass('hidden');
+    }
+});
+
+JS;
+$this->inlineScript()->captureEnd();
+
 
 $this->inlineScript()->captureStart();
 echo <<<JS
@@ -305,6 +325,7 @@ $this->inlineScript()->captureEnd();
                         </div>
                     </div>
                 </div>
+
                 <div class="control-group">
                     <label class="control-label">Active</label>
                     <div class="controls">
@@ -326,6 +347,29 @@ $this->inlineScript()->captureEnd();
                     <div class="controls">
                         <div id="mcd-toggle-button">
                             <?php echo $this->formElement($form->get('mcd'));  ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="<?php echo (($product->getType()->getTypeId() === 3) ? '' : 'hidden ');  ?>remote-phosphor">
+                    <div class="control-group">
+                        <label class="control-label">Colour Temperature</label>
+                        <div class="controls">
+                            <input name="colourTemperature" type="number" data-original-title="Phosphor colour temperature for product" data-trigger="hover" class="span6  tooltips" value="<?php echo $product->getColour(); ?>">
+                        </div>
+                    </div>
+                    <div class="hidden" id="phosphorLengthSection">
+                        <p>
+                            Important: this colour temperature has no default phosphor length added to the system.
+                            Please specify a phosphor length for this colour temperature to proceed.
+                        </p>
+                        <div class="control-group">
+                            <label class="control-label">Default Phosphor Length</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input name="phosphorLength" type="number" data-original-title="Default phosphor length for product" data-trigger="hover" class="span6  tooltips" value="">
+                                    <span class="add-on">mm</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

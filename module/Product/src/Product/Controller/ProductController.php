@@ -318,7 +318,7 @@ class ProductController extends AuthController
                         $this->getEntityManager()->persist($phosphorObj);
                     }
 
-                    $product->getPhosphors()->add($phosphorObj);
+                    $product->setColour($colourTemperature);
                 }
 
                 // find sagepay code

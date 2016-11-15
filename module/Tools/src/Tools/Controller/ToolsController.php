@@ -98,9 +98,20 @@ class ToolsController extends AuthController
             }
 
             // we now have a maximum
-            if (empty($maximumPhosphorLength)) {
-                if (!empty($product->getPhosphors())) {
-                    foreach ($product->getPhosphors() as $phosphor) {
+            if (empty($maximumPhosphorLength) && !empty($product->getColour())) {
+                $queryBuilder = $this->getEntityManager()->createQueryBuilder();
+                $queryBuilder
+                    ->select('p')
+                    ->from('Product\Entity\Phosphor', 'p')
+                    ->where('p.colour=?1')
+                    ->orderBy('p.default', 'DESC')
+                    ->orderBy('p.length', 'DESC')
+                    ->setParameter(1, $product->getColour());
+                $query = $queryBuilder->getQuery();
+                $phosphors = $query->getResult();
+
+                if (!empty($phosphors)) {
+                    foreach ($phosphors as $phosphor) {
                         if ($phosphor->isDefault() === true) {
                             $maximumPhosphorLength = $phosphor->getLength();
                             break;

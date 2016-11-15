@@ -60,6 +60,15 @@ class Product implements InputFilterAwareInterface
      */
     private $leadtime;
 
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="colour", type="integer", nullable=true)
+     */
+    private $colour;
+
+
     /**
      * @var float
      *
@@ -175,14 +184,6 @@ class Product implements InputFilterAwareInterface
     protected $systems;
 
 
-    /**
-     * @var integer
-     *
-     * @ORM\ManyToMany(targetEntity="Product\Entity\Phosphor")
-     * @ORM\JoinTable(name="Product_Phosphor", joinColumns={@ORM\JoinColumn(name="product_id", referencedColumnName="product_id")}, inverseJoinColumns={@ORM\JoinColumn(name="phosphor_id", referencedColumnName="phosphor_id")})
-     */
-    private $phosphors;
-
 
     public function __construct()
     {
@@ -197,58 +198,24 @@ class Product implements InputFilterAwareInterface
         $this->build = new ArrayCollection();
         $this->dispatches = new ArrayCollection();
         $this->pricepoints = new ArrayCollection();
-        $this->phosphors = new ArrayCollection();
-    }
-
-    public function getPhosphors()
-    {
-        return $this->phosphors;
-    }
-
-    public function setPhosphors($phosphors)
-    {
-        $this->phosphors->clear();
-        foreach ($phosphors as $phosphor) {
-            $this->phosphors[] = $phosphor;
-        }
-
-        return $this;
     }
 
     /**
-     * @param Collection $phosphors
+     * @return int
      */
-    public function addPhosphors(Collection $phosphors)
+    public function getColour()
     {
-        foreach ($phosphors as $phosphor) {
-            $this->phosphors->add($phosphor);
-        }
+        return $this->colour;
     }
 
     /**
-     * @param Collection $phosphors
+     * @param int $colour
      */
-    public function removePhosphors(Collection $phosphors)
+    public function setColour($colour)
     {
-        foreach ($phosphors as $phosphor) {
-            $this->phosphors->removeElement($phosphor);
-        }
+        $this->colour = $colour;
     }
 
-    /**
-     * @param $phosphorId
-     * @return bool
-     */
-    public function hasPhosphor($phosphorId)
-    {
-        foreach ($this->phosphors as $phosphor) {
-            if ($phosphorId == $phosphor->getPhosphorId()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     public function getDispatches()
     {
