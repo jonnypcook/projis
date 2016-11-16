@@ -305,7 +305,7 @@ class ProjectSpecificController extends AuthController
                                     'label'  => 'Telemetry',
                                     'uri'    => '/client-' . $client->getClientId() . '/project-' . $project->getProjectId() . '/telemetry/',
                                     'title'  => ucwords( $project->getName() ) . ' Telemetry',
-s                               ),
+                               ),
                             )
                         )
                     )
