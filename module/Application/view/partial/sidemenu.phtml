@@ -74,7 +74,7 @@
                             }
                         }
                     }
-                    $subMenu.='<li class="'.(($child->isActive()||$subactive)?'active':'').'"><a class="" href="'.$child->getHref().'">'.(!empty($child->mlabel)?$child->mlabel:$child->getLabel()).'</a></li>';
+                    $subMenu.='<li class="'.(($child->isActive()||$subactive)?'active':'').'"><a class="'. ($child->getClass() ? $child->getClass() : '') .'" '. ($child->getTarget() ? 'target="'. $child->getTarget() . '"' : '') .'  href="'.$child->getHref().'">'.(!empty($child->mlabel)?$child->mlabel:$child->getLabel()).'</a></li>';
                 }
                 $subMenu.='</ul>';
             }
