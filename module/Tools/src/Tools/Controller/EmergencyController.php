@@ -132,15 +132,15 @@ class EmergencyController extends AbstractActionController
 
         switch (strtolower($mode)) {
             case 'rbs':
-                $to = array('rbs@8point3led.co.uk', 'jonny.p.cook@8point3led.co.uk');
+                $to = array('rbs@8point3led.co.uk');
                 $projectMatch = '/(rbs|natwest)/i';
                 break;
             case 'non-rbs':
-                $to = array('jonny.p.cook@8point3led.co.uk');
+                $to = array('emergency@8point3led.co.uk');
                 $projectMatch = '/^((?!rbs|natwest).)*$/i';
                 break;
             default:
-                $to = array('jonny.p.cook@8point3led.co.uk');
+                $to = array('emergency@8point3led.co.uk');
                 $excludes = array();
                 $projectMatch = false;
                 break;
