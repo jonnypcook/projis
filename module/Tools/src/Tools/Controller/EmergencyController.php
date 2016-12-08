@@ -132,15 +132,18 @@ class EmergencyController extends AbstractActionController
 
         switch (strtolower($mode)) {
             case 'rbs':
+                $subject = 'RBS emergency report alert';
                 $to = array('rbs@8point3led.co.uk');
                 $projectMatch = '/(rbs|natwest)/i';
                 break;
             case 'non-rbs':
+                $subject = '8point3 emergency report alert';
                 $to = array('emergency@8point3led.co.uk');
                 $projectMatch = '/^((?!rbs|natwest).)*$/i';
                 break;
             default:
                 $to = array('emergency@8point3led.co.uk');
+                $subject = 'Global emergency report alert';
                 $excludes = array();
                 $projectMatch = false;
                 break;
@@ -270,7 +273,7 @@ class EmergencyController extends AbstractActionController
                 }
 
                 // send email
-                $this->getGoogleService()->sendGmail('Emergency report alert', sprintf($html, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
+                $this->getGoogleService()->sendGmail($subject, sprintf($html, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
                 $this->addOutputMessage($consoleResponse, 'Email sent', true);
             }
 
