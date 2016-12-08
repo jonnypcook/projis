@@ -3,6 +3,7 @@ return array(
     'controllers' => array(
         'invokables' => array(
             'Tools\Controller\Tools' => 'Tools\Controller\ToolsController',
+            'Tools\Controller\Emergency' => 'Tools\Controller\EmergencyController',
         ),
     ),
     
@@ -23,7 +24,23 @@ return array(
             ),             
         ),
      ),
-    
+
+    // Placeholder for console routes
+    'console' => array(
+        'router' => array(
+            'routes' => array(
+                'list-users' => array(
+                    'options' => array(
+                        'route'    => 'emergency [rbs|all|non-rbs]:mode [--verbose|-v]',
+                        'defaults' => array(
+                            'controller' => 'Tools\Controller\Emergency',
+                            'action'     => 'emergency'
+                        )
+                    )
+                )
+            ),
+        ),
+    ),
     
     'view_manager' => array(
         'template_path_stack' => array(
