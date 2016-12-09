@@ -132,18 +132,18 @@ class EmergencyController extends AbstractActionController
 
         switch (strtolower($mode)) {
             case 'rbs':
-                $subject = 'RBS emergency report alert';
+                $subject = 'EMERGENCY REPORT ALERT: RBS';
                 $to = array('rbs@8point3led.co.uk');
                 $projectMatch = '/(rbs|natwest)/i';
                 break;
             case 'non-rbs':
-                $subject = '8point3 emergency report alert';
+                $subject = 'EMERGENCY REPORT ALERT: 8POINT3';
                 $to = array('emergency@8point3led.co.uk');
                 $projectMatch = '/^((?!rbs|natwest).)*$/i';
                 break;
             default:
                 $to = array('emergency@8point3led.co.uk');
-                $subject = 'Global emergency report alert';
+                $subject = 'EMERGENCY REPORT ALERT: GLOBAL';
                 $excludes = array();
                 $projectMatch = false;
                 break;
