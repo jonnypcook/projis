@@ -97,7 +97,7 @@ class PlaygroundController extends AuthController
 
             if ( !file_exists( $filename ) )
             {
-                throw new \Exception( 'file does not exist' );
+                throw new \Exception( 'file does not exist: ' . $filename);
             }
 
             $imageType = strtolower(preg_replace( '/^[\s\S]+[.]([^.]+)$/', '$1', $filename ));
