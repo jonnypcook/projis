@@ -116,6 +116,7 @@ class PlaygroundController extends AuthController
         }
         catch ( \Exception $ex )
         {
+            echo $ex->getMessage();
             exit; // just exit as file does not exist
         }
     }
