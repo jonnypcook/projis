@@ -133,7 +133,7 @@ class EmergencyController extends AbstractActionController
         switch (strtolower($mode)) {
             case 'rbs':
                 $subject = 'EMERGENCY REPORT ALERT: RBS';
-                $to = array('rbs@8point3led.co.uk');
+                $to = array('rbsemergency@8point3led.co.uk');
                 $projectMatch = '/(rbs|natwest)/i';
                 break;
             case 'non-rbs':
