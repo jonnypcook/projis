@@ -12,8 +12,12 @@ var Script = function () {
             fDevices: []
         };
 
+    var popover = $('#device-popover');
+
     var RADIUS_DESELECTED = 5,
-        RADIUS_SELECTED = 8;
+        RADIUS_SELECTED = 8,
+        DIAMOND_DESELECTED = 6,
+        DIAMOND_SELECTED = 9;
 
     var rtime,
         timeout = false,
@@ -24,7 +28,7 @@ var Script = function () {
     var stage = new Konva.Stage({
         container: 'locator-container',   // id of container <div>
         width: width,
-        height: 500
+        height: 50
     });
 
     // then create layers
@@ -167,12 +171,39 @@ var Script = function () {
      * @param y
      */
     function addDevice(id, serial, emergency, fault, status, lastChecked, x, y) {
-        var circle = new Konva.Circle({
-            radius: RADIUS_DESELECTED,
-            fill: !!fault ? 'red' : '#74B749',
-            stroke: 'black',
-            strokeWidth: 1
-        });
+        var shape;
+        if (emergency){
+            shape = new Konva.Line({
+                points: [0, -DIAMOND_DESELECTED, DIAMOND_DESELECTED, 0, 0, DIAMOND_DESELECTED, -DIAMOND_DESELECTED, 0],
+                fill: !!fault ? 'red' : '#74B749',
+                stroke: 'black',
+                strokeWidth: 1,
+                closed : true,
+                selectFunc: function () {
+                    shape.setPoints([0, -DIAMOND_SELECTED, DIAMOND_SELECTED, 0, 0, DIAMOND_SELECTED, -DIAMOND_SELECTED, 0]);
+                },
+                deselectFunc: function () {
+                    shape.setPoints([0, -DIAMOND_DESELECTED, DIAMOND_DESELECTED, 0, 0, DIAMOND_DESELECTED, -DIAMOND_DESELECTED, 0]);
+                }
+            });
+        } else {
+            shape = new Konva.Circle({
+                radius: RADIUS_DESELECTED,
+                fill: !!fault ? 'red' : '#74B749',
+                stroke: 'black',
+                strokeWidth: 1,
+                selectFunc: function () {
+                    shape.setRadius(RADIUS_SELECTED);
+                },
+                deselectFunc: function () {
+                    shape.setRadius(RADIUS_DESELECTED);
+                }
+            });
+        }
+
+        if (!shape || shape == undefined) {
+            return;
+        }
 
         var group = new Konva.Group({
             draggable: false,
@@ -209,10 +240,16 @@ var Script = function () {
 
             },
             selectFunc: function() {
-                circle.setRadius(RADIUS_SELECTED);
+                if (shape.attrs.selectFunc == undefined) {
+                    return;
+                }
+                shape.attrs.selectFunc();
             },
             deselectFunc: function() {
-                circle.setRadius(RADIUS_DESELECTED);
+                if (shape.attrs.deselectFunc == undefined) {
+                    return;
+                }
+                shape.attrs.deselectFunc();
             }
         });
 
@@ -227,13 +264,14 @@ var Script = function () {
             lastChecked: lastChecked
         };
 
-        group.add(circle);
+        group.add(shape);
 
-        group.on('mouseover', function() {
+        group.on('mouseover', function(e) {
             group.attrs.selectFunc();
             deviceLayer.draw();
             self.css('cursor', 'pointer');
-            setStatus(group.custom);
+            showPopover(group.getX(), group.getY(), group.custom);
+
         }).on('mouseout', function() {
             if (selectedDevice === false || selectedDevice.id !== group.custom.id) {
                 group.attrs.deselectFunc();
@@ -241,6 +279,7 @@ var Script = function () {
             }
             self.css('cursor', 'default');
             setStatus(selectedDevice);
+            hidePopover();
         }).on('click', function (){
             if (selectedDevice !== false) {
                 if (selectedDevice.id === group.custom.id) {
@@ -262,12 +301,47 @@ var Script = function () {
         deviceLayer.add(group);
     }
 
+    /**
+     * hide popover
+     */
+    function hidePopover() {
+        popover.hide();
+    }
+
+    /**
+     * show popover
+     * @param x
+     * @param y
+     * @param custom
+     */
+    function showPopover(x, y, custom) {
+        var left = x - popover.outerWidth() - 30,
+            top = y - Math.floor(popover.outerHeight() / 2);
+        if (left < 0) {
+            left = x + 30;
+            popover.removeClass('left');
+            popover.removeClass('right');
+            popover.addClass('left');
+        } else {
+            popover.removeClass('left');
+            popover.removeClass('right');
+            popover.addClass('right');
+        }
+        popover.css({left: left, top: top});
+        setStatus(custom);
+        popover.show();
+    }
+
+    /**
+     * set status text
+     * @param custom
+     */
     function setStatus(custom) {
-        $('#device-id').text(!custom ? '-' : custom.id);
-        $('#device-serial').text(!custom ? '-' : custom.serial);
-        $('#device-emergency').text(!custom ? '-' : (!!custom.emergency ? 'Yes' : 'No'));
-        $('#device-status').text(!custom ? '-' : custom.status);
-        $('#device-checked').text(!custom ? '-' : (!custom.lastChecked ? '-' : moment(custom.lastChecked).format('MMMM Do YYYY h:mm a')));
+        $('.device-id').text(!custom ? '-' : custom.id);
+        $('.device-serial').text(!custom ? '-' : custom.serial);
+        $('.device-emergency').text(!custom ? '-' : (!!custom.emergency ? 'Yes' : 'No'));
+        $('.device-status').text(!custom ? '-' : custom.status);
+        $('.device-checked').text(!custom ? '-' : (!custom.lastChecked ? '-' : moment(custom.lastChecked).format('MMM Do YYYY HH:mm')));
     }
 
     /**

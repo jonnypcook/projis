@@ -44,6 +44,7 @@ var Script = function () {
 
             var url = "/playground/liteiprefreshdevices/?fDrawingId=" + drawingID;
             var params = 'ts='+Math.round(new Date().getTime()/1000);
+            $('#drawingLoader').fadeIn();
             $('#locatorLoader').fadeIn(function(){
                 $.ajax({
                     type: 'POST',
@@ -64,7 +65,8 @@ var Script = function () {
             });
 
         } catch (ex) {
-
+            $('#drawingLoader').fadeOut();
+            $('#locatorLoader').fadeOut();
         }/**/
     });
 

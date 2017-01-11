@@ -1,6 +1,6 @@
 <?php
 $this->headLink()
-    ->appendStylesheet('/assets/data-tables/DT_bootstrap.css');
+    ->appendStylesheet('/assets/speech/speech-bubbles.css');
 
 
 
@@ -39,9 +39,6 @@ $this->inlineScript()
                                         ?></select></label>
                                 <label><select size="1" id="fDrawingId"><option>select drawing</option></select></label>
                             </div>
-                        </div>
-                        <div class="span2">
-                            <button class="btn btn-danger btn-small pull-right" id="btn-synchronize-drawing">Synchronize Drawing Data <i class="icon-refresh"></i></button>
                         </div>
                     </div>
                 </div>
@@ -87,7 +84,7 @@ $this->inlineScript()
                             <option value="5">Show selected devices</option>
                         </select>
                     </div>
-                    <div class="span10">
+                    <div class="span8">
                         <div class="controls ">
                             <div class="input-append span12">
                                 <input id="inp-show-serials" type="text" class=" small span10" value=""  placeholder="Enter the serial list separated by spaces or commas">
@@ -97,27 +94,39 @@ $this->inlineScript()
                             </div>
                         </div>
                     </div>
+                    <div class="span2">
+                        <button class="btn btn-danger btn-small pull-right" id="btn-synchronize-drawing">Synchronize <i class="icon-refresh"></i></button>
+                    </div>
                 </div>
                 <div class="space10"></div>
 
-                <div id="locator-container"></div>
+                <div id="locator-wrapper" class="relative">
+                    <div class="bubble right" id="device-popover">
+                        <label>Id: <span class="device-id">-</span></label>
+                        <label>Serial: <span class="device-serial">-</span></label>
+                        <label>Emergency: <span class="device-emergency">-</span></label>
+                        <label>Status: <span class="device-status">-</span></label>
+                        <label>Checked: <span class="device-checked">-</span></label>
+                    </div>
+                    <div id="locator-container"></div>
+                </div>
                 <div class="space10"></div>
                 <hr>
                 <div class="row-fluid">
                     <div class="span2">
-                        <label>Id: <span id="device-id">-</span></label>
+                        <label>Id: <span class="device-id">-</span></label>
                     </div>
                     <div class="span2">
-                        <label>Serial: <span id="device-serial">-</span></label>
+                        <label>Serial: <span class="device-serial">-</span></label>
                     </div>
                     <div class="span2">
-                        <label>Emergency: <span id="device-emergency">-</span></label>
+                        <label>Emergency: <span class="device-emergency">-</span></label>
                     </div>
                     <div class="span3">
-                        <label>Status: <span id="device-status">-</span></label>
+                        <label>Status: <span class="device-status">-</span></label>
                     </div>
                     <div class="span2">
-                        <label>Checked: <span id="device-checked">-</span></label>
+                        <label>Checked: <span class="device-checked">-</span></label>
                     </div>
                 </div>
             </div>
