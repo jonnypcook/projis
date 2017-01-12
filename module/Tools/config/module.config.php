@@ -31,7 +31,7 @@ return array(
             'routes' => array(
                 'list-users' => array(
                     'options' => array(
-                        'route'    => 'emergency [rbs|all|non-rbs]:mode [--verbose|-v] [-s|--synchronize]',
+                        'route'    => 'emergency [rbs|all|non-rbs]:mode [--verbose|-v] [-s|--synchronize] [-t|--test]',
                         'defaults' => array(
                             'controller' => 'Tools\Controller\Emergency',
                             'action'     => 'emergency'

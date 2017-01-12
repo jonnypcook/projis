@@ -136,14 +136,14 @@ class EmergencyController extends AbstractActionController
         }
 
         $consoleResponse = "";
-        $request = $this->getRequest();
-        $errorCount = 0;
-        $warningCount = 0;
         $alerts = array();
-        $excludes = array(177, 187);
 
-        // Check mode
+        // Check command flags
         $mode = $request->getParam('mode', 'all'); // defaults to 'all'
+        $verbose = $request->getParam('verbose') || $request->getParam('v');
+        $synchronize = $request->getParam('synchronize') || $request->getParam('s');
+        $testMode = $request->getParam('test') || $request->getParam('t');
+        $flush = true;
 
         switch (strtolower($mode)) {
             case 'rbs':
@@ -160,10 +160,11 @@ class EmergencyController extends AbstractActionController
                 throw new \Exception('Illegal mode selected');
                 break;
         }
-        // Check verbose flag
-        $verbose = $request->getParam('verbose') || $request->getParam('v');
-        $flush = true;
-        $synchronize = $request->getParam('synchronize') || $request->getParam('s');
+
+        // configure test mode
+        if ($testMode) {
+            $to = array('jonny.p.cook@8point3led.co.uk');
+        }
 
         // get projects data for grouping
         $qb = $em->createQueryBuilder();
@@ -190,7 +191,12 @@ class EmergencyController extends AbstractActionController
         $this->addOutputMessage($consoleResponse, 'Generating report', $verbose, $flush);
 
         // run reports against customer group
+        $errorCount = 0;
+        $warningCount = 0;
+        $sitesPolled = 0;
+        $devicesPolled = 0;
         foreach ($projects as $project) {
+            $sitesPolled++;
             $now = new \DateTime('now');
             $qb = $em->createQueryBuilder();
             $qb->select('d')
@@ -203,6 +209,7 @@ class EmergencyController extends AbstractActionController
 
             $devices = $qb->getQuery()->getResult();
             foreach ($devices as $device) {
+                $devicesPolled++;
                 if ($device->getStatus()->isFault()) {
                     $this->addError($alerts, $device, $device->getDrawing(), $device->getDrawing()->getProject());
                     $errorCount++;
@@ -222,7 +229,15 @@ class EmergencyController extends AbstractActionController
         // build email
         $this->addOutputMessage($consoleResponse, 'Sending report', $verbose, $flush);
         if (($errorCount > 0) || ($warningCount > 0)) {
-            $html = '<style>th{text-align: left;} th,td{padding: 2px}</style><p>There are %d errors.<br>There are %d warnings.</p>%s<br>%s<p>Note: Position relates to the drawing (top, left)</p><p>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</p>';
+            $html = '<style>th{text-align: left;} th,td{padding: 2px}</style>' .
+                '<h3>Report Summary</h3><table><tbody>' .
+                '<tr><th>Sites polled</th><td>%d</td></tr>' .
+                '<tr><th>Devices polled</th><td>%d</td></tr>' .
+                '<tr><th>Number of errors</th><td>%d</td></tr>' .
+                '<tr><th>Number of warnings</th><td>%d</td></tr>' .
+                '</tbody></table>' .
+                '<br>%s<br>%s<p>Note: Position relates to the drawing (top, left)</p>' .
+                '<p>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</p>';
             $tblErrors = '';
             if ($errorCount > 0) {
                 foreach ($alerts as $project) {
@@ -255,158 +270,13 @@ class EmergencyController extends AbstractActionController
             }
 
             // send email
-            $to = array('jonny.p.cook@8point3led.co.uk');
-            $this->getGoogleService()->sendGmail($subject, sprintf($html, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
-            $this->getGoogleService()->sendGmail('Test Subject', 'Test Email', array('jonny.p.cook@8point3led.co.uk'));
+            $this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
             $this->addOutputMessage($consoleResponse, 'Email sent', true);
         }
 
         $this->addOutputMessage($consoleResponse, $errorCount . ' errors found');
         $this->addOutputMessage($consoleResponse, $warningCount . ' warnings found');
 
-        return $consoleResponse;
-    }
-
-    /**
-     * @return string
-     * @throws RuntimeException
-     */
-    public function emergency2Action()
-    {
-
-
-        $this->addOutputMessage($consoleResponse, 'starting output', $verbose);
-
-        $uri = self::$URIS['projects'];
-        $response = $this->curlRequest($uri);
-
-        if ($response->getStatusCode() === 200) {
-            $projects = json_decode($response->getBody());
-            foreach ($projects as $project) {
-                if (empty ($project->ProjectID) || in_array($project->ProjectID, $excludes)) { //ignore test projects
-                    $this->addOutputMessage($consoleResponse, sprintf('Skipping project %s', $project->ProjectDescription), $verbose);
-                    continue;
-                }
-
-                if ($projectMatch !== false && !preg_match($projectMatch, $project->ProjectDescription)) {
-                    $this->addOutputMessage($consoleResponse, sprintf('Ignoring project #%d (%s)', $project->ProjectID, $project->ProjectDescription), $verbose);
-                    continue;
-                }
-
-                $uri = sprintf(self::$URIS['drawings'], $project->ProjectID);
-                $this->addOutputMessage($consoleResponse, sprintf('Gettings drawings for project #%d (%s)', $project->ProjectID, $project->ProjectDescription), $verbose);
-
-                $response = $this->curlRequest($uri);
-                if ($response->getStatusCode() !== 200) {
-                    continue;
-                }
-
-                $drawings = json_decode($response->getBody());
-
-                if (empty($drawings)) {
-                    $this->addOutputMessage($consoleResponse, sprintf('No drawings found for project #%d - skipping', $project->ProjectID), $verbose);
-                    continue;
-                }
-
-                foreach ($drawings as $drawing) {
-                    if (empty ($drawing->DrawingID)) {
-                        continue;
-                    }
-
-                    $uri = sprintf(self::$URIS['devices'], $drawing->DrawingID, 1);
-                    $this->addOutputMessage($consoleResponse, sprintf('Gettings devices for drawing #%d in project #%d', $drawing->DrawingID, $project->ProjectID), $verbose);
-
-                    $response = $this->curlRequest($uri);
-                    if ($response->getStatusCode() !== 200) {
-                        continue;
-                    }
-
-                    $devices = json_decode($response->getBody());
-
-                    if (empty($devices)) {
-                        $this->addOutputMessage($consoleResponse, sprintf('No devices found for drawing #%d - skipping', $drawing->DrawingID), $verbose);
-                        continue;
-                    }
-
-                    $now = new \DateTime('now');
-
-                    foreach ($devices as $device) {
-                        switch ($device->LastE3Status) {
-                            case -1:
-                            case 1:
-                            case 2:
-                            case 3:
-                                $fault = false;
-                                break;
-                            default:
-                                $fault = true;
-                        }
-
-                        $date = \DateTime::createFromFormat('d/m/Y H:i:s', $device->LastE3StatusDate);
-                        if ($fault === true) {
-                            $this->addError($alerts, $device, $drawing, $project);
-                            $errorCount++;
-                            $this->addOutputMessage($consoleResponse, sprintf('Error! device %d %s', $device->DeviceID, $this->getDeviceStatusText($device->LastE3Status)), $verbose);
-                        }
-
-                        $diff = $now->getTimestamp() - $date->getTimestamp();
-                        if(floor($diff / (60 * 60 * 24)) > 0) { // if not tested for 24 hours
-                            $this->addWarning($alerts, floor($diff / (60 * 60 * 24)) . ' days untested', $device, $drawing, $project);
-                            $warningCount++;
-                            $this->addOutputMessage($consoleResponse, sprintf('Warning! device %d untested in %d days', $device->DeviceID, floor($diff / (60 * 60 * 24))), $verbose);
-                        }
-                    }
-
-                }
-
-            }
-
-            // build email
-            if (($errorCount > 0) || ($warningCount > 0)) {
-                $html = '<style>th{text-align: left;} th,td{padding: 2px}</style><p>There are %d errors.<br>There are %d warnings.</p>%s<br>%s<p>Note: Position relates to the drawing (top, left)</p><p>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</p>';
-                $tblErrors = '';
-                if ($errorCount > 0) {
-                    foreach ($alerts as $project) {
-                        $postcode = str_replace('_', ' ', $project['project']->PostCode);
-                        foreach ($project['drawings'] as $drawings) {
-                            $drawingName = preg_replace('/[.][^.]+$/', '', $drawings['drawing']->Drawing);
-                            if (!empty($drawings['errors'])) {
-                                foreach ($drawings['errors'] as $error) {
-                                    $tblErrors .= '<tr><td>' . $project['project']->ProjectDescription . '</td><td>' . $postcode . '</td><td>' . $drawingName . '</td><td>' . implode('</td><td>', $error) . '</td></tr>';
-                                }
-                            }
-                        }
-                    }
-                    $tblErrors = '<h3>Error Report</h3><table><thead><tr><th>Project</th><th>Postcode</th><th>Drawing</th><th>Device Id</th><th>Device SN</th><th>Status</th><th>Last Tested</th><th>Position</th></tr></thead><tbody>' . $tblErrors . '</tbody></table>';
-                }
-                $tblWarnings = '';
-                if ($warningCount > 0) {
-                    foreach ($alerts as $project) {
-                        $postcode = str_replace('_', ' ', $project['project']->PostCode);
-                        foreach ($project['drawings'] as $drawings) {
-                            $drawingName = preg_replace('/[.][^.]+$/', '', $drawings['drawing']->Drawing);
-                            if (!empty($drawings['warnings'])) {
-                                foreach ($drawings['warnings'] as $warning) {
-                                    $tblWarnings .= '<tr><td>' . $project['project']->ProjectDescription . '</td><td>' . $postcode . '</td><td>' . $drawingName . '</td><td>' . implode('</td><td>', $warning) . '</td></tr>';
-                                }
-                            }
-                        }
-                    }
-                    $tblWarnings = '<h3>Warnings Report</h3><table><thead><tr><th>Project</th><th>Postcode</th><th>Drawing</th><th>Device Id</th><th>Device SN</th><th>Status</th><th>Last Tested</th><th>Position</th></tr></thead><tbody>' . $tblWarnings . '</tbody></table>';
-                }
-
-                // send email
-                $this->getGoogleService()->sendGmail($subject, sprintf($html, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
-                $this->addOutputMessage($consoleResponse, 'Email sent', true);
-            }
-
-            $this->addOutputMessage($consoleResponse, $errorCount . ' errors found');
-            $this->addOutputMessage($consoleResponse, $warningCount . ' warnings found');
-        } else {
-            $this->addOutputMessage($consoleResponse, 'failed to make curl request');
-        }
-
-        $this->addOutputMessage($consoleResponse, 'completed');
         return $consoleResponse;
     }
 
