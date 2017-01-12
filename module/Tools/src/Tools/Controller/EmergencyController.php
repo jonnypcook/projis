@@ -59,14 +59,20 @@ class EmergencyController extends AbstractActionController
      * @param $response
      * @param $message
      * @param bool|true $verbose
+     * @param bool|false $flush
      */
-    public function addOutputMessage(&$response, $message, $verbose = true)
+    public function addOutputMessage(&$response, $message, $verbose = true, $flush = false)
     {
         if ($verbose === false) {
             return;
         }
 
         $response .= date('Y-m-d H:i:s ') . $message . self::$NEWLINE;
+
+        if ($flush === true) {
+            echo $response;
+            $response = '';
+        }
     }
 
     /**
@@ -107,11 +113,20 @@ class EmergencyController extends AbstractActionController
     }
 
     /**
-     * @return string
-     * @throws RuntimeException
+     * get LiteIp Service
+     * @return \Application\Service\LiteIpService
      */
+    public function getLiteIpService() {
+        return $this->getServiceLocator()->get('LiteIpService');
+    }
+
+
     public function emergencyAction()
     {
+        date_default_timezone_set('Europe/London');
+        $em = $this->getEntityManager();
+        $liteIPService = $this->getLiteIpService();
+
         $request = $this->getRequest();
 
         // Make sure that we are running in a console and the user has not tricked our
@@ -134,23 +149,131 @@ class EmergencyController extends AbstractActionController
             case 'rbs':
                 $subject = 'EMERGENCY REPORT ALERT: RBS';
                 $to = array('rbsemergency@8point3led.co.uk');
-                $projectMatch = '/(rbs|natwest)/i';
+                $customerGroup = 19;
                 break;
             case 'non-rbs':
                 $subject = 'EMERGENCY REPORT ALERT: 8POINT3';
                 $to = array('emergency@8point3led.co.uk');
-                $projectMatch = '/^((?!rbs|natwest).)*$/i';
+                $customerGroup = 10;
                 break;
             default:
-                $to = array('emergency@8point3led.co.uk');
-                $subject = 'EMERGENCY REPORT ALERT: GLOBAL';
-                $excludes = array();
-                $projectMatch = false;
+                throw new \Exception('Illegal mode selected');
                 break;
         }
-
         // Check verbose flag
         $verbose = $request->getParam('verbose') || $request->getParam('v');
+        $flush = true;
+        $synchronize = $request->getParam('synchronize') || $request->getParam('s');
+
+        // get projects data for grouping
+        $qb = $em->createQueryBuilder();
+        $qb->select('p')
+            ->from('Application\Entity\LiteipProject', 'p')
+            ->where('p.CustomerGroup=?1')
+            ->setParameter(1, $customerGroup);
+        $projects = $qb->getQuery()->getResult();
+
+
+        // synchronize project device data
+        if ($synchronize) {
+            $this->addOutputMessage($consoleResponse, 'Starting synchronization of projects ...', $verbose, $flush);
+
+            foreach ($projects as $project) {
+                $this->addOutputMessage($consoleResponse, sprintf('Synchronizing project %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()), $verbose, $flush);
+                $liteIPService->synchronizeDevicesData(false, $project->getProjectID());
+            }
+            $this->addOutputMessage($consoleResponse, 'Synchronization of projects completed', $verbose, $flush);
+        } else {
+            $this->addOutputMessage($consoleResponse, 'Skipping synchronization of projects', $verbose, $flush);
+        }
+
+        $this->addOutputMessage($consoleResponse, 'Generating report', $verbose, $flush);
+
+        // run reports against customer group
+        foreach ($projects as $project) {
+            $now = new \DateTime('now');
+            $qb = $em->createQueryBuilder();
+            $qb->select('d')
+                ->from('Application\Entity\LiteipDevice', 'd')
+                ->innerJoin('d.drawing', 'dr')
+                ->where('dr.project=?1')
+                ->andWhere('d.IsE3=true')
+                ->setParameter(1, $project->getProjectID());
+            $this->addOutputMessage($consoleResponse, sprintf('Synchronizing project data for: %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()) , $verbose, $flush);
+
+            $devices = $qb->getQuery()->getResult();
+            foreach ($devices as $device) {
+                if ($device->getStatus()->isFault()) {
+                    $this->addError($alerts, $device, $device->getDrawing(), $device->getDrawing()->getProject());
+                    $errorCount++;
+                    $this->addOutputMessage($consoleResponse, sprintf('Error! device %d %s', $device->getDeviceID(), $device->getStatus()->getDescription()), $verbose, $flush);
+                }
+
+                $timestamp = empty($device->getLastE3StatusDate()) ? 0 : $device->getLastE3StatusDate()->getTimestamp();
+                $diff = $now->getTimestamp() - $timestamp;
+                if(floor($diff / (60 * 60 * 24)) > 0) { // if not tested for 24 hours
+                    $this->addWarning($alerts, floor($diff / (60 * 60 * 24)) . ' days untested', $device, $device->getDrawing(), $device->getDrawing()->getProject());
+                    $warningCount++;
+                    $this->addOutputMessage($consoleResponse, sprintf('Warning! device %d untested in %d days', $device->getDeviceID(), floor($diff / (60 * 60 * 24))), $verbose, $flush);
+                }
+            }
+        }
+
+        // build email
+        $this->addOutputMessage($consoleResponse, 'Sending report', $verbose, $flush);
+        if (($errorCount > 0) || ($warningCount > 0)) {
+            $html = '<style>th{text-align: left;} th,td{padding: 2px}</style><p>There are %d errors.<br>There are %d warnings.</p>%s<br>%s<p>Note: Position relates to the drawing (top, left)</p><p>Please do not reply to this message. Replies to this message are routed to an unmonitored mailbox.</p>';
+            $tblErrors = '';
+            if ($errorCount > 0) {
+                foreach ($alerts as $project) {
+                    $postcode = str_replace('_', ' ', $project['project']->getPostCode());
+                    foreach ($project['drawings'] as $drawings) {
+                        $drawingName = preg_replace('/[.][^.]+$/', '', $drawings['drawing']->getDrawing());
+                        if (!empty($drawings['errors'])) {
+                            foreach ($drawings['errors'] as $error) {
+                                $tblErrors .= '<tr><td>' . $project['project']->getProjectDescription() . '</td><td>' . $postcode . '</td><td>' . $drawingName . '</td><td>' . implode('</td><td>', $error) . '</td></tr>';
+                            }
+                        }
+                    }
+                }
+                $tblErrors = '<h3>Error Report</h3><table><thead><tr><th>Project</th><th>Postcode</th><th>Drawing</th><th>Device Id</th><th>Device SN</th><th>Status</th><th>Last Tested</th><th>Position</th></tr></thead><tbody>' . $tblErrors . '</tbody></table>';
+            }
+            $tblWarnings = '';
+            if ($warningCount > 0) {
+                foreach ($alerts as $project) {
+                    $postcode = str_replace('_', ' ', $project['project']->getPostCode());
+                    foreach ($project['drawings'] as $drawings) {
+                        $drawingName = preg_replace('/[.][^.]+$/', '', $drawings['drawing']->getDrawing());
+                        if (!empty($drawings['warnings'])) {
+                            foreach ($drawings['warnings'] as $warning) {
+                                $tblWarnings .= '<tr><td>' . $project['project']->getProjectDescription() . '</td><td>' . $postcode . '</td><td>' . $drawingName . '</td><td>' . implode('</td><td>', $warning) . '</td></tr>';
+                            }
+                        }
+                    }
+                }
+                $tblWarnings = '<h3>Warnings Report</h3><table><thead><tr><th>Project</th><th>Postcode</th><th>Drawing</th><th>Device Id</th><th>Device SN</th><th>Status</th><th>Last Tested</th><th>Position</th></tr></thead><tbody>' . $tblWarnings . '</tbody></table>';
+            }
+
+            // send email
+            $to = array('jonny.p.cook@8point3led.co.uk');
+            $this->getGoogleService()->sendGmail($subject, sprintf($html, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
+            $this->getGoogleService()->sendGmail('Test Subject', 'Test Email', array('jonny.p.cook@8point3led.co.uk'));
+            $this->addOutputMessage($consoleResponse, 'Email sent', true);
+        }
+
+        $this->addOutputMessage($consoleResponse, $errorCount . ' errors found');
+        $this->addOutputMessage($consoleResponse, $warningCount . ' warnings found');
+
+        return $consoleResponse;
+    }
+
+    /**
+     * @return string
+     * @throws RuntimeException
+     */
+    public function emergency2Action()
+    {
+
 
         $this->addOutputMessage($consoleResponse, 'starting output', $verbose);
 
@@ -295,7 +418,13 @@ class EmergencyController extends AbstractActionController
      */
     function addError (array &$alerts, $device, $drawing, $project) {
         $this->prepareAlert($alerts, $drawing, $project);
-        $alerts[$project->ProjectID]['drawings'][$drawing->DrawingID]['errors'][] = array($device->DeviceID, $device->DeviceSN, $this->getDeviceStatusText($device->LastE3Status), $device->LastE3StatusDate, '(' . $device->PosTop . ',' . $device->PosLeft  . ')');
+        $alerts[$project->getProjectID()]['drawings'][$drawing->getDrawingID()]['errors'][] = array(
+            $device->getDeviceID(),
+            $device->getDeviceSN(),
+            $device->getStatus()->getDescription(),
+            empty($device->getLastE3StatusDate()) ? '' : $device->getLastE3StatusDate()->format('d/m/Y H:i:s'),
+            '(' . $device->getPosTop() . ',' . $device->getPosLeft()  . ')'
+        );
     }
 
     /**
@@ -307,7 +436,13 @@ class EmergencyController extends AbstractActionController
      */
     function addWarning (array &$alerts, $type, $device, $drawing, $project) {
         $this->prepareAlert($alerts, $drawing, $project);
-        $alerts[$project->ProjectID]['drawings'][$drawing->DrawingID]['warnings'][] = array($device->DeviceID, $device->DeviceSN, $type, $device->LastE3StatusDate, '(' . $device->PosTop . ',' . $device->PosLeft  . ')');
+        $alerts[$project->getProjectID()]['drawings'][$drawing->getDrawingID()]['warnings'][] = array(
+            $device->getDeviceID(),
+            $device->getDeviceSN(),
+            $type,
+            empty($device->getLastE3StatusDate()) ? '' : $device->getLastE3StatusDate()->format('d/m/Y H:i:s'),
+            '(' . $device->getPosTop() . ',' . $device->getPosLeft()  . ')'
+        );
     }
 
     /**
@@ -316,19 +451,19 @@ class EmergencyController extends AbstractActionController
      * @param $project
      */
     function prepareAlert (array &$alerts, $drawing, $project) {
-        if (empty($alerts[$project->ProjectID])) {
-            $alerts[$project->ProjectID] = array(
+        if (empty($alerts[$project->getProjectID()])) {
+            $alerts[$project->getProjectID()] = array(
                 'project' => $project,
                 'drawings' => array(
-                    $drawing->DrawingID => array(
+                    $drawing->getDrawingID() => array(
                         'drawing' => $drawing,
                         'errors' => array(),
                         'warnings' => array()
                     )
                 )
             );
-        } elseif (empty($alerts[$project->ProjectID]['drawings'][$drawing->DrawingID])) {
-            $alerts[$project->ProjectID]['drawings'][$drawing->DrawingID] = array(
+        } elseif (empty($alerts[$project->getProjectID()]['drawings'][$drawing->getDrawingID()])) {
+            $alerts[$project->getProjectID()]['drawings'][$drawing->getDrawingID()] = array(
                 'drawing' => $drawing,
                 'errors' => array(),
                 'warnings' => array()

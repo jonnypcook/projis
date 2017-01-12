@@ -17,8 +17,23 @@ class Module
         );
     }
 
+
     public function getConfig()
     {
         return include __DIR__ . '/config/module.config.php';
+    }
+
+    public function getServiceConfig()
+    {
+        return array(
+            'factories' => array(
+                'LiteIpService' => function($sm) {
+                    $config = $sm->get('Config');
+
+                    return new \Application\Service\LiteIpService($config['liteip'], $sm->get('Doctrine\ORM\EntityManager'));
+                }
+            ),
+
+        );
     }
 }
