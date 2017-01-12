@@ -58,7 +58,7 @@ class PlaygroundController extends AuthController
      * @return mixed
      */
     public function liteipLocatorAction() {
-        $this->setCaption('LitIP LED locator');
+        $this->setCaption('LED Device locator');
         $liteIpService = $this->getLiteIpService();
 
         $qbs  = $this->getEntityManager()->createQueryBuilder();
