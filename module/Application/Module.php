@@ -100,6 +100,11 @@ class Module
                     }
                     
                     return new \Application\Service\GoogleService($config['openAuth2']['google'], $auth->getIdentity(), $sm->get('Doctrine\ORM\EntityManager'));
+                },
+                'LiteIpService' => function($sm) {
+                    $config = $sm->get('Config');
+
+                    return new \Application\Service\LiteIpService($config['liteip'], $sm->get('Doctrine\ORM\EntityManager'));
                 }
             ),
             

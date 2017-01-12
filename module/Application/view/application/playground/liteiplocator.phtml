@@ -1,0 +1,137 @@
+<?php
+$this->headLink()
+    ->appendStylesheet('/assets/speech/speech-bubbles.css');
+
+
+
+$this->inlineScript()
+    ->appendFile('/assets/moment/moment.js')
+    ->appendFile('/assets/konvajs/konva.js')
+    ->appendFile('/assets/data-tables/jquery.dataTables.js')
+    ->appendFile('/assets/data-tables/DT_bootstrap.js')
+    ->appendFile('/js/forms/liteip/locator.js?' . time())
+    ->appendFile('/js/forms/liteip/locator.image.js?' . time());
+
+?>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget blue">
+            <div class="widget-title">
+                <h4><i class="icon-location-arrow"></i> LiteIP LED finder</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="locatorLoader" class="loader"></div>
+                <div class="dataTables_wrapper form-inline">
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <div>
+                                <label><select size="1" id="sel-project"><option>select project</option><?php
+                                if (!empty($projects)) {
+                                    foreach ($projects as $project) {
+                                        echo '<option value="' . $project->getProjectID() . '">' . $project->getProjectDescription() . '</option>';
+                                    }
+                                }
+                                        ?></select></label>
+                                <label><select size="1" id="fDrawingId"><option>select drawing</option></select></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered table-striped" id="devices_tbl">
+                    <thead>
+                    <tr>
+                        <th>Serial</th>
+                        <th >Emergency</th>
+                        <th >Status</th>
+                        <th >Floor</th>
+                        <th >Project</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        <!-- BEGIN ORDERED LISTS PORTLET-->
+        <div class="widget green">
+            <div class="widget-title">
+                <h4><i class="icon-location-arrow"></i> Drawing</h4>
+                <span class="tools">
+                <a href="javascript:;" class="icon-chevron-down"></a>
+                <a href="javascript:;" class="icon-remove"></a>
+                </span>
+            </div>
+            <div class="widget-body relative">
+                <div id="drawingLoader" class="loader"></div>
+                <div class="row-fluid">
+                    <div class="span2">
+                        <select class="span12" id="sel-device-view-mode">
+                            <option value="1">Show all devices</option>
+                            <option value="2">Show emergency devices</option>
+                            <option value="3">Show non-emergency devices</option>
+                            <option value="4">Show failing devices</option>
+                            <option value="5">Show selected devices</option>
+                        </select>
+                    </div>
+                    <div class="span8">
+                        <div class="controls ">
+                            <div class="input-append span12">
+                                <input id="inp-show-serials" type="text" class=" small span10" value=""  placeholder="Enter the serial list separated by spaces or commas">
+                                <button type="button" class="btn" id="btn-show-serials">
+                                    Go
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span2">
+                        <button class="btn btn-danger btn-small pull-right" id="btn-synchronize-drawing">Synchronize <i class="icon-refresh"></i></button>
+                    </div>
+                </div>
+                <div class="space10"></div>
+
+                <div id="locator-wrapper" class="relative">
+                    <div class="bubble right" id="device-popover">
+                        <label>Id: <span class="device-id">-</span></label>
+                        <label>Serial: <span class="device-serial">-</span></label>
+                        <label>Emergency: <span class="device-emergency">-</span></label>
+                        <label>Status: <span class="device-status">-</span></label>
+                        <label>Checked: <span class="device-checked">-</span></label>
+                    </div>
+                    <div id="locator-container"></div>
+                </div>
+                <div class="space10"></div>
+                <hr>
+                <div class="row-fluid">
+                    <div class="span2">
+                        <label>Id: <span class="device-id">-</span></label>
+                    </div>
+                    <div class="span2">
+                        <label>Serial: <span class="device-serial">-</span></label>
+                    </div>
+                    <div class="span2">
+                        <label>Emergency: <span class="device-emergency">-</span></label>
+                    </div>
+                    <div class="span3">
+                        <label>Status: <span class="device-status">-</span></label>
+                    </div>
+                    <div class="span2">
+                        <label>Checked: <span class="device-checked">-</span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END ORDERED LISTS PORTLET-->
+
+    </div>
+</div>
