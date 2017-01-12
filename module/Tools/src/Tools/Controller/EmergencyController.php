@@ -271,7 +271,7 @@ class EmergencyController extends AbstractActionController
             }
 
             // send email
-            //$this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
+            $this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
             $this->addOutputMessage($consoleResponse, 'Email sent', true);
         }
 
