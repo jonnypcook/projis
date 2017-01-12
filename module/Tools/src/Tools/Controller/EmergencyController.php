@@ -171,6 +171,7 @@ class EmergencyController extends AbstractActionController
         $qb->select('p')
             ->from('Application\Entity\LiteipProject', 'p')
             ->where('p.CustomerGroup=?1')
+            ->andWhere('p.TestSite=false')
             ->setParameter(1, $customerGroup);
         $projects = $qb->getQuery()->getResult();
 
@@ -270,7 +271,7 @@ class EmergencyController extends AbstractActionController
             }
 
             // send email
-            $this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
+            //$this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
             $this->addOutputMessage($consoleResponse, 'Email sent', true);
         }
 

@@ -39,6 +39,12 @@ class LiteipProject implements InputFilterAwareInterface
      */
     private $CustomerGroup;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="TestSite", type="boolean", nullable=false)
+     */
+    private $TestSite;
 
     /**
      * @var integer
@@ -52,7 +58,26 @@ class LiteipProject implements InputFilterAwareInterface
 
     public function __construct()
     {
+        $this->setTestSite(false);
     }
+
+    /**
+     * @return boolean
+     */
+    public function isTestSite()
+    {
+        return $this->TestSite;
+    }
+
+    /**
+     * @param boolean $TestSite
+     */
+    public function setTestSite($TestSite)
+    {
+        $this->TestSite = $TestSite;
+    }
+
+
 
     /**
      * @return string
