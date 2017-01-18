@@ -56,23 +56,17 @@ class EmergencyController extends AbstractActionController
     }
 
     /**
-     * @param $response
      * @param $message
      * @param bool|true $verbose
-     * @param bool|false $flush
      */
-    public function addOutputMessage(&$response, $message, $verbose = true, $flush = false)
+    public function addOutputMessage($message, $verbose = true)
     {
         if ($verbose === false) {
             return;
         }
 
-        $response .= date('Y-m-d H:i:s ') . $message . self::$NEWLINE;
+        echo date('Y-m-d H:i:s ') . $message . self::$NEWLINE;
 
-        if ($flush === true) {
-            echo $response;
-            $response = '';
-        }
     }
 
     /**
@@ -121,6 +115,54 @@ class EmergencyController extends AbstractActionController
     }
 
 
+    public function synchronizeLiteipAction() {
+        date_default_timezone_set('Europe/London');
+        // Check command flags
+        $request = $this->getRequest();
+        $mode = $request->getParam('mode', 'all'); // defaults to 'all'
+        $verbose = $request->getParam('verbose') || $request->getParam('v');
+
+        switch ($mode) {
+            case 'rbs':
+                $customerGroup = 19;
+                break;
+            case 'non-rbs':
+                $customerGroup = 10;
+                break;
+            default:
+                throw new \Exception('Illegal mode selected');
+                break;
+        }
+        $this->addOutputMessage("Starting {$mode} synchronization");
+
+        $liteIPService = $this->getLiteIpService();
+
+        $this->addOutputMessage('Synchronizing projects data', $verbose);
+        $liteIPService->synchronizeProjectsData(true);
+        $this->addOutputMessage('Synchronizing drawings data', $verbose);
+        $liteIPService->synchronizeDrawingsData();
+
+        $em = $this->getEntityManager();
+
+        // get projects data for grouping
+        $qb = $em->createQueryBuilder();
+        $qb->select('p')
+            ->from('Application\Entity\LiteipProject', 'p')
+            ->where('p.CustomerGroup=?1')
+            ->andWhere('p.TestSite=false')
+            ->setParameter(1, $customerGroup);
+        $projects = $qb->getQuery()->getResult();
+
+        foreach ($projects as $project) {
+            $this->addOutputMessage('Synchronizing: ' . (empty($project->getProjectDescription()) ? 'undefined' : $project->getProjectDescription()) . ' (' . $project->getProjectID() . ' - ' . $project->getPostCode() . ')', $verbose);
+            $liteIPService->synchronizeDevicesData(false, $project->getProjectID());
+        }
+
+        $this->addOutputMessage("synchronization complete");
+
+        return;
+    }
+
     public function emergencyAction()
     {
         date_default_timezone_set('Europe/London');
@@ -135,7 +177,6 @@ class EmergencyController extends AbstractActionController
             throw new RuntimeException('You can only use this action from a console!');
         }
 
-        $consoleResponse = "";
         $alerts = array();
 
         // Check command flags
@@ -178,18 +219,18 @@ class EmergencyController extends AbstractActionController
 
         // synchronize project device data
         if ($synchronize) {
-            $this->addOutputMessage($consoleResponse, 'Starting synchronization of projects ...', $verbose, $flush);
+            $this->addOutputMessage('Starting synchronization of projects ...', $verbose);
 
             foreach ($projects as $project) {
-                $this->addOutputMessage($consoleResponse, sprintf('Synchronizing project %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()), $verbose, $flush);
+                $this->addOutputMessage(sprintf('Synchronizing project %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()), $verbose);
                 $liteIPService->synchronizeDevicesData(false, $project->getProjectID());
             }
-            $this->addOutputMessage($consoleResponse, 'Synchronization of projects completed', $verbose, $flush);
+            $this->addOutputMessage('Synchronization of projects completed', $verbose);
         } else {
-            $this->addOutputMessage($consoleResponse, 'Skipping synchronization of projects', $verbose, $flush);
+            $this->addOutputMessage('Skipping synchronization of projects', $verbose);
         }
 
-        $this->addOutputMessage($consoleResponse, 'Generating report', $verbose, $flush);
+        $this->addOutputMessage('Generating report', $verbose);
 
         // run reports against customer group
         $errorCount = 0;
@@ -206,7 +247,7 @@ class EmergencyController extends AbstractActionController
                 ->where('dr.project=?1')
                 ->andWhere('d.IsE3=true')
                 ->setParameter(1, $project->getProjectID());
-            $this->addOutputMessage($consoleResponse, sprintf('Synchronizing project data for: %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()) , $verbose, $flush);
+            $this->addOutputMessage(sprintf('Synchronizing project data for: %s (id=%s)', $project->getProjectDescription(), $project->getProjectID()) , $verbose);
 
             $devices = $qb->getQuery()->getResult();
             foreach ($devices as $device) {
@@ -214,7 +255,7 @@ class EmergencyController extends AbstractActionController
                 if ($device->getStatus()->isFault()) {
                     $this->addError($alerts, $device, $device->getDrawing(), $device->getDrawing()->getProject());
                     $errorCount++;
-                    $this->addOutputMessage($consoleResponse, sprintf('Error! device %d %s', $device->getDeviceID(), $device->getStatus()->getDescription()), $verbose, $flush);
+                    $this->addOutputMessage(sprintf('Error! device %d %s', $device->getDeviceID(), $device->getStatus()->getDescription()), $verbose);
                 }
 
                 $timestamp = empty($device->getLastE3StatusDate()) ? 0 : $device->getLastE3StatusDate()->getTimestamp();
@@ -222,13 +263,13 @@ class EmergencyController extends AbstractActionController
                 if(floor($diff / (60 * 60 * 24)) > 0) { // if not tested for 24 hours
                     $this->addWarning($alerts, floor($diff / (60 * 60 * 24)) . ' days untested', $device, $device->getDrawing(), $device->getDrawing()->getProject());
                     $warningCount++;
-                    $this->addOutputMessage($consoleResponse, sprintf('Warning! device %d untested in %d days', $device->getDeviceID(), floor($diff / (60 * 60 * 24))), $verbose, $flush);
+                    $this->addOutputMessage(sprintf('Warning! device %d untested in %d days', $device->getDeviceID(), floor($diff / (60 * 60 * 24))), $verbose);
                 }
             }
         }
 
         // build email
-        $this->addOutputMessage($consoleResponse, 'Sending report', $verbose, $flush);
+        $this->addOutputMessage('Sending report', $verbose);
         if (($errorCount > 0) || ($warningCount > 0)) {
             $html = '<style>th{text-align: left;} th,td{padding: 2px}</style>' .
                 '<h3>Report Summary</h3><table><tbody>' .
@@ -272,13 +313,13 @@ class EmergencyController extends AbstractActionController
 
             // send email
             $this->getGoogleService()->sendGmail($subject, sprintf($html, $sitesPolled, $devicesPolled, $errorCount, $warningCount, $tblErrors, $tblWarnings), $to);
-            $this->addOutputMessage($consoleResponse, 'Email sent', true);
+            $this->addOutputMessage('Email sent', true);
         }
 
-        $this->addOutputMessage($consoleResponse, $errorCount . ' errors found');
-        $this->addOutputMessage($consoleResponse, $warningCount . ' warnings found');
+        $this->addOutputMessage($errorCount . ' errors found');
+        $this->addOutputMessage($warningCount . ' warnings found');
 
-        return $consoleResponse;
+        return;
     }
 
     /**

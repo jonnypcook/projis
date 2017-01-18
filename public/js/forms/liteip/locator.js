@@ -35,6 +35,36 @@ var Script = function () {
         $('#locator-container').trigger('addSerial', $(this).attr('data-device-serial'));
     });
 
+    $('#btn-synchronize-all').on('click', function() {
+        try {
+            var url = "/playground/liteiprefreshall/";
+            var params = 'ts='+Math.round(new Date().getTime()/1000);
+            $('#drawingLoader').fadeIn();
+            $('#locatorLoader').fadeIn(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: params, // Just send the Base64 content in POST body
+                    processData: false, // No need to process
+                    timeout: 60000, // 1 min timeout
+                    dataType: 'text', // Pure Base64 char data
+                    beforeSend: function onBeforeSend(xhr, settings) {},
+                    error: function onError(XMLHttpRequest, textStatus, errorThrown) {},
+                    success: function onUploadComplete(response) {
+                    },
+                    complete: function(jqXHR, textStatus){
+                        $('#locatorLoader').fadeOut();
+                        $("#fDrawingId").trigger("change");
+                    }
+                });
+            });
+
+        } catch (ex) {
+            $('#drawingLoader').fadeOut();
+            $('#locatorLoader').fadeOut();
+        }/**/
+    });
+
     $('#btn-synchronize-drawing').on('click', function() {
         try {
             var drawingID = $("#fDrawingId").val();

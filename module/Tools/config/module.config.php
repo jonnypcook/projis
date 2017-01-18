@@ -29,12 +29,21 @@ return array(
     'console' => array(
         'router' => array(
             'routes' => array(
-                'list-users' => array(
+                'emergency-report' => array(
                     'options' => array(
                         'route'    => 'emergency [rbs|all|non-rbs]:mode [--verbose|-v] [-s|--synchronize] [-t|--test]',
                         'defaults' => array(
                             'controller' => 'Tools\Controller\Emergency',
                             'action'     => 'emergency'
+                        )
+                    )
+                ),
+                'synchronize' => array(
+                    'options' => array(
+                        'route'    => 'synchronizeliteip [rbs|all|non-rbs]:mode [--verbose|-v] [-t|--test]',
+                        'defaults' => array(
+                            'controller' => 'Tools\Controller\Emergency',
+                            'action'     => 'synchronizeliteip'
                         )
                     )
                 )

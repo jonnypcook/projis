@@ -119,25 +119,28 @@ class LiteIpService
     }
 
     /**
+     * @param bool|false $update
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
      */
-    public function synchronizeProjectsData() {
+    public function synchronizeProjectsData($update = false) {
         $response = $this->getProjectsData();
         $em = $this->getEntityManager();
 
         if ($response->getStatusCode() === 200) {
             $projects = json_decode($response->getBody(), true);
             foreach ($projects as $project) {
-                if ($em->find('Application\Entity\LiteipProject', $project['ProjectID'])) {
+                $liteIpProject = $em->find('Application\Entity\LiteipProject', $project['ProjectID']);
+                if (!($liteIpProject instanceof LiteipProject)) {
+                    $liteIpProject = new LiteipProject();
+                } elseif($update !== true) {
                     continue;
                 }
 
-                $liteipProject = new LiteipProject();
                 $hydrator = new DoctrineHydrator($em, 'Application\Entity\LiteipProject');
-                $hydrator->hydrate($project, $liteipProject);
-                $em->persist($liteipProject);
+                $hydrator->hydrate($project, $liteIpProject);
+                $em->persist($liteIpProject);
             }
             $em->flush();
         }

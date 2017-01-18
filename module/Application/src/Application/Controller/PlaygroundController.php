@@ -287,6 +287,36 @@ class PlaygroundController extends AuthController
         return new JsonModel($data);/**/
     }
 
+    public function liteIpRefreshAllAction () {
+        if (!$this->request->isXmlHttpRequest()) {
+            throw new \Exception('illegal request type');
+        }
+
+//        if (!$this->isGranted('admin.all')) {
+//            throw new \Exception('illegal request type');
+//        }
+//
+        $liteIPService = $this->getLiteIpService();
+        $liteIPService->synchronizeProjectsData(true);
+        $liteIPService->synchronizeDrawingsData();
+
+        $em = $this->getEntityManager();
+
+        // get projects data for grouping
+        $qb = $em->createQueryBuilder();
+        $qb->select('p')
+            ->from('Application\Entity\LiteipProject', 'p')
+            ->andWhere('p.TestSite=false');
+        $projects = $qb->getQuery()->getResult();
+
+        foreach ($projects as $project) {
+            $liteIPService->synchronizeDevicesData(false, $project->getProjectID());
+        }
+
+        return new JsonModel(array('error' => false));
+
+    }
+
     public function liteIpRefreshDevicesAction() {
         if (!$this->request->isXmlHttpRequest()) {
             throw new \Exception('illegal request type');
