@@ -130,7 +130,7 @@ class EmergencyController extends AbstractActionController
                 $customerGroup = 10;
                 break;
             default:
-                throw new \Exception('Illegal mode selected');
+                $customerGroup = false;
                 break;
         }
         $this->addOutputMessage("Starting {$mode} synchronization");
@@ -148,9 +148,11 @@ class EmergencyController extends AbstractActionController
         $qb = $em->createQueryBuilder();
         $qb->select('p')
             ->from('Application\Entity\LiteipProject', 'p')
-            ->where('p.CustomerGroup=?1')
-            ->andWhere('p.TestSite=false')
-            ->setParameter(1, $customerGroup);
+            ->where('p.TestSite=false');
+        if ($customerGroup !== false) {
+            $qb->andWhere('p.CustomerGroup=?1')
+                ->setParameter(1, $customerGroup);
+        }
         $projects = $qb->getQuery()->getResult();
 
         foreach ($projects as $project) {
