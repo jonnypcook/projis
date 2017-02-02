@@ -262,9 +262,9 @@ class LiteIpService
 
         foreach ($queryBuilder->getQuery()->getResult() as $device) {
             $em->remove($device);
+            $em->flush();
         }
 
-        $em->flush();
     }
 
     /**
