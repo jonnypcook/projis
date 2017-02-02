@@ -82,10 +82,19 @@ class ProductController extends AuthController
         $keyword = $this->params()->fromQuery('sSearch', '');
         $keyword = trim($keyword);
         if (!empty($keyword)) {
-            $queryBuilder->andWhere('p.model LIKE :model')
-                ->setParameter('model', '%' . trim(preg_replace('/[*]+/', '%', $keyword), '%') . '%');
-        }
+            $keywordStr = '%' . trim(preg_replace('/[*]+/', '%', $keyword), '%') . '%';
+            $qb2  = $em->createQueryBuilder();
+            $qb2->select('DISTINCT p1.productId')
+                ->from('Product\Entity\Philips', 'pi')
+                ->join('pi.product', 'p1')
+                ->andWhere($queryBuilder->expr()->like('pi.model', $queryBuilder->expr()->literal($keywordStr)))
+            ;
 
+            $queryBuilder->andWhere($queryBuilder->expr()->orX(
+                $queryBuilder->expr()->like('p.model', $queryBuilder->expr()->literal($keywordStr)),
+                $queryBuilder->expr()->in('p.productId', $qb2->getDQL())
+            ));
+        }
 
         /*
          * Ordering
@@ -144,9 +153,17 @@ class ProductController extends AuthController
 
 
         foreach ($paginator as $page) {
+            $extra = '';
+            if ($page->getBrand()->getName() == 'Philips') {
+                $philips = $em->getRepository('Product\Entity\Philips')->findByProduct($page->getproductId());
+                foreach ($philips as $philipsItem) {
+                    $extra = ' - ' . $philipsItem->getModel();
+                    break;
+                }
+            }
             $url = $this->url()->fromRoute('productitem', array('pid' => $page->getproductId()));
             $data['aaData'][] = array(
-                '<a href="' . $url . '" pid="' . $page->getproductId() . '">' . $page->getModel() . '</a>',
+                '<a href="' . $url . '" pid="' . $page->getproductId() . '">' . $page->getModel()  . $extra . '</a>',
                 //$page->getDescription(),
                 $page->getBrand()->getName(),
                 $page->getType()->getName(),
