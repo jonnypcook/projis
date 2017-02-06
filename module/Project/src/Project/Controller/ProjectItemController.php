@@ -2286,7 +2286,7 @@ class ProjectitemController extends ProjectSpecificController
                                 '_B'  => array( $system[3], 'B Board', 'PCB Boards Type B', 0 ),
                                 '_B1' => array( $system[3], 'B1 Board', 'PCB Boards Type B1', 0 ),
                                 '_B1PP' => array( $system[3], 'B1PP Board', 'PCB Boards Type B1PP', 0 ),
-                                '_B1FP' => array( $system[3], 'B1FP Board', 'PCB Boards Type B1FP', 0 ),
+                                '_B1SP' => array( $system[3], 'B1SP Board', 'PCB Boards Type B1SP', 0 ),
                                 '_C'  => array( $system[3], 'C Board', 'PCB Boards Type C', 0 ),
                             );
                         }

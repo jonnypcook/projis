@@ -1596,7 +1596,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                 '"Specified Length"', '"Achievable Length"',
                 '"Product"', '"Product Type"',
                 '"LED Quantity"', '"LED Quantity (inc multiplier)"', '"Configuration"',
-                '"A"', '"B"', '"B1"', '"B1PP"', '"B1FP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
+                '"A"', '"B"', '"B1"', '"B1PP"', '"B1SP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
                 '"Phosphor"', '"Aluminium"',
             );
         } else {
@@ -1605,7 +1605,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                 '"Legacy Lighting"', '"Legacy Quantity"', '"Specified Length"', '"Achievable Length"',
                 '"Weekly Hours of Operation"', '"Life Span"', '"Legacy Rating"', '"Product"', '"Product Type"',
                 '"LED Quantity"', '"LED Quantity (inc multiplier)"', '"LED Rating"', '"Configuration"',
-                '"A"', '"B"', '"B1"', '"B1PP"', '"B1FP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
+                '"A"', '"B"', '"B1"', '"B1PP"', '"B1SP"', '"C"', '"End Caps"', '"Red/Black Cable"', '"WAGO"',
                 '"Phosphor"', '"Aluminium"',
             );
         }
@@ -1634,7 +1634,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                             '_B'  => array( $system[3], 'B Board', 'PCB Boards Type B', 0 ),
                             '_B1' => array( $system[3], 'B1 Board', 'PCB Boards Type B1', 0 ),
                             '_B1PP' => array( $system[3], 'B1PP Board', 'PCB Boards Type B1PP', 0 ),
-                            '_B1FP' => array( $system[3], 'B1FP Board', 'PCB Boards Type B1FP', 0 ),
+                            '_B1SP' => array( $system[3], 'B1SP Board', 'PCB Boards Type B1SP', 0 ),
                             '_C'  => array( $system[3], 'C Board', 'PCB Boards Type C', 0 ),
                         );
 
@@ -1702,7 +1702,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                             $arch ? $boards['_B'][3] : 0,
                             $arch ? $boards['_B1'][3] : 0,
                             $arch ? $boards['_B1PP'][3] : 0,
-                            $arch ? $boards['_B1FP'][3] : 0,
+                            $arch ? $boards['_B1SP'][3] : 0,
                             $arch ? $boards['_C'][3] : 0,
                             $arch ? $architectural['_EC'][3] : 0,
                             $arch ? $architectural['_CBL'][3] : 0,
@@ -1734,7 +1734,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                             $arch ? $boards['_B'][3] : 0,
                             $arch ? $boards['_B1'][3] : 0,
                             $arch ? $boards['_B1PP'][3] : 0,
-                            $arch ? $boards['_B1FP'][3] : 0,
+                            $arch ? $boards['_B1SP'][3] : 0,
                             $arch ? $boards['_C'][3] : 0,
                             $arch ? $architectural['_EC'][3] : 0,
                             $arch ? $architectural['_CBL'][3] : 0,

@@ -663,7 +663,7 @@ class Model
     const BOARDLEN_B = 286.75;
     const BOARDLEN_B1 = 104.60;
     const BOARDLEN_B1PP = 104.60;
-    const BOARDLEN_B1FP = 104.60;
+    const BOARDLEN_B1SP = 104.60;
     const BOARDLEN_C = 288.35;
     const BOARDLEN_GAP = 1;
     const BOARDLEN_ALUM = 2; // changed from 2
@@ -860,7 +860,7 @@ class Model
         }
 
         $len = ($curLen + $boardGap + $boardB1);
-        $conf = $currConf . '-B1FP';
+        $conf = $currConf . '-B1SP';
         if ($len < $maximum) {
             $this->addBoardConfiguration($conf, $len, true);
         }
@@ -872,7 +872,7 @@ class Model
         }
 
         $len = ($curLen + $boardGap + $boardB1 + $boardGap + $boardB1);
-        $conf = $currConf . '-B1-B1FP';
+        $conf = $currConf . '-B1-B1SP';
         if ($len < $maximum) {
             $this->addBoardConfiguration($conf, $len, true);
         }
@@ -1003,7 +1003,7 @@ class Model
                 'B' => self::BOARDLEN_B,
                 'B1' => self::BOARDLEN_B1,
                 'B1PP' => self::BOARDLEN_B1PP, // stand-alone version
-                'B1FP' => self::BOARDLEN_B1FP, // end version
+                'B1SP' => self::BOARDLEN_B1SP, // end version
                 'C' => self::BOARDLEN_C,
 
                 'GAP' => self::BOARDLEN_GAP,
@@ -1019,7 +1019,7 @@ class Model
             $midBoards = array (
                 'B' => array($boardConfigs['B'], true, false),
                 'B1' => array($boardConfigs['B1'], true, false),
-                'B1FP' => array($boardConfigs['B1FP'], true, true),
+                'B1SP' => array($boardConfigs['B1SP'], true, true),
                 'C' => array($boardConfigs['C'], true, true),
             );
 
