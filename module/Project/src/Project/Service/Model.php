@@ -706,7 +706,6 @@ class Model
                 $rpLen += self::BOARDLEN_ALUM * 2;
 
                 foreach ($brdBd as $brd) {
-                    $brd = $this->findBoardName($brd);
                     $rpLen += constant('self::BOARDLEN_' . $brd);
 
                     if ($brd == 'A') {
@@ -738,14 +737,6 @@ class Model
             }
         }
 
-    }
-
-    function findBoardName($brd) {
-        if ($brd == 'B1FP') {
-            return 'B1SP';
-        }
-
-        return $brd;
     }
 
     /**
@@ -783,8 +774,6 @@ class Model
                     );
 
                     foreach ($brdBd as $brd) {
-                        $brd = $this->findBoardName($brd);
-
                         $buildConfig[$aConfig]['LEN'] += constant('self::BOARDLEN_' . $brd);
                         $buildConfig[$aConfig]['_' . $brd]++;
                         if ($brd == 'A') {
