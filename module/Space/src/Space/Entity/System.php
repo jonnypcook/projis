@@ -427,23 +427,23 @@ class System implements InputFilterAwareInterface
                 'name'     => 'product', // 'usr_name'
                 'required' => true,
                 'filters'  => array(),
-                'validators' => array(), 
+                'validators' => array(),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'legacy', // 'usr_name'
                 'required' => false,
                 'filters'  => array(),
-                'validators' => array(), 
+                'validators' => array(),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'pricing', // 'usr_name'
                 'required' => false,
                 'filters'  => array(),
-                'validators' => array(), 
+                'validators' => array(),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'quantity', // 'usr_name'
                 'required' => true,
@@ -459,9 +459,9 @@ class System implements InputFilterAwareInterface
                             'inclusive' => false
                         ),
                     ),
-                ), 
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'hours', // 'usr_name'
                 'required' => false,
@@ -483,10 +483,10 @@ class System implements InputFilterAwareInterface
                             'max'      => 168,
                             'inclusive' => true
                         ),
-                    ),                    
-                ), 
+                    ),
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'ppu', // 'usr_name'
                 'required' => true,
@@ -502,10 +502,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true // set to false if zero not allowed
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'cpu', // 'usr_name'
                 'required' => false,
@@ -521,10 +521,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'ppuTrial', // 'usr_name'
                 'required' => false,
@@ -540,10 +540,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'ippu', // 'usr_name'
                 'required' => true,
@@ -559,9 +559,9 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'legacyWatts', // 'usr_name'
                 'required' => false,
@@ -577,10 +577,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'legacyMcpu', // 'usr_name'
                 'required' => false,
@@ -596,10 +596,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'legacyQuantity', // 'usr_name'
                 'required' => false,
@@ -615,10 +615,10 @@ class System implements InputFilterAwareInterface
                             'inclusive' => true
                         ),
                     ),
-                ), 
+                ),
             )));
 
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'lux', // 'usr_name'
                 'required' => true,
@@ -640,10 +640,10 @@ class System implements InputFilterAwareInterface
                             'max'      => 90,
                             'inclusive' => true
                         ),
-                    ),                    
-                ), 
+                    ),
+                ),
             )));
-            
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'occupancy', // 'usr_name'
                 'required' => true,
@@ -665,11 +665,11 @@ class System implements InputFilterAwareInterface
                             'max'      => 90,
                             'inclusive' => true
                         ),
-                    ),                    
-                ), 
+                    ),
+                ),
             )));
-            
-            
+
+
             $inputFilter->add($factory->createInput(array(
                 'name'     => 'label', // 'usr_name'
                 'required' => false,
@@ -686,8 +686,8 @@ class System implements InputFilterAwareInterface
                             'max'      => 512,
                         ),
                     ),
-                    
-                ), 
+
+                ),
             )));
             
             /*$inputFilter->add($factory->createInput(array(

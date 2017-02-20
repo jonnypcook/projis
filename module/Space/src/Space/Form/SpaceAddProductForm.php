@@ -254,6 +254,19 @@ class SpaceAddProductForm extends Form implements \DoctrineModule\Persistence\Ob
             ),
         ));
 
+        $this->add(array(
+            'name' => 'minimumPhosphorLength', // 'usr_name',
+            'attributes' => array(
+                'type'  => 'text',
+                'data-original-title' => 'Minimum configurable phosphor length',
+                'data-trigger' => 'hover',
+                'class' => 'span6  tooltips',
+                'value' => 0
+            ),
+            'options' => array(
+            ),
+        ));
+
         
     }
     

@@ -250,6 +250,7 @@ class SpaceitemController extends SpaceSpecificController
                 $altSz = $this->params()->fromPost('altSz', false);
                 $maximumUnitLength = $this->params()->fromPost('maxunitlength', false);
                 $maximumPhosphorLength = $this->params()->fromPost('maximumPhosphorLength', false);
+                $minimumPhosphorLength = $this->params()->fromPost('minimumPhosphorLength', false);
                 $mode = 1;
 
                 $errors = array();
@@ -271,6 +272,10 @@ class SpaceitemController extends SpaceSpecificController
 
                 if (!empty($maximumPhosphorLength) && !preg_match('/^[\d]+(.[\d]+)?$/', $maximumPhosphorLength)) {
                     $errors['maxphosphorlength'] =  array("isEmpty" =>'illegal maximum phosphor unit length');
+                }
+
+                if (!empty($minimumPhosphorLength) && !preg_match('/^[\d]+(.[\d]+)?$/', $minimumPhosphorLength)) {
+                    $errors['minphosphorlength'] = array("isEmpty" =>'illegal minimum phosphor unit length');
                 }
 
                 if (!empty($errors)) {
@@ -329,7 +334,7 @@ class SpaceitemController extends SpaceSpecificController
                     return new JsonModel(array('err' => true, 'info' => $errors));
                 }
 
-                $attributes = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $maximumUnitLength, $maximumPhosphorLength, $mode, $args);
+                $attributes = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $maximumUnitLength, $maximumPhosphorLength, $minimumPhosphorLength, $mode, $args);
 
                 //$post['quantity'] = $attributes['dBillU'];
                 $post['quantity'] = $attributes['dBillTU'];
@@ -344,6 +349,7 @@ class SpaceitemController extends SpaceSpecificController
                 ));
 
                 $attributes['mul'] = $maximumUnitLength;
+                $attributes['minphos'] = ($minimumPhosphorLength === false) ? 0 : $minimumPhosphorLength;
                 //print_r($attributes); die();
 
             }
@@ -384,7 +390,6 @@ class SpaceitemController extends SpaceSpecificController
                     //$system->setPricing(null);
                     $system->setSpace($this->getSpace());
                 }
-
 
                 if (isset($attributes)) {
                     $system->setAttributes($attributes);

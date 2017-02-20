@@ -1051,7 +1051,7 @@ class Model
 
             // generate and save to database
             $this->architecturalGenerateLengths($boards, array(), 0, $maximumUnitLength, 1);
-            echo $this->transactionCount;
+//            echo $this->transactionCount;
             $this->getEntityManager()->flush();
             $this->getEntityManager()->clear();
 
@@ -1122,7 +1122,7 @@ class Model
      * @param int $mode (1=closest, 2=shallowest)
      * @return bool
      */
-    function findOptimumChain ($upperLimit = false, $lowerLimit = false, $limit = false, $depth = false, $mode = 1) {
+    function findOptimumChain ($upperLimit = false, $lowerLimit = false, $limit = false, $depth = false, $mode = 1, $minimumPhosphorLength = false) {
         $queryBuilder = $this->getEntityManager()->createQueryBuilder();
         $queryBuilder
             ->select('bc')
@@ -1156,6 +1156,18 @@ class Model
                 ->setParameter('lowerLimit', $lowerLimit);
         }
 
+        if ($minimumPhosphorLength !== false) {
+            $qbs  = $this->getEntityManager()->createQueryBuilder();
+            $qbs->select('t3.boardChainId')
+                ->from('Product\Entity\BoardConfigurationBoardChain', 't1')
+                ->innerJoin('t1.boardConfiguration', 't2')
+                ->innerJoin('t1.boardChain', 't3')
+                ->where('t2.length <= ' . $minimumPhosphorLength);
+
+            $queryBuilder->andWhere($queryBuilder->expr()->notIn('bc.boardChainId', $qbs->getDQL()));
+        }
+
+
         $query = $queryBuilder->getQuery();
 
         if ($limit !== false) {
@@ -1174,9 +1186,9 @@ class Model
     }
 
 
-    function findRemainderConfig ($remainder, &$config, &$length, $depth = false, $mode = 1) {
+    function findRemainderConfig ($remainder, &$config, &$length, $depth = false, $mode = 1, $minimumPhosphorLength = false) {
         $remainderLower = ($remainder - self::BOARDLEN_B1 > 0) ? $remainder - self::BOARDLEN_B1 : 0;
-        $board = $this->findOptimumChain($remainder, $remainderLower, 1, $depth, $mode);
+        $board = $this->findOptimumChain($remainder, 300, 1, $depth, $mode, $minimumPhosphorLength);
 
         if (!empty($board)) {
             foreach ($board->getConfigurations() as $configuration) {
@@ -1196,7 +1208,7 @@ class Model
      * @param array $args
      * @return array
      */
-    function findOptimumArchitectural(\Product\Entity\Product $product, $length, $maximumUnitLength, $maximumPhosphorLength, $mode, array $args = array())
+    function findOptimumArchitectural(\Product\Entity\Product $product, $length, $maximumUnitLength, $maximumPhosphorLength, $minimumPhosphorLength, $mode, array $args = array())
     {
         try {
             $data = array('dLen' => 0, 'dUnits' => 1, 'dBill' => 0, 'dBillU' => 0, 'dBillTU' => 0, 'dCost' => 0, 'dConf' => 0);
@@ -1211,6 +1223,8 @@ class Model
             }
 
             $chainable = true;
+
+            $minimumPhosphorLength = empty($minimumPhosphorLength) ? 0 : (int)$minimumPhosphorLength;
 
             // ensure that phosphor is in valid range
             if ($maximumPhosphorLength > 2000) {
@@ -1240,7 +1254,7 @@ class Model
             }
 
             // find maximum and configs array if not available
-            $maximumBoard = $this->findOptimumBoard($maximumPhosphorLength, 0, 1, $chainable);
+            $maximumBoard = $this->findOptimumBoard($maximumPhosphorLength, $minimumPhosphorLength, 1, $chainable);
             $data['sLen'] = $length;
             $data['maxBoardPerRP'] = $maximumBoard->getLength();
             $data['maxBoardPerRPB'] = $maximumBoard->getConfiguration();
@@ -1254,7 +1268,7 @@ class Model
             $data['optimumLength'] = $maximumBoard->getLength() * $maximumCnt;
 
             // find config to fill remainder
-                $this->findRemainderConfig ($remainder, $optimumConfig, $data['optimumLength'], 2, 1);
+            $this->findRemainderConfig ($remainder, $optimumConfig, $data['optimumLength'], 2, 1, $minimumPhosphorLength);
 
             // calculate the number of optimum lengths in required length
             $setup = array();
@@ -1271,8 +1285,7 @@ class Model
             $optimumConfig = ($maximumCnt == 0) ? array() : array($maximumBoard->getConfiguration() => $maximumCnt);
             $remainder = $remainder - ($maximumCnt * $maximumBoard->getLength());
             $data['dLen'] += $maximumBoard->getLength() * $maximumCnt;
-
-            $this->findRemainderConfig ($remainder, $optimumConfig, $data['dLen'], false, 1);
+            $this->findRemainderConfig ($remainder, $optimumConfig, $data['dLen'], false, 1, $minimumPhosphorLength);
 
             if (!empty($optimumConfig)) {
                 $setup[] = $optimumConfig;

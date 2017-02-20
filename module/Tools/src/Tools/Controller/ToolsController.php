@@ -68,6 +68,7 @@ class ToolsController extends AuthController
             $length = $this->params()->fromPost('length', false);
             $maximumUnitLength = $this->params()->fromPost('maxunitlen', false);
             $maximumPhosphorLength = $this->params()->fromPost('maximumPhosphorLength', false);
+            $minimumPhosphorLength = $this->params()->fromPost('minimumPhosphorLength', false);
             $mode = 1;
 
             if (empty($productId) || !preg_match('/^[\d]+$/', $productId)) {
@@ -84,6 +85,10 @@ class ToolsController extends AuthController
 
             if (!empty($maximumPhosphorLength) && !preg_match('/^[\d]+(.[\d]+)?$/', $maximumPhosphorLength)) {
                 throw new \Exception('illegal maximum phosphor unit length parameter: ' . $maximumPhosphorLength);
+            }
+
+            if (!empty($minimumPhosphorLength) && !preg_match('/^[\d]+(.[\d]+)?$/', $minimumPhosphorLength)) {
+                throw new \Exception('illegal minimum phosphor unit length parameter: ' . $minimumPhosphorLength);
             }
 
             // find product cost per unit
@@ -126,7 +131,7 @@ class ToolsController extends AuthController
                 throw new \Exception('maximum phosphor unit length not provided via parameter or product');
             }
 
-            $data = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $maximumUnitLength, $maximumPhosphorLength, $mode, array('alts'=>true));
+            $data = $this->getServiceLocator()->get('Model')->findOptimumArchitectural($product, $length, $maximumUnitLength, $maximumPhosphorLength, $minimumPhosphorLength, $mode, array('alts'=>true));
             $data = array('err'=>false, 'info'=>$data);
         } catch (\Exception $ex) {
             $data = array('err'=>true, 'info'=>array('ex'=>$ex->getMessage()));

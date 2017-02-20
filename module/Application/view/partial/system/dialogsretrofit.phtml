@@ -44,6 +44,7 @@ function calculateArchitecturalChange() {
         var length = $('form[name=SpaceAddArchitecturalForm] input[name=length]').val();
         var maximumunitlength = $('form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').val();
         var maximumPhosphorLength = $('form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]').val();
+        var minimumPhosphorLength = $('form[name=SpaceAddArchitecturalForm] input[name=minimumPhosphorLength]').val();
 
         if (productId=='') {
             throw "no product defined";
@@ -54,7 +55,7 @@ function calculateArchitecturalChange() {
         }
 
         var url = '/tools/rpQuickCalculate/';
-        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&productId='+productId+'&length='+length+'&maxunitlen='+maximumunitlength + '&maximumPhosphorLength=' + maximumPhosphorLength;
+        var params = 'ts='+Math.round(new Date().getTime()/1000)+'&productId='+productId+'&length='+length+'&maxunitlen='+maximumunitlength + '&maximumPhosphorLength=' + maximumPhosphorLength + '&minimumPhosphorLength=' + minimumPhosphorLength;
             
         $.ajax({
             type: 'POST',
@@ -309,9 +310,7 @@ function setupArchitecturalTabForm (obj) {
     $('form[name=SpaceAddArchitecturalForm] input[name=length]').val((obj.length==null)?'':obj.length);
     $('form[name=SpaceAddArchitecturalForm] select[name=product]').val((obj.productId==null)?'':obj.productId);
     $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('liszt:updated');
-    if (obj.modify!=null) {
-        $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('change', {pLen: obj.pLen});
-    }
+
     $('form[name=SpaceAddArchitecturalForm] input[name=ppu]').val((obj.ppu==null)?'':obj.ppu);
     $('form[name=SpaceAddArchitecturalForm] input[name=ippu]').val((obj.ippu==null)?'0':obj.ippu);
     $('form[name=SpaceAddArchitecturalForm] input[name=label]').val((obj.label==null)?'':obj.label);
@@ -325,7 +324,12 @@ function setupArchitecturalTabForm (obj) {
     $('form[name=SpaceAddArchitecturalForm] select[name=lux]').val((obj.lux==null)?0:obj.lux);
     $('form[name=SpaceAddArchitecturalForm] select[name=occupancy]').val((obj.occupancy==null)?0:obj.occupancy);
     $('form[name=SpaceAddArchitecturalForm] input[name=maxunitlength]').val((obj.mul==null)?5000:obj.mul);
+    $('form[name=SpaceAddArchitecturalForm] input[name=minimumPhosphorLength]').val((obj.minphos==null)?0:obj.minphos);
 
+    if (obj.modify!=null) {
+        $('form[name=SpaceAddArchitecturalForm] select[name=product]').trigger('change', {pLen: obj.pLen});
+    }
+    
     chsnConf = (obj.chsnConf==null)?false:obj.chsnConf;
     chsnLen = (obj.dLen==null)?false:obj.dLen;
     if (obj.modify!=null) {
@@ -619,9 +623,9 @@ var Script = function () {
                                         hours: obj.system.hours,
                                         ppu: obj.system.ppu,
                                         ippu: obj.system.ippu,
-                                        legacyWatts: (obj.system.legacyId==null)?0:obj.system.legacyWatts,
-                                        legacyQuantity: (obj.system.legacyId==null)?0:obj.system.legacyQuantity,
-                                        legacyMcpu: (obj.system.legacyId==null)?'':obj.system.legacyMcpu,
+                                        legacyWatts: (obj.system.legacyId==null)? 0 : obj.system.legacyWatts,
+                                        legacyQuantity: (obj.system.legacyId==null)? 0 : obj.system.legacyQuantity,
+                                        legacyMcpu: (obj.system.legacyId==null)? 0 : obj.system.legacyMcpu,
                                         lux: obj.system.lux,
                                         occupancy: obj.system.occupancy,
                                         legacy: obj.system.legacyId,
@@ -632,6 +636,7 @@ var Script = function () {
                                         dLen: (obj.system.attributes.dLen==null)?false:obj.system.attributes.dLen,
                                         pLen: (obj.system.attributes.pLen==null)?false:obj.system.attributes.pLen,
                                         mul: obj.system.attributes.mul,
+                                        minphos: obj.system.attributes.minphos,
                                         modify: obj.system.systemId,
                                     });
                                     $('#architecturalLength')
@@ -821,7 +826,8 @@ var Script = function () {
 
     $('form[name=SpaceAddArchitecturalForm] input[name=length], form[name=SpaceAddArchitecturalForm] input[name=maxunitlength], ' +
      'form[name=SpaceAddArchitecturalForm] input[name=quantity], ' +
-      'form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength]').on('change', function(e) {
+      'form[name=SpaceAddArchitecturalForm] select[name=maximumPhosphorLength], ' +
+      'form[name=SpaceAddArchitecturalForm] input[name=minimumPhosphorLength]').on('change', function(e) {
         calculateArchitecturalChange();
     });
     
@@ -1652,6 +1658,16 @@ $this->inlineScript()->captureEnd();
                                         <select name="maximumPhosphorLength">
                                             <option class="default" value="">Use Default Length</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Min Phosphor Length</label>
+
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <?php echo $this->formElement($formSystem->get('minimumPhosphorLength')); ?>
+                                            <span class="add-on">mm</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
