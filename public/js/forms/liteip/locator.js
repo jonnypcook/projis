@@ -18,13 +18,16 @@ var Script = function () {
             null,
             null,
             null,
+            null,
             { 'bSortable': false },
             { 'bSortable': false }
         ],
         sAjaxSource: "/playground/liteipdevicelist/",
         fnServerParams: function (aoData) {
             var fDrawingId = $("#fDrawingId").val();
+            var fShowEmergency = $("#fShowEmergency").val();
             aoData.push({name: "fDrawingId", value: fDrawingId});
+            aoData.push({name: "fShowEmergency", value: fShowEmergency});
         },
         fnDrawCallback: function () {
             // called at the end of table rendering
@@ -100,20 +103,28 @@ var Script = function () {
         }/**/
     });
 
+    $('#fShowEmergency').on("change", function(e) {
+        $("#fDrawingId").trigger("change");
+    });
+
     $("#fDrawingId").on("change", function(e) {
+        if (!$(this).val().match(/^[\d]+$/)) {
+            return;
+        }
         var opt = $("#fDrawingId option[value=" + $(this).val() + "]");
         devicesTable.fnDraw();
         findDeviceList({
             drawingID: $(this).val(),
             width: opt.attr('data-width'),
-            height: opt.attr('data-height')
+            height: opt.attr('data-height'),
+            emergency: $('#fShowEmergency').val()
         });
         return;
     });
 
     function findDeviceList(drawing) {
         try {
-            var url = "/playground/liteipdevicelist/?fDrawingId=" + drawing.drawingID + "&plot=1";
+            var url = "/playground/liteipdevicelist/?fDrawingId=" + drawing.drawingID + "&plot=1&fShowEmergency=" + (!!drawing.emergency ? drawing.emergency : '0');
             var params = 'ts='+Math.round(new Date().getTime()/1000);
             $('#drawingLoader').fadeIn(function(){
                 $.ajax({

@@ -163,6 +163,7 @@ class PlaygroundController extends AuthController
         }
 
         $drawingId = $this->params()->fromQuery('fDrawingId', 1);
+        $emergencyOnly = $this->params()->fromQuery('fShowEmergency', false);
         $plotMode = $this->params()->fromQuery('plot', false);
         $queryBuilder = $em->createQueryBuilder();
 
@@ -172,6 +173,9 @@ class PlaygroundController extends AuthController
                 ->from('Application\Entity\LiteipDevice', 'd')
                 ->where('d.drawing = :did')
                 ->setParameter('did', $drawingId);
+            if ($emergencyOnly) {
+                $queryBuilder->andWhere('d.IsE3 = true');
+            }
 
             $deviceData = array();
             $devices = $queryBuilder->getQuery()->getResult();
@@ -197,6 +201,10 @@ class PlaygroundController extends AuthController
             ->from('Application\Entity\LiteipDevice', 'd')
             ->where('d.drawing = :did')
             ->setParameter('did', $drawingId);
+
+        if ($emergencyOnly) {
+            $queryBuilder->andWhere('d.IsE3 = true');
+        }
 
 
 
@@ -279,6 +287,7 @@ class PlaygroundController extends AuthController
                 '<a class="serial-trigger" data-device-serial="' . $page->getDeviceSN() . '">' . $page->getDeviceSN() . '</a>',
                 $page->isIsE3() ? 'Yes' : 'No',
                 empty($page->getStatus()) ? 'n\a' : $page->getStatus()->getName(),
+                !empty($page->getLastE3StatusDate()) ? $page->getLastE3StatusDate()->format('Y-m-d H:i:s') : '',
                 $page->getDrawing()->getDrawing(),
                 $page->getDrawing()->getProject()->getProjectDescription()
             );

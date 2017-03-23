@@ -173,9 +173,13 @@ var Script = function () {
     function addDevice(id, serial, emergency, fault, status, lastChecked, x, y) {
         var shape;
         if (emergency){
+            var dt = new Date(lastChecked);
+            var now = new Date();
+            var daysOverdue = Math.ceil((now.getTime() - dt.getTime()) / (1000 * 3600 * 24));
+
             shape = new Konva.Line({
                 points: [0, -DIAMOND_DESELECTED, DIAMOND_DESELECTED, 0, 0, DIAMOND_DESELECTED, -DIAMOND_DESELECTED, 0],
-                fill: !!fault ? 'red' : '#74B749',
+                fill: !!fault ? 'red' : ((daysOverdue < 5) ? '#74B749' : '#ffa500'),
                 stroke: 'black',
                 strokeWidth: 1,
                 closed : true,
