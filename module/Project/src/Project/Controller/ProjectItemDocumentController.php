@@ -1152,7 +1152,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
     {
         $em       = $this->getEntityManager();
         $discount = ($this->getProject()->getMcd());
-        $query    = $em->createQuery( 'SELECT  p.mcd, p.productId, p.model, p.eca, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
+        $query    = $em->createQuery( 'SELECT  p.mcd, p.productId, p.model, p.eca, p.description, p.attributes, pt.service, pt.name AS productType, pt.name as type, s.ppu, s.cpu, b.name as brand, '
             . 'SUM(s.quantity * sp.quantity) AS quantity, '
             . 'SUM(s.ppu*s.quantity * sp.quantity) AS price, '
             . 'SUM(ROUND((s.ppu * (1 - (' . $discount . ' * p.mcd))),2) * s.quantity * sp.quantity) AS priceMCD, '
@@ -1170,6 +1170,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
         $data[] = array(
             '"Model"',
             '"Brand"',
+            '"Description"',
             '"Sage Code"',
             '"CPU"',
             '"PPU"',
@@ -1192,6 +1193,7 @@ class ProjectitemdocumentController extends ProjectSpecificController
                 $data[] = array(
                     '"' . $item['model'] . '"',
                     '"' . $item['brand'] . '"',
+                    '"'.$item['description'].'"',
                     $item['productId'],
                     $item['cpu'],
                     $item['ppu'],
